@@ -2,6 +2,9 @@
 
 approvers:
 - mattmoor
-- n3wscott
-- vaikas-google
 - vaikas
+- tcnghia
+
+reviewers:
+- tanzeeb
+- shashwathi
