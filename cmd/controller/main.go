@@ -16,16 +16,14 @@ limitations under the License.
 
 package main
 
-import (
-	// The set of controllers this controller process runs.
-	"knative.dev/sample-controller/pkg/reconciler/addressableservice"
-
-	// This defines the shared main for injected controllers.
-	"knative.dev/pkg/injection/sharedmain"
-)
+// import (
+// 	// This defines the shared main for injected controllers.
+// 	"knative.dev/pkg/injection/sharedmain"
+// )
 
 func main() {
-	sharedmain.Main("controller",
-		addressableservice.NewController,
-	)
+	// TODO(mattmoor): Do something here.
+	// sharedmain.Main("controller",
+	// 	ingress.NewController,
+	// )
 }
