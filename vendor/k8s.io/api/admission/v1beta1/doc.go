@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Knative Authors
+Copyright 2017 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,18 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+// +k8s:deepcopy-gen=package
+// +k8s:protobuf-gen=package
+// +k8s:openapi-gen=false
 
-import (
-	// The set of controllers this controller process runs.
-	"knative.dev/net-contour/pkg/reconciler/contour"
+// +groupName=admission.k8s.io
 
-	// This defines the shared main for injected controllers.
-	"knative.dev/pkg/injection/sharedmain"
-)
-
-func main() {
-	sharedmain.Main("controller",
-		contour.NewController,
-	)
-}
+package v1beta1 // import "k8s.io/api/admission/v1beta1"
