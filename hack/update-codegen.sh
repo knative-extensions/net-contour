@@ -35,5 +35,11 @@ ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   "projectcontour:v1" \
   --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
 
+# Depends on generate-groups.sh to install bin/deepcopy-gen
+${GOPATH}/bin/deepcopy-gen \
+  -O zz_generated.deepcopy \
+  --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt \
+  -i knative.dev/net-contour/pkg/reconciler/contour/config
+
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT}/hack/update-deps.sh

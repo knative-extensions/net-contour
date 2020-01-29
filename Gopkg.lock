@@ -202,6 +202,14 @@
   version = "v4.6.0"
 
 [[projects]]
+  digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"
+  name = "github.com/ghodss/yaml"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:2b0e6c0bea11257c646616ebd6a62be0ef2b6a0fd8210ac3caeaf57ee136123b"
   name = "github.com/gogo/protobuf"
   packages = [
@@ -246,7 +254,7 @@
   version = "v1.3.2"
 
 [[projects]]
-  digest = "1:f0ae868d945753df81e797524bb7f3c577bcf751ce515c18162d259ca3ff8de7"
+  digest = "1:010d46ea3c1e730897e53058d1013a963f3f987675dda87df64f891b945281db"
   name = "github.com/google/go-cmp"
   packages = [
     "cmp",
@@ -257,8 +265,15 @@
     "cmp/internal/value",
   ]
   pruneopts = "NUT"
-  revision = "5a6f75716e1203a923a78c9efb94089d857df0f6"
-  version = "v0.4.0"
+  revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
+  version = "v0.3.0"
+
+[[projects]]
+  digest = "1:10aa62acd56f635de190110a836aa261b3774e697b2b6a7af27d8263cf856d47"
+  name = "github.com/google/go-containerregistry"
+  packages = ["pkg/name"]
+  pruneopts = "NUT"
+  revision = "b02d448a3705facf11018efff34f1d2830be5724"
 
 [[projects]]
   digest = "1:3ec6c8e4b700377066dbb5ab3155c55f97109ab6147fee9423a68506d79bbafa"
@@ -375,6 +390,14 @@
   pruneopts = "NUT"
   revision = "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e"
   version = "v1.0.2"
+
+[[projects]]
+  branch = "master"
+  digest = "1:0e9bfc47ab9941ecc3344e580baca5deb4091177e84dd9773b48b38ec26b93d5"
+  name = "github.com/mattbaird/jsonpatch"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "81af80346b1a01caae0cbc27fd3c1ba5b11e189f"
 
 [[projects]]
   digest = "1:5985ef4caf91ece5d54817c11ea25f182697534f8ae6521eadcd628c142ac4b6"
@@ -564,7 +587,7 @@
   revision = "2cfd321de3ee5d5f8a5fda2521d1703478334d98"
 
 [[projects]]
-  digest = "1:94b2c0ce9cbf81b32d0fb28057382fe65e96256734edacff926bca6882c531f3"
+  digest = "1:8db306ae20162ad4e6e9e50741b1f3ab492e6cdcbb741a3544f77e624efce032"
   name = "go.uber.org/zap"
   packages = [
     ".",
@@ -572,7 +595,9 @@
     "internal/bufferpool",
     "internal/color",
     "internal/exit",
+    "internal/ztest",
     "zapcore",
+    "zaptest",
   ]
   pruneopts = "NUT"
   revision = "33e58d4d0120aa28d4df84cd244838c490846c9d"
@@ -610,13 +635,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a53e759e143477fa880c68a055ee5b5cf0cf3c1d3207b5dd587d3c7d67a7cedf"
+  digest = "1:ecf6d2856abcee71624ec8dcb3c89c6664b8d88bff65e340798a0fc20434e70c"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
     "http/httpguts",
     "http2",
+    "http2/h2c",
     "http2/hpack",
     "idna",
     "internal/timeseries",
@@ -939,16 +965,18 @@
   version = "kubernetes-1.16.4"
 
 [[projects]]
-  digest = "1:bb77158914ce8d640d522f0addeb4fc9063052e7d2ceba69fe4af39714c760b6"
+  digest = "1:814703684a5e0baf4a4dc15fe892bfb266c57d66db5d6d89996cdec36efb2fc1"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/equality",
     "pkg/api/errors",
     "pkg/api/meta",
     "pkg/api/resource",
+    "pkg/api/validation",
     "pkg/apis/meta/internalversion",
     "pkg/apis/meta/v1",
     "pkg/apis/meta/v1/unstructured",
+    "pkg/apis/meta/v1/validation",
     "pkg/apis/meta/v1beta1",
     "pkg/conversion",
     "pkg/conversion/queryparams",
@@ -991,11 +1019,12 @@
   version = "kubernetes-1.16.4"
 
 [[projects]]
-  digest = "1:a173f9aabce42766fb4543e818fb255e3923a639f545187144764533e7c8f746"
+  digest = "1:298948440571216e3fb864964a174482cb61422e34344e07c3f284ce43f9ce6a"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
     "discovery/fake",
+    "dynamic",
     "informers",
     "informers/admissionregistration",
     "informers/admissionregistration/v1",
@@ -1240,21 +1269,49 @@
   digest = "1:5acceb9ddfc654a91e633bb00531fc719fcaedda25d621162385ba5c2badc849"
   name = "knative.dev/pkg"
   packages = [
+    "apis",
+    "apis/duck",
+    "apis/duck/v1",
     "changeset",
     "codegen/cmd/injection-gen",
     "codegen/cmd/injection-gen/args",
     "codegen/cmd/injection-gen/generators",
     "configmap",
+    "configmap/testing",
     "controller",
     "injection",
     "kmeta",
+    "kmp",
     "logging",
     "logging/logkey",
+    "logging/testing",
     "metrics",
     "metrics/metricskey",
+    "network",
+    "profiling",
+    "system",
+    "system/testing",
+    "tracker",
   ]
   pruneopts = "T"
   revision = "2fbb9db15cbb7971ad2b1f4266a437f5dcc33a51"
+
+[[projects]]
+  branch = "master"
+  digest = "1:0e1c3f855826979579f1fb0ab6b97dc69e521e0602ea8b2f07fd758f6b6398b7"
+  name = "knative.dev/serving"
+  packages = [
+    "pkg/apis/autoscaling",
+    "pkg/apis/config",
+    "pkg/apis/networking",
+    "pkg/apis/networking/v1alpha1",
+    "pkg/apis/serving",
+    "pkg/gc",
+    "pkg/network",
+    "pkg/reconciler/route/config",
+  ]
+  pruneopts = "T"
+  revision = "30739c2de4c22db0e3344fc4f8e80c346035036b"
 
 [[projects]]
   branch = "master"
@@ -1279,8 +1336,11 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/google/go-cmp/cmp",
     "github.com/projectcontour/contour/apis/projectcontour/v1",
     "github.com/projectcontour/contour/cmd/contour",
+    "gopkg.in/yaml.v2",
+    "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/labels",
@@ -1289,6 +1349,7 @@
     "k8s.io/apimachinery/pkg/runtime/serializer",
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/runtime",
+    "k8s.io/apimachinery/pkg/util/sets",
     "k8s.io/apimachinery/pkg/watch",
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/discovery/fake",
@@ -1302,9 +1363,16 @@
     "k8s.io/code-generator/cmd/informer-gen",
     "k8s.io/code-generator/cmd/lister-gen",
     "knative.dev/pkg/codegen/cmd/injection-gen",
+    "knative.dev/pkg/configmap",
+    "knative.dev/pkg/configmap/testing",
     "knative.dev/pkg/controller",
     "knative.dev/pkg/injection",
     "knative.dev/pkg/logging",
+    "knative.dev/pkg/logging/testing",
+    "knative.dev/pkg/system",
+    "knative.dev/pkg/system/testing",
+    "knative.dev/serving/pkg/apis/networking/v1alpha1",
+    "knative.dev/serving/pkg/network",
     "knative.dev/test-infra/scripts",
     "knative.dev/test-infra/tools/dep-collector",
   ]
