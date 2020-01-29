@@ -210,11 +210,15 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:2b0e6c0bea11257c646616ebd6a62be0ef2b6a0fd8210ac3caeaf57ee136123b"
+  digest = "1:b38ab1b8cf42d089d9f31d4918c57c2dd47d42f3e7fc50e12142140228cf81a9"
   name = "github.com/gogo/protobuf"
   packages = [
+    "gogoproto",
+    "jsonpb",
     "proto",
+    "protoc-gen-gogo/descriptor",
     "sortkeys",
+    "types",
   ]
   pruneopts = "NUT"
   revision = "5628607bb4c51c3157aacc3a50f0ab707582b805"
@@ -738,17 +742,6 @@
   revision = "7ca132754999accbaa5c1735eda29e7ce0f3bf03"
 
 [[projects]]
-  branch = "master"
-  digest = "1:325a1b73817aa79fc85f10376ed41ea607f7dd7f6c6bfa46df6a28ef2857941f"
-  name = "golang.org/x/xerrors"
-  packages = [
-    ".",
-    "internal",
-  ]
-  pruneopts = "NUT"
-  revision = "9bdfabe68543c54f90421aeb9a60ef8061b5b544"
-
-[[projects]]
   digest = "1:2cc54a51d099b781d9abf9d9545909488e0e2d19cf885aff61e433d6c18351a4"
   name = "google.golang.org/api"
   packages = [
@@ -916,6 +909,30 @@
   pruneopts = "NUT"
   revision = "95959eaf5e3c41c66151dcfd91779616b84077a8"
   version = "2019.1.1"
+
+[[projects]]
+  digest = "1:9579dd8b1ccd8cf54ed576af68438b69588cc136eac90b10aa7c8d1a1c8334ff"
+  name = "istio.io/api"
+  packages = ["networking/v1alpha3"]
+  pruneopts = "NUT"
+  revision = "e1a1952e5b81ed914b06c1814fd3a0c92c750e37"
+  version = "1.4.3"
+
+[[projects]]
+  digest = "1:57e8c0255e33ab72e09219665d5ed7733a694e0092ab4a69b97100aa27bcbbb4"
+  name = "istio.io/client-go"
+  packages = ["pkg/apis/networking/v1alpha3"]
+  pruneopts = "NUT"
+  revision = "26c62a04cdbc1fb52dd71a9194b0d49ce297e836"
+  version = "1.4.3"
+
+[[projects]]
+  digest = "1:9c9f11af1b1f2ae03d897ba5de27103ec1c9c43605663ccdef67831d6a462a30"
+  name = "istio.io/gogo-genproto"
+  packages = ["googleapis/google/api"]
+  pruneopts = "NUT"
+  revision = "f7d19ec0141d49ac9efc83b5e61fa81ba103b445"
+  version = "1.4.3"
 
 [[projects]]
   digest = "1:061024a203efbf02654d4aa55d69cd10d1f8985dada4cbafe5d6ce1b6914d22a"
@@ -1266,13 +1283,31 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:3dcce77ab2e9e7f9b7c9c04bc543897009c2adc12c0f9621127738a7885b474f"
+  name = "knative.dev/caching"
+  packages = [
+    "pkg/apis/caching",
+    "pkg/apis/caching/v1alpha1",
+    "pkg/client/clientset/versioned",
+    "pkg/client/clientset/versioned/scheme",
+    "pkg/client/clientset/versioned/typed/caching/v1alpha1",
+    "pkg/client/injection/client",
+  ]
+  pruneopts = "NUT"
+  revision = "bb5b5155f3b20c9c0294a71733be93e5a1d10e31"
+
+[[projects]]
+  branch = "master"
   digest = "1:5acceb9ddfc654a91e633bb00531fc719fcaedda25d621162385ba5c2badc849"
   name = "knative.dev/pkg"
   packages = [
     "apis",
     "apis/duck",
     "apis/duck/v1",
+    "apis/duck/v1alpha1",
+    "apis/duck/v1beta1",
     "changeset",
+    "client/injection/kube/client",
     "codegen/cmd/injection-gen",
     "codegen/cmd/injection-gen/args",
     "codegen/cmd/injection-gen/generators",
@@ -1280,6 +1315,7 @@
     "configmap/testing",
     "controller",
     "injection",
+    "injection/clients/dynamicclient",
     "kmeta",
     "kmp",
     "logging",
@@ -1289,6 +1325,7 @@
     "metrics/metricskey",
     "network",
     "profiling",
+    "ptr",
     "system",
     "system/testing",
     "tracker",
@@ -1302,12 +1339,30 @@
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
+    "pkg/apis/autoscaling/v1alpha1",
     "pkg/apis/config",
     "pkg/apis/networking",
     "pkg/apis/networking/v1alpha1",
     "pkg/apis/serving",
+    "pkg/apis/serving/v1",
+    "pkg/apis/serving/v1alpha1",
+    "pkg/apis/serving/v1beta1",
+    "pkg/client/clientset/versioned",
+    "pkg/client/clientset/versioned/scheme",
+    "pkg/client/clientset/versioned/typed/autoscaling/v1alpha1",
+    "pkg/client/clientset/versioned/typed/networking/v1alpha1",
+    "pkg/client/clientset/versioned/typed/serving/v1",
+    "pkg/client/clientset/versioned/typed/serving/v1alpha1",
+    "pkg/client/clientset/versioned/typed/serving/v1beta1",
+    "pkg/client/injection/client",
+    "pkg/client/istio/clientset/versioned",
+    "pkg/client/istio/clientset/versioned/scheme",
+    "pkg/client/istio/clientset/versioned/typed/networking/v1alpha3",
+    "pkg/client/istio/injection/client",
     "pkg/gc",
     "pkg/network",
+    "pkg/network/ingress",
+    "pkg/reconciler",
     "pkg/reconciler/route/config",
   ]
   pruneopts = "T"
@@ -1348,6 +1403,7 @@
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/runtime/serializer",
     "k8s.io/apimachinery/pkg/types",
+    "k8s.io/apimachinery/pkg/util/intstr",
     "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/apimachinery/pkg/util/sets",
     "k8s.io/apimachinery/pkg/watch",
@@ -1367,12 +1423,17 @@
     "knative.dev/pkg/configmap/testing",
     "knative.dev/pkg/controller",
     "knative.dev/pkg/injection",
+    "knative.dev/pkg/kmeta",
     "knative.dev/pkg/logging",
     "knative.dev/pkg/logging/testing",
+    "knative.dev/pkg/network",
+    "knative.dev/pkg/ptr",
     "knative.dev/pkg/system",
     "knative.dev/pkg/system/testing",
     "knative.dev/serving/pkg/apis/networking/v1alpha1",
     "knative.dev/serving/pkg/network",
+    "knative.dev/serving/pkg/network/ingress",
+    "knative.dev/serving/pkg/reconciler",
     "knative.dev/test-infra/scripts",
     "knative.dev/test-infra/tools/dep-collector",
   ]
