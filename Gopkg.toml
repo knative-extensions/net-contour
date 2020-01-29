@@ -10,7 +10,20 @@ required = [
   "knative.dev/pkg/codegen/cmd/injection-gen",
   "knative.dev/test-infra/scripts",
   "knative.dev/test-infra/tools/dep-collector",
+  "github.com/projectcontour/contour/cmd/contour",
 ]
+
+[[override]]
+  name = "github.com/projectcontour/contour"
+  version = "1.1.0"
+
+[[override]]
+  name = "knative.dev/pkg"
+  branch = "master"
+
+[[override]]
+  name = "knative.dev/serving"
+  branch = "master"
 
 [[override]]
   name = "k8s.io/klog"
@@ -37,8 +50,20 @@ required = [
   version = "kubernetes-1.16.4"
 
 [[override]]
-  name = "knative.dev/pkg"
-  branch = "master"
+  name = "k8s.io/apiextensions-apiserver"
+  version = "kubernetes-1.16.4"
+
+[[override]]
+  name = "github.com/gogo/protobuf"
+  version = "v1.3.1"
+
+[[override]]
+  name = "istio.io/api"
+  version = "1.4.0-beta.4"
+
+[[override]]
+  name = "istio.io/client-go"
+  version = "1.4.0-beta.2"
 
 [[override]]
   name = "google.golang.org/genproto"
@@ -48,7 +73,12 @@ required = [
   name = "go.opencensus.io"
   # Needed because this includes the appropriate version of metricsdata
   version = "v0.22.0"
-  
+
+[[override]]
+  name = "cloud.google.com/go"
+  # The version used in serving
+  version = "v0.34.0"
+
 [prune]
   go-tests = true
   unused-packages = true
@@ -56,6 +86,11 @@ required = [
 
 [[prune.project]]
   name = "knative.dev/pkg"
+  unused-packages = false
+  non-go = false
+
+[[prune.project]]
+  name = "knative.dev/serving"
   unused-packages = false
   non-go = false
 
