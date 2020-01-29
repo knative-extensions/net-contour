@@ -19,11 +19,21 @@ set -o nounset
 set -o pipefail
 
 REPO_ROOT=$(dirname ${BASH_SOURCE})/..
-CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null || echo ../code-generator)}
+CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 $(dirname ${BASH_SOURCE})/../vendor/k8s.io/code-generator 2>/dev/null || echo ../code-generator)}
 
-KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 ./vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}
+KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 $(dirname ${BASH_SOURCE})/../vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}
 
-# TODO(mattmoor): Keep the script to run deepcopy-gen in the future.
+# Generate our own client for istio (otherwise injection won't work)
+${CODEGEN_PKG}/generate-groups.sh "client,informer,lister" \
+  knative.dev/net-contour/pkg/client github.com/projectcontour/contour/apis \
+  "projectcontour:v1" \
+  --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
+
+# Knative Injection (for istio)
+${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
+  knative.dev/net-contour/pkg/client github.com/projectcontour/contour/apis \
+  "projectcontour:v1" \
+  --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
 
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT}/hack/update-deps.sh
