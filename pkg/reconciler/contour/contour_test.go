@@ -18,23 +18,456 @@ package contour
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
+	"time"
+
+	fakecontourclient "knative.dev/net-contour/pkg/client/injection/client/fake"
+	fakeservingclient "knative.dev/serving/pkg/client/injection/client/fake"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
+	clientgotesting "k8s.io/client-go/testing"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
 	"knative.dev/net-contour/pkg/reconciler/contour/resources"
+	"knative.dev/pkg/configmap"
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/network"
+	"knative.dev/serving/pkg/apis/networking"
 	"knative.dev/serving/pkg/apis/networking/v1alpha1"
 	servingnetwork "knative.dev/serving/pkg/network"
 	"knative.dev/serving/pkg/reconciler"
 	spresources "knative.dev/serving/pkg/resources"
+
+	. "knative.dev/net-contour/pkg/reconciler/testing"
+	. "knative.dev/pkg/reconciler/testing"
 )
+
+func TestReconcile(t *testing.T) {
+	table := TableTest{{
+		Name: "bad workqueue key",
+		Key:  "too/many/parts",
+	}, {
+		Name: "key not found",
+		Key:  "foo/not-found",
+	}, {
+		Name: "skip ingress not matching class key",
+		Key:  "ns/name",
+		Objects: []runtime.Object{
+			ing("name", "ns", withBasicSpec, withAnnotation(map[string]string{
+				networking.IngressClassAnnotationKey: "fake-controller",
+			})),
+		},
+	}, {
+		Name: "skip ingress marked for deletion",
+		Key:  "ns/name",
+		Objects: []runtime.Object{
+			ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
+				i.SetDeletionTimestamp(&metav1.Time{time.Now()})
+			}),
+		},
+	}, {
+		Name: "first reconcile basic ingress",
+		Key:  "ns/name",
+		Objects: append([]runtime.Object{
+			ing("name", "ns", withBasicSpec, withContour),
+		}, servicesAndEndpoints...),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+				i.Status.MarkNetworkConfigured()
+				i.Status.MarkLoadBalancerReady(
+					[]v1alpha1.LoadBalancerIngressStatus{},
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: publicSvc,
+					}},
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: privateSvc,
+					}})
+			}),
+		}},
+		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
+			ListRestrictions: clientgotesting.ListRestrictions{
+				Labels: deleteSelector(t, 0),
+				Fields: fields.Everything(),
+			},
+		}},
+	}, {
+		Name: "steady state basic ingress",
+		Key:  "ns/name",
+		Objects: append(append([]runtime.Object{
+			ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
+				// What we got from the initial reconciliation (above)
+				i.Status.InitializeConditions()
+				i.Status.MarkNetworkConfigured()
+				i.Status.MarkLoadBalancerReady(
+					[]v1alpha1.LoadBalancerIngressStatus{},
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: publicSvc,
+					}},
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: privateSvc,
+					}})
+			}),
+		}, mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour))...), servicesAndEndpoints...),
+		// We still issue a DeleteCollection each reconcile to make sure things not of the
+		// current generation are cleaned up.
+		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
+			ListRestrictions: clientgotesting.ListRestrictions{
+				Labels: deleteSelector(t, 0),
+				Fields: fields.Everything(),
+			},
+		}},
+	}, {
+		Name: "basic ingress changed",
+		Key:  "ns/name",
+		Objects: append(append([]runtime.Object{
+			ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
+		}, mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour))...), servicesAndEndpoints...),
+		WantUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: mustMakeProxies(t,
+				ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
+			)[0],
+		}},
+		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
+			ListRestrictions: clientgotesting.ListRestrictions{
+				// We delete the things that don't match the generation being reconciled.
+				Labels: deleteSelector(t, 1),
+				Fields: fields.Everything(),
+			},
+		}},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withContour, withGeneration(1), withBasicSpec2, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+				i.Status.MarkNetworkConfigured()
+				i.Status.MarkLoadBalancerReady(
+					[]v1alpha1.LoadBalancerIngressStatus{},
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: publicSvc,
+					}},
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: privateSvc,
+					}})
+				// The rest would likely have carried over from the previous reconcile,
+				// but omitting it from the input object is less verbose.  The salient
+				// difference is this:
+				i.Status.ObservedGeneration = 1
+			}),
+		}},
+	}, {
+		Name: "first reconcile multi-httpproxy ingress",
+		Key:  "ns/name",
+		Objects: append([]runtime.Object{
+			ing("name", "ns", withMultiProxySpec, withContour),
+		}, servicesAndEndpoints...),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withMultiProxySpec, withContour)),
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withMultiProxySpec, withContour, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+				i.Status.MarkNetworkConfigured()
+				i.Status.MarkLoadBalancerReady(
+					[]v1alpha1.LoadBalancerIngressStatus{},
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: publicSvc,
+					}},
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: privateSvc,
+					}})
+			}),
+		}},
+		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
+			ListRestrictions: clientgotesting.ListRestrictions{
+				Labels: deleteSelector(t, 0),
+				Fields: fields.Everything(),
+			},
+		}},
+	}, {
+		Name:    "error creating http proxy",
+		Key:     "ns/name",
+		WantErr: true,
+		WithReactors: []clientgotesting.ReactionFunc{
+			InduceFailure("create", "httpproxies"),
+		},
+		Objects: append([]runtime.Object{
+			ing("name", "ns", withBasicSpec, withContour),
+		}, servicesAndEndpoints...),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+			}),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeWarning, "InternalError", "inducing failure for create httpproxies"),
+		},
+	}, {
+		Name:    "error updating http proxy",
+		Key:     "ns/name",
+		WantErr: true,
+		WithReactors: []clientgotesting.ReactionFunc{
+			InduceFailure("update", "httpproxies"),
+		},
+		Objects: append(append([]runtime.Object{
+			ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
+		}, mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour))...), servicesAndEndpoints...),
+		WantUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: mustMakeProxies(t,
+				ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
+			)[0],
+		}},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withContour, withGeneration(1), withBasicSpec2, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+			}),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeWarning, "InternalError", "inducing failure for update httpproxies"),
+		},
+	}, {
+		Name:    "error deleting collection",
+		Key:     "ns/name",
+		WantErr: true,
+		WithReactors: []clientgotesting.ReactionFunc{
+			InduceFailure("delete-collection", "httpproxies"),
+		},
+		Objects: append(append([]runtime.Object{
+			ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
+				i.Status.InitializeConditions()
+			}),
+		}, mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour))...), servicesAndEndpoints...),
+		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
+			ListRestrictions: clientgotesting.ListRestrictions{
+				Labels: deleteSelector(t, 0),
+				Fields: fields.Everything(),
+			},
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeWarning, "InternalError", "inducing failure for delete-collection httpproxies"),
+		},
+	}, {
+		Name:    "error updating status",
+		Key:     "ns/name",
+		WantErr: true,
+		WithReactors: []clientgotesting.ReactionFunc{
+			InduceFailure("update", "ingresses"),
+		},
+		Objects: append([]runtime.Object{
+			ing("name", "ns", withBasicSpec, withContour),
+		}, servicesAndEndpoints...),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+				i.Status.MarkNetworkConfigured()
+				i.Status.MarkLoadBalancerReady(
+					[]v1alpha1.LoadBalancerIngressStatus{},
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: publicSvc,
+					}},
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: privateSvc,
+					}})
+			}),
+		}},
+		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
+			ListRestrictions: clientgotesting.ListRestrictions{
+				Labels: deleteSelector(t, 0),
+				Fields: fields.Everything(),
+			},
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeWarning, "UpdateFailed", `Failed to update status for "name": inducing failure for update ingresses`),
+		},
+	}, {
+		Name: "first reconcile, missing services",
+		Key:  "ns/name",
+		Objects: []runtime.Object{
+			ing("name", "ns", withBasicSpec, withContour),
+		},
+		WantErr: true,
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+			}),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeWarning, "InternalError", `service "goo" not found`),
+		},
+	}, {
+		Name: "first reconcile, missing endpoints",
+		Key:  "ns/name",
+		Objects: append([]runtime.Object{
+			ing("name", "ns", withBasicSpec, withContour),
+		}, services...),
+		WantErr: true,
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+			}),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeWarning, "InternalError", `endpoints "goo" not found`),
+		},
+	}, {
+		Name: "first reconcile, empty endpoints",
+		Key:  "ns/name",
+		Objects: append([]runtime.Object{
+			ing("name", "ns", withBasicSpec, withContour),
+			// The Endpoints is present, but it has no ready addresses.
+			&corev1.Endpoints{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "ns",
+					Name:      "goo",
+				},
+				Subsets: []corev1.EndpointSubset{{
+					NotReadyAddresses: []corev1.EndpointAddress{{
+						IP: "10.0.0.1",
+					}},
+				}},
+			},
+		}, services...),
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+				i.Status.MarkIngressNotReady("EndpointsNotReady", `Waiting for Endpoints "goo" to have ready addresses.`)
+			}),
+		}},
+	}}
+
+	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
+		return &Reconciler{
+			client:          fakeservingclient.Get(ctx),
+			contourClient:   fakecontourclient.Get(ctx),
+			lister:          listers.GetIngressLister(),
+			contourLister:   listers.GetHTTPProxyLister(),
+			serviceLister:   listers.GetK8sServiceLister(),
+			endpointsLister: listers.GetEndpointsLister(),
+			recorder:        controller.GetEventRecorder(ctx),
+			tracker:         &NullTracker{},
+			statusManager: &fakeStatusManager{
+				FakeIsReady: func(context.Context, *v1alpha1.Ingress) (bool, error) {
+					return true, nil
+				},
+			},
+			configStore: &testConfigStore{
+				config: defaultConfig,
+			},
+		}
+	}))
+}
+
+func TestReconcileProberNotReady(t *testing.T) {
+	table := TableTest{{
+		Name: "first reconcile basic ingress",
+		Key:  "ns/name",
+		Objects: append([]runtime.Object{
+			ing("name", "ns", withBasicSpec, withContour),
+		}, servicesAndEndpoints...),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+				i.Status.MarkNetworkConfigured()
+				i.Status.MarkLoadBalancerNotReady()
+			}),
+		}},
+		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
+			ListRestrictions: clientgotesting.ListRestrictions{
+				Labels: deleteSelector(t, 0),
+				Fields: fields.Everything(),
+			},
+		}},
+	}}
+
+	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
+		return &Reconciler{
+			client:          fakeservingclient.Get(ctx),
+			contourClient:   fakecontourclient.Get(ctx),
+			lister:          listers.GetIngressLister(),
+			contourLister:   listers.GetHTTPProxyLister(),
+			serviceLister:   listers.GetK8sServiceLister(),
+			endpointsLister: listers.GetEndpointsLister(),
+			recorder:        controller.GetEventRecorder(ctx),
+			tracker:         &NullTracker{},
+			statusManager: &fakeStatusManager{
+				FakeIsReady: func(context.Context, *v1alpha1.Ingress) (bool, error) {
+					return false, nil
+				},
+			},
+			configStore: &testConfigStore{
+				config: defaultConfig,
+			},
+		}
+	}))
+}
+
+func TestReconcileProbeError(t *testing.T) {
+	theError := errors.New("this is the error")
+
+	table := TableTest{{
+		Name:    "first reconcile basic ingress",
+		Key:     "ns/name",
+		WantErr: true,
+		Objects: append([]runtime.Object{
+			ing("name", "ns", withBasicSpec, withContour),
+		}, servicesAndEndpoints...),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+				i.Status.MarkNetworkConfigured()
+			}),
+		}},
+		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
+			ListRestrictions: clientgotesting.ListRestrictions{
+				Labels: deleteSelector(t, 0),
+				Fields: fields.Everything(),
+			},
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeWarning, "InternalError", fmt.Sprintf("failed to probe Ingress ns/name: %v", theError)),
+		},
+	}}
+
+	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
+		return &Reconciler{
+			client:          fakeservingclient.Get(ctx),
+			contourClient:   fakecontourclient.Get(ctx),
+			lister:          listers.GetIngressLister(),
+			contourLister:   listers.GetHTTPProxyLister(),
+			serviceLister:   listers.GetK8sServiceLister(),
+			endpointsLister: listers.GetEndpointsLister(),
+			recorder:        controller.GetEventRecorder(ctx),
+			tracker:         &NullTracker{},
+			statusManager: &fakeStatusManager{
+				FakeIsReady: func(context.Context, *v1alpha1.Ingress) (bool, error) {
+					return false, theError
+				},
+			},
+			configStore: &testConfigStore{
+				config: defaultConfig,
+			},
+		}
+	}))
+}
 
 var (
 	publicNS      = "public-contour"
@@ -222,10 +655,9 @@ func withGeneration(gen int64) IngressOption {
 }
 
 func withContour(i *v1alpha1.Ingress) {
-	// TODO(mattmoor): Uncomment once the annotation lands.
-	// withAnnotation(map[string]string{
-	// 	networking.IngressClassAnnotationKey: ContourIngressClassName,
-	// })(i)
+	withAnnotation(map[string]string{
+		networking.IngressClassAnnotationKey: ContourIngressClassName,
+	})(i)
 }
 
 type fakeStatusManager struct {
