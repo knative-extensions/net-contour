@@ -21,8 +21,8 @@ Before submitting a PR, see also [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 You must install these tools:
 
-1. [`go`](https://golang.org/doc/install): The language Knative
-   `net-contour` is built in
+1. [`go`](https://golang.org/doc/install): The language Knative `net-contour` is
+   built in
 1. [`git`](https://help.github.com/articles/set-up-git/): For source control
 1. [`dep`](https://github.com/golang/dep): For managing external dependencies.
 1. [`ko`](https://github.com/google/ko): For development.
@@ -73,12 +73,11 @@ _Adding the `upstream` remote sets you up nicely for regularly
 Once you reach this point you are ready to do a full build and deploy as
 described below.
 
-
 ### Installing Contour
 
 Before deploying the `net-contour` controller you will need a properly
-configured installation of Contour.  We provide a version of this that
-can be built from source via:
+configured installation of Contour. We provide a version of this that can be
+built from source via:
 
 ```bash
 ko apply -f config/contour
