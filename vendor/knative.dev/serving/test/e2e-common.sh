@@ -20,7 +20,7 @@
 # with the job config.
 E2E_MIN_CLUSTER_NODES=${E2E_MIN_CLUSTER_NODES:-4}
 E2E_MAX_CLUSTER_NODES=${E2E_MAX_CLUSTER_NODES:-4}
-E2E_CLUSTER_MACHINE=${E2E_CLUSTER_MACHINE:-n1-standard-8}
+E2E_CLUSTER_MACHINE=${E2E_CLUSTER_MACHINE:-e2-standard-8}
 
 # This script provides helper methods to perform cluster actions.
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/e2e-tests.sh
@@ -32,6 +32,7 @@ KOURIER_VERSION=""
 AMBASSADOR_VERSION=""
 CONTOUR_VERSION=""
 INGRESS_CLASS=""
+CERTIFICATE_CLASS=""
 
 HTTPS=0
 MESH=0
@@ -59,6 +60,7 @@ function parse_flags() {
     --cert-manager-version)
       [[ $2 =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || abort "version format must be '[0-9].[0-9].[0-9]'"
       readonly CERT_MANAGER_VERSION=$2
+      readonly CERTIFICATE_CLASS="cert-manager.certificate.networking.internal.knative.dev"
       return 2
       ;;
     --mesh)
@@ -366,10 +368,6 @@ metadata:
 data:
   profiling.enable: "true"
 EOF
-
-  echo ">> Patching activator HPA"
-  # We set min replicas to 2 for testing multiple activator pods.
-  kubectl -n knative-serving patch hpa activator --patch '{"spec":{"minReplicas":2}}' || return 1
 }
 
 # Check if we should use --resolvabledomain.  In case the ingress only has
@@ -394,6 +392,15 @@ function ingress_class() {
     echo ""
   else
     echo "--ingressClass=${INGRESS_CLASS}"
+  fi
+}
+
+# Check if we should specify --certificateClass
+function certificate_class() {
+  if [[ -z "${CERTIFICATE_CLASS}" ]]; then
+    echo ""
+  else
+    echo "--certificateClass=${CERTIFICATE_CLASS}"
   fi
 }
 
