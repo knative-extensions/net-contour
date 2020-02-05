@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"time"
 
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
@@ -33,7 +32,6 @@ import (
 	activatorconfig "knative.dev/serving/pkg/activator/config"
 	activatornet "knative.dev/serving/pkg/activator/net"
 	"knative.dev/serving/pkg/activator/util"
-	"knative.dev/serving/pkg/apis/serving"
 	pkghttp "knative.dev/serving/pkg/http"
 	"knative.dev/serving/pkg/network"
 	"knative.dev/serving/pkg/queue"
@@ -51,21 +49,16 @@ type Throttler interface {
 type activationHandler struct {
 	transport        http.RoundTripper
 	tracingTransport http.RoundTripper
-	reporter         activator.StatsReporter
 	throttler        Throttler
 	bufferPool       httputil.BufferPool
 }
 
-// The default time we'll try to probe the revision for activation.
-const defaulTimeout = 2 * time.Minute
-
 // New constructs a new http.Handler that deals with revision activation.
-func New(ctx context.Context, t Throttler, sr activator.StatsReporter) http.Handler {
+func New(ctx context.Context, t Throttler) http.Handler {
 	defaultTransport := pkgnet.AutoTransport
 	return &activationHandler{
 		transport:        defaultTransport,
 		tracingTransport: &ochttp.Transport{Base: defaultTransport},
-		reporter:         sr,
 		throttler:        t,
 		bufferPool:       network.NewBufferPool(),
 	}
@@ -80,8 +73,6 @@ func (a *activationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if tracingEnabled {
 		tryContext, trySpan = trace.StartSpan(r.Context(), "throttler_try")
 	}
-	tryContext, cancel := context.WithTimeout(tryContext, defaulTimeout)
-	defer cancel()
 
 	err := a.throttler.Try(tryContext, revID, func(dest string) error {
 		trySpan.End()
@@ -96,12 +87,9 @@ func (a *activationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}, tracingEnabled)
 		proxySpan.End()
 
-		revision := revisionFrom(r.Context())
-		configurationName := revision.Labels[serving.ConfigurationLabelKey]
-		serviceName := revision.Labels[serving.ServiceLabelKey]
 		// Do not report response time here. It is reported in pkg/activator/metric_handler.go to
 		// sum up all time spent on multiple handlers.
-		a.reporter.ReportRequestCount(revID.Namespace, serviceName, configurationName, revID.Name, httpStatus, 1)
+		reporterFrom(r.Context()).ReportRequestCount(httpStatus, 1)
 
 		return nil
 	})
