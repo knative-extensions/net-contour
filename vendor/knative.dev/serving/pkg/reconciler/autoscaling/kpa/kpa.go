@@ -30,7 +30,7 @@ import (
 	pav1alpha1 "knative.dev/serving/pkg/apis/autoscaling/v1alpha1"
 	nv1alpha1 "knative.dev/serving/pkg/apis/networking/v1alpha1"
 	"knative.dev/serving/pkg/apis/serving"
-	"knative.dev/serving/pkg/autoscaler"
+	"knative.dev/serving/pkg/autoscaler/scaling"
 	areconciler "knative.dev/serving/pkg/reconciler/autoscaling"
 	"knative.dev/serving/pkg/reconciler/autoscaling/config"
 	"knative.dev/serving/pkg/reconciler/autoscaling/kpa/resources"
@@ -227,7 +227,7 @@ func (c *Reconciler) reconcile(ctx context.Context, pa *pav1alpha1.PodAutoscaler
 	return computeStatus(pa, pc)
 }
 
-func (c *Reconciler) reconcileDecider(ctx context.Context, pa *pav1alpha1.PodAutoscaler, k8sSvc string) (*autoscaler.Decider, error) {
+func (c *Reconciler) reconcileDecider(ctx context.Context, pa *pav1alpha1.PodAutoscaler, k8sSvc string) (*scaling.Decider, error) {
 	desiredDecider := resources.MakeDecider(ctx, pa, config.FromContext(ctx).Autoscaler, k8sSvc)
 	decider, err := c.deciders.Get(ctx, desiredDecider.Namespace, desiredDecider.Name)
 	if errors.IsNotFound(err) {
@@ -267,7 +267,7 @@ func reportMetrics(pa *pav1alpha1.PodAutoscaler, pc podCounts) error {
 	serviceLabel := pa.Labels[serving.ServiceLabelKey] // This might be empty.
 	configLabel := pa.Labels[serving.ConfigurationLabelKey]
 
-	reportCtx, err := reporterContext(pa.Namespace, serviceLabel, configLabel, pa.Name)
+	ctx, err := reporterContext(pa.Namespace, serviceLabel, configLabel, pa.Name)
 	if err != nil {
 		return err
 	}
@@ -280,7 +280,7 @@ func reportMetrics(pa *pav1alpha1.PodAutoscaler, pc podCounts) error {
 	if pc.want >= 0 {
 		stats = append(stats, requestedPodCountM.M(int64(pc.want)))
 	}
-	pkgmetrics.RecordBatch(reportCtx, stats...)
+	pkgmetrics.RecordBatch(ctx, stats...)
 	return nil
 }
 
