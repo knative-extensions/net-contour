@@ -218,15 +218,11 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:b38ab1b8cf42d089d9f31d4918c57c2dd47d42f3e7fc50e12142140228cf81a9"
+  digest = "1:2b0e6c0bea11257c646616ebd6a62be0ef2b6a0fd8210ac3caeaf57ee136123b"
   name = "github.com/gogo/protobuf"
   packages = [
-    "gogoproto",
-    "jsonpb",
     "proto",
-    "protoc-gen-gogo/descriptor",
     "sortkeys",
-    "types",
   ]
   pruneopts = "NUT"
   revision = "5628607bb4c51c3157aacc3a50f0ab707582b805"
@@ -922,30 +918,6 @@
   version = "2019.1.1"
 
 [[projects]]
-  digest = "1:9579dd8b1ccd8cf54ed576af68438b69588cc136eac90b10aa7c8d1a1c8334ff"
-  name = "istio.io/api"
-  packages = ["networking/v1alpha3"]
-  pruneopts = "NUT"
-  revision = "e1a1952e5b81ed914b06c1814fd3a0c92c750e37"
-  version = "1.4.3"
-
-[[projects]]
-  digest = "1:57e8c0255e33ab72e09219665d5ed7733a694e0092ab4a69b97100aa27bcbbb4"
-  name = "istio.io/client-go"
-  packages = ["pkg/apis/networking/v1alpha3"]
-  pruneopts = "NUT"
-  revision = "26c62a04cdbc1fb52dd71a9194b0d49ce297e836"
-  version = "1.4.3"
-
-[[projects]]
-  digest = "1:9c9f11af1b1f2ae03d897ba5de27103ec1c9c43605663ccdef67831d6a462a30"
-  name = "istio.io/gogo-genproto"
-  packages = ["googleapis/google/api"]
-  pruneopts = "NUT"
-  revision = "f7d19ec0141d49ac9efc83b5e61fa81ba103b445"
-  version = "1.4.3"
-
-[[projects]]
   digest = "1:d77b48cc0ea74f3edbc8e0515a0ce2fa2154eb414137dd4fb5a642a73296d403"
   name = "k8s.io/api"
   packages = [
@@ -1362,7 +1334,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b9bf9be301ffbfd00981299321bddf3801a6f8c402e65bfd8411eae34f604aa8"
+  digest = "1:8356c43d1864b3da53067c02c8912e1e56db1778019f1b745c5cb5e4028216a1"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1412,11 +1384,11 @@
     "webhook/certificates/resources",
   ]
   pruneopts = "T"
-  revision = "32ea8458157368451b8e0383aafdacdf5ec061c8"
+  revision = "248c9f0353cab2acd75f6d582fcdb9e45d1e285b"
 
 [[projects]]
   branch = "master"
-  digest = "1:60d46f7dd8d317de286d255fc1dad8003b2f4e5483e826fb96bac8bcc735d4ec"
+  digest = "1:b50d68cf7bd2ade6526a7cc9b7b477b539debb51113d696ae311a0d067dc2bd1"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1457,10 +1429,6 @@
     "pkg/client/injection/informers/factory/fake",
     "pkg/client/injection/informers/networking/v1alpha1/ingress",
     "pkg/client/injection/informers/networking/v1alpha1/ingress/fake",
-    "pkg/client/istio/clientset/versioned",
-    "pkg/client/istio/clientset/versioned/scheme",
-    "pkg/client/istio/clientset/versioned/typed/networking/v1alpha3",
-    "pkg/client/istio/injection/client",
     "pkg/client/listers/autoscaling/v1alpha1",
     "pkg/client/listers/networking/v1alpha1",
     "pkg/client/listers/serving/v1",
@@ -1475,18 +1443,18 @@
     "pkg/resources",
   ]
   pruneopts = "T"
-  revision = "dcbebaa50d4ff63064b691f81e1b6dee1ae9ebb2"
+  revision = "318466bb9f2679945dfbd72647cbea73945d4037"
 
 [[projects]]
   branch = "master"
-  digest = "1:8bd3cae999736fca901bdd918ab9e9a899f39446701a296ade11ca44ae0a741e"
+  digest = "1:9fc1b7e84778267884b614c45b0939aa8984dcab5794eb3c6bb5e57bd0a99c41"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "64615f92c4ebdd4e4423015ffc0db45877660a0d"
+  revision = "1b5477b12d75ea7210d970ff9a234277dcd9ee18"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
