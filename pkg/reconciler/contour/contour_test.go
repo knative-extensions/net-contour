@@ -39,10 +39,10 @@ import (
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/network"
+	"knative.dev/pkg/reconciler"
 	"knative.dev/serving/pkg/apis/networking"
 	"knative.dev/serving/pkg/apis/networking/v1alpha1"
 	servingnetwork "knative.dev/serving/pkg/network"
-	"knative.dev/serving/pkg/reconciler"
 	spresources "knative.dev/serving/pkg/resources"
 
 	. "knative.dev/net-contour/pkg/reconciler/testing"

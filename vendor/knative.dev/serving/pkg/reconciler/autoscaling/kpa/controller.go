@@ -34,7 +34,7 @@ import (
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/serving/pkg/apis/autoscaling"
-	"knative.dev/serving/pkg/autoscaler"
+	autoscalerconfig "knative.dev/serving/pkg/autoscaler/config"
 	"knative.dev/serving/pkg/reconciler"
 	areconciler "knative.dev/serving/pkg/reconciler/autoscaling"
 	"knative.dev/serving/pkg/reconciler/autoscaling/config"
@@ -59,10 +59,12 @@ func NewController(
 	metricInformer := metricinformer.Get(ctx)
 	psInformerFactory := podscalable.Get(ctx)
 
+	onlyKpaClass := reconciler.AnnotationFilterFunc(
+		autoscaling.ClassAnnotationKey, autoscaling.KPA, false /*allowUnset*/)
+
 	c := &Reconciler{
 		Base: &areconciler.Base{
 			Base:              reconciler.NewBase(ctx, controllerAgentName, cmw),
-			PALister:          paInformer.Lister(),
 			SKSLister:         sksInformer.Lister(),
 			ServiceLister:     serviceInformer.Lister(),
 			MetricLister:      metricInformer.Lister(),
@@ -72,13 +74,22 @@ func NewController(
 		podsLister:      podsInformer.Lister(),
 		deciders:        deciders,
 	}
-	impl := pareconciler.NewImpl(ctx, c)
+	impl := pareconciler.NewImpl(ctx, c, func(impl *controller.Impl) controller.Options {
+		c.Logger.Info("Setting up ConfigMap receivers")
+		configsToResync := []interface{}{
+			&autoscalerconfig.Config{},
+		}
+		resync := configmap.TypeFilter(configsToResync...)(func(string, interface{}) {
+			impl.FilteredGlobalResync(onlyKpaClass, paInformer.Informer())
+		})
+		configStore := config.NewStore(c.Logger.Named("config-store"), resync)
+		configStore.WatchConfigs(cmw)
+		return controller.Options{ConfigStore: configStore}
+	})
 	c.scaler = newScaler(ctx, psInformerFactory, impl.EnqueueAfter)
 
 	c.Logger.Info("Setting up KPA-Class event handlers")
 	// Handle only PodAutoscalers that have KPA annotation.
-	onlyKpaClass := reconciler.AnnotationFilterFunc(
-		autoscaling.ClassAnnotationKey, autoscaling.KPA, false /*allowUnset*/)
 	paHandler := cache.FilteringResourceEventHandler{
 		FilterFunc: onlyKpaClass,
 		Handler:    controller.HandleAll(impl.Enqueue),
@@ -119,17 +130,6 @@ func NewController(
 
 	// Have the Deciders enqueue the PAs whose decisions have changed.
 	deciders.Watch(impl.EnqueueKey)
-
-	c.Logger.Info("Setting up ConfigMap receivers")
-	configsToResync := []interface{}{
-		&autoscaler.Config{},
-	}
-	resync := configmap.TypeFilter(configsToResync...)(func(string, interface{}) {
-		impl.FilteredGlobalResync(onlyKpaClass, paInformer.Informer())
-	})
-	configStore := config.NewStore(c.Logger.Named("config-store"), resync)
-	configStore.WatchConfigs(cmw)
-	c.ConfigStore = configStore
 
 	return impl
 }

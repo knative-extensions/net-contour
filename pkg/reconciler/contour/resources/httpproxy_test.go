@@ -29,9 +29,9 @@ import (
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/ptr"
+	"knative.dev/pkg/reconciler"
 	"knative.dev/serving/pkg/apis/networking/v1alpha1"
 	servingnetwork "knative.dev/serving/pkg/network"
-	"knative.dev/serving/pkg/reconciler"
 )
 
 const (
