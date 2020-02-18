@@ -486,7 +486,8 @@ var (
 			},
 		},
 		Network: &servingnetwork.Config{
-			AutoTLS: false,
+			AutoTLS:      false,
+			HTTPProtocol: servingnetwork.HTTPEnabled,
 		},
 	}
 )
