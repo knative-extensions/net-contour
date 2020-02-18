@@ -1334,7 +1334,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:112a8273481730053f435aee0101436a4b59842ea09c660ee5a3647ee9fc8c7b"
+  digest = "1:6e2169542b76688fe02763aee6b53dedc9d71acb8608705393c4230ffae94e68"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1385,11 +1385,11 @@
     "webhook/certificates/resources",
   ]
   pruneopts = "T"
-  revision = "d8b36f3593257b2b39ab9bb6fbd8ad6828983755"
+  revision = "1cc7b7152937735a29c9d6fdaf3b244684aa850e"
 
 [[projects]]
   branch = "master"
-  digest = "1:c4eca972d0ac47e779ecd646160573418ef5be098223fb07cedb09382ffd6fe0"
+  digest = "1:d75e3c590db6ac05ea415f4760cc3d699be1874f0a92d9cb46a33baf4f53fbec"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1444,7 +1444,7 @@
     "pkg/resources",
   ]
   pruneopts = "T"
-  revision = "d161feb8979a6f44b950270f71faee45df70ea84"
+  revision = "0c6284e24b867de5d27d18da33f272b3a73dca96"
 
 [[projects]]
   branch = "master"
