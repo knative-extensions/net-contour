@@ -103,9 +103,6 @@ func TestReconcile(t *testing.T) {
 				Fields: fields.Everything(),
 			},
 		}},
-		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"ns/name\""),
-		},
 	}, {
 		Name: "steady state basic ingress",
 		Key:  "ns/name",
@@ -132,9 +129,6 @@ func TestReconcile(t *testing.T) {
 				Fields: fields.Everything(),
 			},
 		}},
-		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"ns/name\""),
-		},
 	}, {
 		Name: "basic ingress changed",
 		Key:  "ns/name",
@@ -172,9 +166,6 @@ func TestReconcile(t *testing.T) {
 				i.Status.ObservedGeneration = 1
 			}),
 		}},
-		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"ns/name\""),
-		},
 	}, {
 		Name: "first reconcile multi-httpproxy ingress",
 		Key:  "ns/name",
@@ -203,9 +194,6 @@ func TestReconcile(t *testing.T) {
 				Fields: fields.Everything(),
 			},
 		}},
-		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"ns/name\""),
-		},
 	}, {
 		Name:    "error creating http proxy",
 		Key:     "ns/name",
@@ -363,9 +351,6 @@ func TestReconcile(t *testing.T) {
 				i.Status.MarkIngressNotReady("EndpointsNotReady", `Waiting for Endpoints "goo" to have ready addresses.`)
 			}),
 		}},
-		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"ns/name\""),
-		},
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
@@ -415,9 +400,6 @@ func TestReconcileProberNotReady(t *testing.T) {
 				Fields: fields.Everything(),
 			},
 		}},
-		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"ns/name\""),
-		},
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {

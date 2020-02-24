@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -90,7 +89,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ingress *v1alpha1.Ingres
 		logger.Errorf("Failed to reconcile Ingress %s", ingress.Name, reconcileErr)
 		return reconcileErr
 	}
-	return reconciler.NewEvent(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"%s/%s\"", ingress.Namespace, ingress.Name)
+	return reconcileErr
 }
 
 func (r *Reconciler) reconcile(ctx context.Context, ing *v1alpha1.Ingress) error {
