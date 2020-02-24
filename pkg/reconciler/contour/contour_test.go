@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"knative.dev/pkg/logging"
 	"testing"
 	"time"
 
@@ -42,6 +43,8 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/serving/pkg/apis/networking"
 	"knative.dev/serving/pkg/apis/networking/v1alpha1"
+	servingclient "knative.dev/serving/pkg/client/injection/client/fake"
+	ingressreconciler "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 	servingnetwork "knative.dev/serving/pkg/network"
 	spresources "knative.dev/serving/pkg/resources"
 
@@ -100,6 +103,9 @@ func TestReconcile(t *testing.T) {
 				Fields: fields.Everything(),
 			},
 		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"ns/name\""),
+		},
 	}, {
 		Name: "steady state basic ingress",
 		Key:  "ns/name",
@@ -126,6 +132,9 @@ func TestReconcile(t *testing.T) {
 				Fields: fields.Everything(),
 			},
 		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"ns/name\""),
+		},
 	}, {
 		Name: "basic ingress changed",
 		Key:  "ns/name",
@@ -163,6 +172,9 @@ func TestReconcile(t *testing.T) {
 				i.Status.ObservedGeneration = 1
 			}),
 		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"ns/name\""),
+		},
 	}, {
 		Name: "first reconcile multi-httpproxy ingress",
 		Key:  "ns/name",
@@ -191,6 +203,9 @@ func TestReconcile(t *testing.T) {
 				Fields: fields.Everything(),
 			},
 		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"ns/name\""),
+		},
 	}, {
 		Name:    "error creating http proxy",
 		Key:     "ns/name",
@@ -348,10 +363,13 @@ func TestReconcile(t *testing.T) {
 				i.Status.MarkIngressNotReady("EndpointsNotReady", `Waiting for Endpoints "goo" to have ready addresses.`)
 			}),
 		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"ns/name\""),
+		},
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
-		return &Reconciler{
+		r := &Reconciler{
 			client:          fakeservingclient.Get(ctx),
 			contourClient:   fakecontourclient.Get(ctx),
 			lister:          listers.GetIngressLister(),
@@ -365,10 +383,13 @@ func TestReconcile(t *testing.T) {
 					return true, nil
 				},
 			},
-			configStore: &testConfigStore{
-				config: defaultConfig,
-			},
 		}
+
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, controller.Options{
+				ConfigStore: &testConfigStore{
+					config: defaultConfig,
+				}})
 	}))
 }
 
@@ -394,10 +415,13 @@ func TestReconcileProberNotReady(t *testing.T) {
 				Fields: fields.Everything(),
 			},
 		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"ns/name\""),
+		},
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
-		return &Reconciler{
+		r := &Reconciler{
 			client:          fakeservingclient.Get(ctx),
 			contourClient:   fakecontourclient.Get(ctx),
 			lister:          listers.GetIngressLister(),
@@ -411,10 +435,12 @@ func TestReconcileProberNotReady(t *testing.T) {
 					return false, nil
 				},
 			},
-			configStore: &testConfigStore{
-				config: defaultConfig,
-			},
 		}
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, controller.Options{
+				ConfigStore: &testConfigStore{
+					config: defaultConfig,
+				}})
 	}))
 }
 
@@ -448,7 +474,7 @@ func TestReconcileProbeError(t *testing.T) {
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
-		return &Reconciler{
+		r := &Reconciler{
 			client:          fakeservingclient.Get(ctx),
 			contourClient:   fakecontourclient.Get(ctx),
 			lister:          listers.GetIngressLister(),
@@ -462,10 +488,13 @@ func TestReconcileProbeError(t *testing.T) {
 					return false, theError
 				},
 			},
-			configStore: &testConfigStore{
-				config: defaultConfig,
-			},
 		}
+
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, controller.Options{
+				ConfigStore: &testConfigStore{
+					config: defaultConfig,
+				}})
 	}))
 }
 
