@@ -1319,21 +1319,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3dcce77ab2e9e7f9b7c9c04bc543897009c2adc12c0f9621127738a7885b474f"
-  name = "knative.dev/caching"
-  packages = [
-    "pkg/apis/caching",
-    "pkg/apis/caching/v1alpha1",
-    "pkg/client/clientset/versioned",
-    "pkg/client/clientset/versioned/scheme",
-    "pkg/client/clientset/versioned/typed/caching/v1alpha1",
-    "pkg/client/injection/client",
-  ]
-  pruneopts = "NUT"
-  revision = "bb5b5155f3b20c9c0294a71733be93e5a1d10e31"
-
-[[projects]]
-  branch = "master"
   digest = "1:cc94fa80f6e4903c1c5b2fc8673156762b2ab2dfe3be11486fea0307e9de71b8"
   name = "knative.dev/pkg"
   packages = [
@@ -1361,7 +1346,6 @@
     "configmap/testing",
     "controller",
     "injection",
-    "injection/clients/dynamicclient",
     "injection/sharedmain",
     "kmeta",
     "kmp",
@@ -1430,6 +1414,7 @@
     "pkg/client/injection/informers/factory/fake",
     "pkg/client/injection/informers/networking/v1alpha1/ingress",
     "pkg/client/injection/informers/networking/v1alpha1/ingress/fake",
+    "pkg/client/injection/reconciler/networking/v1alpha1/ingress",
     "pkg/client/listers/autoscaling/v1alpha1",
     "pkg/client/listers/networking/v1alpha1",
     "pkg/client/listers/serving/v1",
@@ -1438,7 +1423,6 @@
     "pkg/network",
     "pkg/network/ingress",
     "pkg/network/status",
-    "pkg/reconciler",
     "pkg/resources",
   ]
   pruneopts = "T"
@@ -1470,7 +1454,6 @@
     "github.com/google/go-cmp/cmp",
     "github.com/projectcontour/contour/apis/projectcontour/v1",
     "github.com/projectcontour/contour/cmd/contour",
-    "go.uber.org/zap",
     "gopkg.in/yaml.v2",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/equality",
@@ -1532,11 +1515,11 @@
     "knative.dev/serving/pkg/client/injection/client/fake",
     "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress",
     "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress/fake",
+    "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress",
     "knative.dev/serving/pkg/client/listers/networking/v1alpha1",
     "knative.dev/serving/pkg/network",
     "knative.dev/serving/pkg/network/ingress",
     "knative.dev/serving/pkg/network/status",
-    "knative.dev/serving/pkg/reconciler",
     "knative.dev/serving/pkg/resources",
     "knative.dev/test-infra/scripts",
     "knative.dev/test-infra/tools/dep-collector",
