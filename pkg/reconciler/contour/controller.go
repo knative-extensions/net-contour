@@ -73,20 +73,21 @@ func NewController(
 			scheme.Scheme, corev1.EventSource{Component: controllerAgentName}),
 	}
 	myFilterFunc := reconciler.AnnotationFilterFunc(networking.IngressClassAnnotationKey, ContourIngressClassName, false)
-	impl := ingressreconciler.NewImpl(ctx, c, func(impl *controller.Impl) controller.Options {
-		logger.Info("Setting up ConfigMap receivers")
-		configsToResync := []interface{}{
-			&config.Contour{},
-			&network.Config{},
-		}
+	impl := ingressreconciler.NewImpl(ctx, c, ContourIngressClassName,
+		func(impl *controller.Impl) controller.Options {
+			logger.Info("Setting up ConfigMap receivers")
+			configsToResync := []interface{}{
+				&config.Contour{},
+				&network.Config{},
+			}
 
-		resyncIngressesOnConfigChange := configmap.TypeFilter(configsToResync...)(func(string, interface{}) {
-			impl.FilteredGlobalResync(myFilterFunc, ingressInformer.Informer())
+			resyncIngressesOnConfigChange := configmap.TypeFilter(configsToResync...)(func(string, interface{}) {
+				impl.FilteredGlobalResync(myFilterFunc, ingressInformer.Informer())
+			})
+			configStore := config.NewStore(logger.Named("config-store"), resyncIngressesOnConfigChange)
+			configStore.WatchConfigs(cmw)
+			return controller.Options{ConfigStore: configStore}
 		})
-		configStore := config.NewStore(logger.Named("config-store"), resyncIngressesOnConfigChange)
-		configStore.WatchConfigs(cmw)
-		return controller.Options{ConfigStore: configStore}
-	})
 
 	logger.Info("Setting up event handlers")
 

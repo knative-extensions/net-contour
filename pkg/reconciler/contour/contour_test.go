@@ -20,9 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"knative.dev/pkg/logging"
 	"testing"
 	"time"
+
+	"knative.dev/pkg/logging"
 
 	fakecontourclient "knative.dev/net-contour/pkg/client/injection/client/fake"
 	fakeservingclient "knative.dev/serving/pkg/client/injection/client/fake"
@@ -371,7 +372,8 @@ func TestReconcile(t *testing.T) {
 		}
 
 		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
-			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, controller.Options{
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
+			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
 				}})
@@ -419,7 +421,8 @@ func TestReconcileProberNotReady(t *testing.T) {
 			},
 		}
 		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
-			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, controller.Options{
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
+			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
 				}})
@@ -473,7 +476,8 @@ func TestReconcileProbeError(t *testing.T) {
 		}
 
 		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
-			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, controller.Options{
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
+			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
 				}})
