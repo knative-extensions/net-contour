@@ -35,7 +35,6 @@ import (
 
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
 	"knative.dev/net-contour/pkg/reconciler/contour/resources"
-	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/tracker"
@@ -72,32 +71,8 @@ type Reconciler struct {
 
 var _ ingressreconciler.Interface = (*Reconciler)(nil)
 
-func (r *Reconciler) ReconcileKind(ctx context.Context, ingress *v1alpha1.Ingress) reconciler.Event {
-	logger := logging.FromContext(ctx)
-
-	// Get the resource with this namespace/name.
-	if ingress.Annotations != nil {
-		class := ingress.Annotations[networking.IngressClassAnnotationKey]
-		if class != ContourIngressClassName {
-			logger.Debugf("Resource %q is not our class.", ingress.Name)
-			return nil
-		}
-	}
-
-	reconcileErr := r.reconcile(ctx, ingress)
-	if reconcileErr != nil {
-		logger.Errorf("Failed to reconcile Ingress %s", ingress.Name, reconcileErr)
-		return reconcileErr
-	}
-	return reconcileErr
-}
-
-func (r *Reconciler) reconcile(ctx context.Context, ing *v1alpha1.Ingress) error {
-	if ing.GetDeletionTimestamp() != nil {
-		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
-		// When a controller needs finalizer handling, it would go here.
-		return nil
-	}
+// ReconcileKind reconciles ingress resource.
+func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) reconciler.Event {
 	ing.Status.InitializeConditions()
 
 	if err := r.reconcileProxies(ctx, ing); err != nil {
