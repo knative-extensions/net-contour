@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	"knative.dev/pkg/logging"
+
 	fakecontourclient "knative.dev/net-contour/pkg/client/injection/client/fake"
 	fakeservingclient "knative.dev/serving/pkg/client/injection/client/fake"
 
@@ -42,6 +44,8 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/serving/pkg/apis/networking"
 	"knative.dev/serving/pkg/apis/networking/v1alpha1"
+	servingclient "knative.dev/serving/pkg/client/injection/client/fake"
+	ingressreconciler "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 	servingnetwork "knative.dev/serving/pkg/network"
 	spresources "knative.dev/serving/pkg/resources"
 
@@ -351,7 +355,7 @@ func TestReconcile(t *testing.T) {
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
-		return &Reconciler{
+		r := &Reconciler{
 			client:          fakeservingclient.Get(ctx),
 			contourClient:   fakecontourclient.Get(ctx),
 			lister:          listers.GetIngressLister(),
@@ -365,10 +369,14 @@ func TestReconcile(t *testing.T) {
 					return true, nil
 				},
 			},
-			configStore: &testConfigStore{
-				config: defaultConfig,
-			},
 		}
+
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
+			controller.Options{
+				ConfigStore: &testConfigStore{
+					config: defaultConfig,
+				}})
 	}))
 }
 
@@ -397,7 +405,7 @@ func TestReconcileProberNotReady(t *testing.T) {
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
-		return &Reconciler{
+		r := &Reconciler{
 			client:          fakeservingclient.Get(ctx),
 			contourClient:   fakecontourclient.Get(ctx),
 			lister:          listers.GetIngressLister(),
@@ -411,10 +419,13 @@ func TestReconcileProberNotReady(t *testing.T) {
 					return false, nil
 				},
 			},
-			configStore: &testConfigStore{
-				config: defaultConfig,
-			},
 		}
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
+			controller.Options{
+				ConfigStore: &testConfigStore{
+					config: defaultConfig,
+				}})
 	}))
 }
 
@@ -448,7 +459,7 @@ func TestReconcileProbeError(t *testing.T) {
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
-		return &Reconciler{
+		r := &Reconciler{
 			client:          fakeservingclient.Get(ctx),
 			contourClient:   fakecontourclient.Get(ctx),
 			lister:          listers.GetIngressLister(),
@@ -462,10 +473,14 @@ func TestReconcileProbeError(t *testing.T) {
 					return false, theError
 				},
 			},
-			configStore: &testConfigStore{
-				config: defaultConfig,
-			},
 		}
+
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
+			controller.Options{
+				ConfigStore: &testConfigStore{
+					config: defaultConfig,
+				}})
 	}))
 }
 
