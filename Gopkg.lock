@@ -1319,22 +1319,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3dcce77ab2e9e7f9b7c9c04bc543897009c2adc12c0f9621127738a7885b474f"
-  name = "knative.dev/caching"
-  packages = [
-    "pkg/apis/caching",
-    "pkg/apis/caching/v1alpha1",
-    "pkg/client/clientset/versioned",
-    "pkg/client/clientset/versioned/scheme",
-    "pkg/client/clientset/versioned/typed/caching/v1alpha1",
-    "pkg/client/injection/client",
-  ]
-  pruneopts = "NUT"
-  revision = "bb5b5155f3b20c9c0294a71733be93e5a1d10e31"
-
-[[projects]]
-  branch = "master"
-  digest = "1:1e7838d5007ae0a2f64d99f5a2c216749a03247b85b4a7d741c6ae3c4fe14e0a"
+  digest = "1:82eaafe1b10a648afe37de603c6d9f4fe69fb5c129ecc832a5997335f3a0ee89"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1361,7 +1346,6 @@
     "configmap/testing",
     "controller",
     "injection",
-    "injection/clients/dynamicclient",
     "injection/sharedmain",
     "kmeta",
     "kmp",
@@ -1385,11 +1369,11 @@
     "webhook/certificates/resources",
   ]
   pruneopts = "T"
-  revision = "5c9bc970ce963ddad76a59b289ba90d5b118d98f"
+  revision = "7af3fab62ce2bf2f861fee510eeb15eccb47925e"
 
 [[projects]]
   branch = "master"
-  digest = "1:4df22179b9bcb64c1186be3aa9fadc32eee1c96fc99e7f6be7fc1dff1904be6e"
+  digest = "1:b6ee5366bcb5f115fbb88188ee341c21c5d17bcef7a8867976ea54f9bdfad2f9"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1442,18 +1426,18 @@
     "pkg/resources",
   ]
   pruneopts = "T"
-  revision = "0d2c1c5093f697f69982e8f92515275410222b98"
+  revision = "744090c517077e65c6d806357532d96507a6b0b9"
 
 [[projects]]
   branch = "master"
-  digest = "1:043997c1e0120a3c74c981acf40438f54db2753a756e8896fc67fd9edb9ccea9"
+  digest = "1:e7ea104eff9c91ce48f1730ab8b4098faa1ea519162ccbbbca68c205428f0e21"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "359e2ba3ab51221e4a91e78f4031361306bbba0d"
+  revision = "01760e2303d6a17936658f155004da3019d0f43c"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
