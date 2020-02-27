@@ -36,10 +36,6 @@ import (
 	netv1alpha1 "knative.dev/serving/pkg/apis/networking/v1alpha1"
 )
 
-const (
-	controllerAgentName = "serverlessservice-controller"
-)
-
 // NewController initializes the controller and is called by the generated code.
 // Registers eventhandlers to enqueue events.
 func NewController(
@@ -73,7 +69,7 @@ func NewController(
 
 	// Watch all the services that we have created.
 	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.Filter(netv1alpha1.SchemeGroupVersion.WithKind("ServerlessService")),
+		FilterFunc: controller.FilterGroupVersionKind(netv1alpha1.SchemeGroupVersion.WithKind("ServerlessService")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
