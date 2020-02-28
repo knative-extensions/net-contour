@@ -67,7 +67,7 @@ func (cr *ConcurrencyReporter) reportToMetricsBackend(key types.NamespacedName, 
 	revName := key.Name
 	revision, err := cr.rl.Revisions(ns).Get(revName)
 	if err != nil {
-		cr.logger.With(zap.Any("revID", key)).Errorw("Error while getting revision", zap.Error(err))
+		cr.logger.Errorw("Error while getting revision", zap.Any("revID", key), zap.Error(err))
 		return
 	}
 	configurationName := revision.Labels[serving.ConfigurationLabelKey]
@@ -151,7 +151,9 @@ func (cr *ConcurrencyReporter) run(stopCh <-chan struct{}, reportCh <-chan time.
 				}
 				cr.reportToMetricsBackend(key, concurrency)
 			}
-			cr.statCh <- messages
+			if len(messages) > 0 {
+				cr.statCh <- messages
+			}
 
 			incomingRequestsPerKey = make(map[types.NamespacedName]float64)
 			reportedFirstRequest = make(map[types.NamespacedName]int64)
