@@ -19,8 +19,8 @@ package contour
 import (
 	"context"
 
-	contourclient "knative.dev/net-contour/pkg/client/injection/client"
 	proxyinformer "knative.dev/net-contour/pkg/client/injection/informers/projectcontour/v1/httpproxy"
+	contourclient "knative.dev/net-contour/pkg/client/injection/client"
 	endpointsinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
