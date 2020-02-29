@@ -372,7 +372,7 @@ func TestReconcile(t *testing.T) {
 		}
 
 		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
-			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, // TODO(mattmoor): Add back -> ContourIngressClassName,
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
@@ -421,7 +421,7 @@ func TestReconcileProberNotReady(t *testing.T) {
 			},
 		}
 		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
-			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, // TODO(mattmoor): Add back -> ContourIngressClassName,
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
@@ -476,7 +476,7 @@ func TestReconcileProbeError(t *testing.T) {
 		}
 
 		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
-			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, // TODO(mattmoor): Add back -> ContourIngressClassName,
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,

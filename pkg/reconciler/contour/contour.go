@@ -73,6 +73,11 @@ var _ ingressreconciler.Interface = (*Reconciler)(nil)
 
 // ReconcileKind reconciles ingress resource.
 func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) reconciler.Event {
+	// TODO(mattmoor): Remove this once we re-enable genreconciler class handling.
+	if class, ok := ing.Annotations[networking.IngressClassAnnotationKey]; !ok || class != ContourIngressClassName {
+		return nil
+	}
+
 	ing.Status.InitializeConditions()
 
 	if err := r.reconcileProxies(ctx, ing); err != nil {

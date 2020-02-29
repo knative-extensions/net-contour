@@ -73,7 +73,7 @@ func NewController(
 			scheme.Scheme, corev1.EventSource{Component: controllerAgentName}),
 	}
 	myFilterFunc := reconciler.AnnotationFilterFunc(networking.IngressClassAnnotationKey, ContourIngressClassName, false)
-	impl := ingressreconciler.NewImpl(ctx, c, ContourIngressClassName,
+	impl := ingressreconciler.NewImpl(ctx, c, // TODO(mattmoor): Add back -> ContourIngressClassName,
 		func(impl *controller.Impl) controller.Options {
 			logger.Info("Setting up ConfigMap receivers")
 			configsToResync := []interface{}{
