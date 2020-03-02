@@ -977,7 +977,7 @@
   version = "kubernetes-1.16.4"
 
 [[projects]]
-  digest = "1:8e2b7c4ef17568bbcb7e9dd15f6f60a7ca46c31ea40f9c725c5116dc4e649262"
+  digest = "1:5c34ecf93f44c70f40f7eb45445442ce400affcb1ada78cf3b02d2c4bb652776"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/apitesting/fuzzer",
@@ -1018,6 +1018,7 @@
     "pkg/util/runtime",
     "pkg/util/sets",
     "pkg/util/strategicpatch",
+    "pkg/util/uuid",
     "pkg/util/validation",
     "pkg/util/validation/field",
     "pkg/util/wait",
@@ -1319,7 +1320,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:18e38e0ec694fdad73da5156624020664b1950c8f919216f75896c31323eb8a7"
+  digest = "1:5a1686615370a9501192d7bd36dd8cee47e73d56c3576dee4737dd9db5c01d7d"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1349,6 +1350,7 @@
     "injection/sharedmain",
     "kmeta",
     "kmp",
+    "leaderelection",
     "logging",
     "logging/logkey",
     "logging/testing",
@@ -1369,11 +1371,11 @@
     "webhook/certificates/resources",
   ]
   pruneopts = "T"
-  revision = "bb008a5b533c110945aad45df24877c39bc5f792"
+  revision = "2fe8db30007231e4157929b781ad457f371e422d"
 
 [[projects]]
   branch = "master"
-  digest = "1:6675a65f7a57dd7dd4764a5a6eef5f4b315192df307dfeca554640d06ce8f4fc"
+  digest = "1:9919260a069e25f43adbf4558125530c4848623fcaaaf4b49a86a4a30407ea61"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1385,6 +1387,7 @@
     "pkg/apis/serving/v1",
     "pkg/apis/serving/v1alpha1",
     "pkg/apis/serving/v1beta1",
+    "pkg/autoscaler/config",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/fake",
     "pkg/client/clientset/versioned/scheme",
@@ -1426,18 +1429,18 @@
     "pkg/resources",
   ]
   pruneopts = "T"
-  revision = "42b0783a809a6f4324917f29093903cfaac21a78"
+  revision = "24ac85f2c7ca5c6e40accc7f47f274f23f38e5ac"
 
 [[projects]]
   branch = "master"
-  digest = "1:043997c1e0120a3c74c981acf40438f54db2753a756e8896fc67fd9edb9ccea9"
+  digest = "1:e7ea104eff9c91ce48f1730ab8b4098faa1ea519162ccbbbca68c205428f0e21"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "359e2ba3ab51221e4a91e78f4031361306bbba0d"
+  revision = "4dac123b9a3d14d2e07b4a59fbac0b0e99a09e92"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
