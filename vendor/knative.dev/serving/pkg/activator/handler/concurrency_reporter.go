@@ -67,7 +67,7 @@ func (cr *ConcurrencyReporter) reportToMetricsBackend(key types.NamespacedName, 
 	revName := key.Name
 	revision, err := cr.rl.Revisions(ns).Get(revName)
 	if err != nil {
-		cr.logger.With(zap.Any("revID", key)).Errorw("Error while getting revision", zap.Error(err))
+		cr.logger.Errorw("Error while getting revision", zap.Any("revID", key), zap.Error(err))
 		return
 	}
 	configurationName := revision.Labels[serving.ConfigurationLabelKey]
@@ -134,24 +134,28 @@ func (cr *ConcurrencyReporter) run(stopCh <-chan struct{}, reportCh <-chan time.
 		case <-reportCh:
 			messages := make([]asmetrics.StatMessage, 0, len(outstandingRequestsPerKey))
 			for key, concurrency := range outstandingRequestsPerKey {
+				averageConcurrentRequests := float64(concurrency - reportedFirstRequest[key])
+
 				if concurrency == 0 {
 					delete(outstandingRequestsPerKey, key)
-					// TODO(#6991): make sure `RequestCount` is reported here.
-				} else {
-					messages = append(messages, asmetrics.StatMessage{
-						Key: key,
-						Stat: asmetrics.Stat{
-							// Stat time is unset by design. The receiver will set the time.
-							PodName: cr.podName,
-							// Subtract the request we already reported when first seeing the revision.
-							AverageConcurrentRequests: float64(concurrency - reportedFirstRequest[key]),
-							RequestCount:              incomingRequestsPerKey[key],
-						},
-					})
+					averageConcurrentRequests = 0
 				}
+
+				messages = append(messages, asmetrics.StatMessage{
+					Key: key,
+					Stat: asmetrics.Stat{
+						// Stat time is unset by design. The receiver will set the time.
+						PodName: cr.podName,
+						// Subtract the request we already reported when first seeing the revision.
+						AverageConcurrentRequests: averageConcurrentRequests,
+						RequestCount:              incomingRequestsPerKey[key],
+					},
+				})
 				cr.reportToMetricsBackend(key, concurrency)
 			}
-			cr.statCh <- messages
+			if len(messages) > 0 {
+				cr.statCh <- messages
+			}
 
 			incomingRequestsPerKey = make(map[types.NamespacedName]float64)
 			reportedFirstRequest = make(map[types.NamespacedName]int64)
