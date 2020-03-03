@@ -24,6 +24,10 @@ metadata:
 
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: contour
+  namespace: contour-external
 data:
   contour.yaml: |
     leaderelection:
@@ -81,10 +85,6 @@ data:
     #   - "upstream_service_time"
     #   - "user_agent"
     #   - "x_forwarded_for"
-kind: ConfigMap
-metadata:
-  name: contour
-  namespace: contour-external
 
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -1267,16 +1267,17 @@ metadata:
   name: contour-certgen
   namespace: contour-external
 spec:
-  backoffLimit: 1
-  completions: 1
-  parallelism: 1
+  ttlSecondsAfterFinished: 0
   template:
     metadata:
       labels:
-        app: contour-certgen
+        app: "contour-certgen"
     spec:
       containers:
-      - command:
+      - name: contour
+        image: knative.dev/net-contour/vendor/github.com/projectcontour/contour/cmd/contour
+        imagePullPolicy: Always
+        command:
         - contour
         - certgen
         - --namespace=contour-external
@@ -1287,16 +1288,15 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        image: knative.dev/net-contour/vendor/github.com/projectcontour/contour/cmd/contour
-        imagePullPolicy: Always
-        name: contour
       restartPolicy: Never
+      serviceAccountName: contour-certgen
       securityContext:
-        runAsGroup: 65534
         runAsNonRoot: true
         runAsUser: 65534
-      serviceAccountName: contour-certgen
-  ttlSecondsAfterFinished: 0
+        runAsGroup: 65534
+  parallelism: 1
+  completions: 1
+  backoffLimit: 1
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -1351,18 +1351,15 @@ rules:
   - list
   - watch
 - apiGroups:
-  - networking.k8s.io
+  - "networking.k8s.io"
   resources:
   - ingresses
   verbs:
   - get
   - list
   - watch
-- apiGroups:
-  - contour.heptio.com
-  resources:
-  - ingressroutes
-  - tlscertificatedelegations
+- apiGroups: ["contour.heptio.com"]
+  resources: ["ingressroutes", "tlscertificatedelegations"]
   verbs:
   - get
   - list
@@ -1370,11 +1367,8 @@ rules:
   - put
   - post
   - patch
-- apiGroups:
-  - projectcontour.io
-  resources:
-  - httpproxies
-  - tlscertificatedelegations
+- apiGroups: ["projectcontour.io"]
+  resources: ["httpproxies", "tlscertificatedelegations"]
   verbs:
   - get
   - list
@@ -1430,8 +1424,8 @@ metadata:
   namespace: contour-external
 spec:
   ports:
-  - name: xds
-    port: 8001
+  - port: 8001
+    name: xds
     protocol: TCP
     targetPort: 8001
   selector:
@@ -1442,18 +1436,24 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
   name: envoy
   namespace: contour-external
+  annotations:
+    # This annotation puts the AWS ELB into "TCP" mode so that it does not
+    # do HTTP negotiation for HTTPS connections at the ELB edge.
+    # The downside of this is the remote IP address of all connections will
+    # appear to be the internal address of the ELB. See docs/proxy-proto.md
+    # for information about enabling the PROXY protocol on the ELB to recover
+    # the original remote IP address.
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
 spec:
   externalTrafficPolicy: Local
   ports:
-  - name: http
-    port: 80
+  - port: 80
+    name: http
     protocol: TCP
-  - name: https
-    port: 443
+  - port: 443
+    name: https
     protocol: TCP
   selector:
     app: envoy
@@ -1469,18 +1469,20 @@ metadata:
   namespace: contour-external
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # This value of maxSurge means that during a rolling update
+      # the new ReplicaSet will be created first.
+      maxSurge: 50%
   selector:
     matchLabels:
       app: contour
-  strategy:
-    rollingUpdate:
-      maxSurge: 50%
-    type: RollingUpdate
   template:
     metadata:
       annotations:
-        prometheus.io/port: "8000"
         prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
       labels:
         app: contour
     spec:
@@ -1507,20 +1509,9 @@ spec:
         - --contour-cert-file=/certs/tls.crt
         - --contour-key-file=/certs/tls.key
         - --config-path=/config/contour.yaml
-        command:
-        - contour
-        env:
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              apiVersion: v1
-              fieldPath: metadata.name
+        command: ["contour"]
         image: knative.dev/net-contour/vendor/github.com/projectcontour/contour/cmd/contour
         imagePullPolicy: Always
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8000
         name: contour
         ports:
         - containerPort: 8001
@@ -1529,27 +1520,37 @@ spec:
         - containerPort: 8000
           name: debug
           protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
         readinessProbe:
-          initialDelaySeconds: 15
-          periodSeconds: 10
           tcpSocket:
             port: 8001
+          initialDelaySeconds: 15
+          periodSeconds: 10
         volumeMounts:
-        - mountPath: /certs
-          name: contourcert
+        - name: contourcert
+          mountPath: /certs
           readOnly: true
-        - mountPath: /ca
-          name: cacert
+        - name: cacert
+          mountPath: /ca
           readOnly: true
-        - mountPath: /config
-          name: contour-config
+        - name: contour-config
+          mountPath: /config
           readOnly: true
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
       dnsPolicy: ClusterFirst
+      serviceAccountName: contour
       securityContext:
-        runAsGroup: 65534
         runAsNonRoot: true
         runAsUser: 65534
-      serviceAccountName: contour
+        runAsGroup: 65534
       volumes:
       - name: contourcert
         secret:
@@ -1557,13 +1558,13 @@ spec:
       - name: cacert
         secret:
           secretName: cacert
-      - configMap:
-          defaultMode: 420
+      - name: contour-config
+        configMap:
+          name: contour
+          defaultMode: 0644
           items:
           - key: contour.yaml
             path: contour.yaml
-          name: contour
-        name: contour-config
 
 ---
 apiVersion: apps/v1
@@ -1574,19 +1575,22 @@ metadata:
   name: envoy
   namespace: contour-external
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 10%
   selector:
     matchLabels:
       app: envoy
   template:
     metadata:
       annotations:
-        prometheus.io/path: /stats/prometheus
-        prometheus.io/port: "8002"
         prometheus.io/scrape: "true"
+        prometheus.io/port: "8002"
+        prometheus.io/path: "/stats/prometheus"
       labels:
         app: envoy
     spec:
-      automountServiceAccountToken: false
       containers:
       - args:
         - -c
@@ -1596,6 +1600,9 @@ spec:
         - --log-level info
         command:
         - envoy
+        image: docker.io/envoyproxy/envoy:v1.12.2
+        imagePullPolicy: IfNotPresent
+        name: envoy
         env:
         - name: CONTOUR_NAMESPACE
           valueFrom:
@@ -1607,21 +1614,6 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.name
-        image: docker.io/envoyproxy/envoy:v1.12.2
-        imagePullPolicy: IfNotPresent
-        lifecycle:
-          preStop:
-            exec:
-              command:
-              - bash
-              - -c
-              - --
-              - echo
-              - -ne
-              - "POST /healthcheck/fail HTTP/1.1\r\nHost: localhost\r\nConnection:
-                close\r\n\r\n"
-              - '>/dev/tcp/localhost/9001'
-        name: envoy
         ports:
         - containerPort: 80
           # hostPort: 80
@@ -1638,12 +1630,24 @@ spec:
           initialDelaySeconds: 3
           periodSeconds: 3
         volumeMounts:
-        - mountPath: /config
-          name: envoy-config
-        - mountPath: /certs
-          name: envoycert
-        - mountPath: /ca
-          name: cacert
+        - name: envoy-config
+          mountPath: /config
+        - name: envoycert
+          mountPath: /certs
+        - name: cacert
+          mountPath: /ca
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - bash
+              - -c
+              - --
+              - echo
+              - -ne
+              - "POST /healthcheck/fail HTTP/1.1\r\nHost: localhost\r\nConnection:
+                close\r\n\r\n"
+              - '>/dev/tcp/localhost/9001'
       initContainers:
       - args:
         - bootstrap
@@ -1655,36 +1659,33 @@ spec:
         - --envoy-key-file=/certs/tls.key
         command:
         - contour
+        image: knative.dev/net-contour/vendor/github.com/projectcontour/contour/cmd/contour
+        imagePullPolicy: Always
+        name: envoy-initconfig
+        volumeMounts:
+        - name: envoy-config
+          mountPath: /config
+        - name: envoycert
+          mountPath: /certs
+          readOnly: true
+        - name: cacert
+          mountPath: /ca
+          readOnly: true
         env:
         - name: CONTOUR_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        image: knative.dev/net-contour/vendor/github.com/projectcontour/contour/cmd/contour
-        imagePullPolicy: Always
-        name: envoy-initconfig
-        volumeMounts:
-        - mountPath: /config
-          name: envoy-config
-        - mountPath: /certs
-          name: envoycert
-          readOnly: true
-        - mountPath: /ca
-          name: cacert
-          readOnly: true
-      restartPolicy: Always
+      automountServiceAccountToken: false
       volumes:
-      - emptyDir: {}
-        name: envoy-config
+      - name: envoy-config
+        emptyDir: {}
       - name: envoycert
         secret:
           secretName: envoycert
       - name: cacert
         secret:
           secretName: cacert
-  updateStrategy:
-    rollingUpdate:
-      maxUnavailable: 10%
-    type: RollingUpdate
+      restartPolicy: Always
 
 ---

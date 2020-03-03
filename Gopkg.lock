@@ -1429,7 +1429,7 @@
     "pkg/resources",
   ]
   pruneopts = "T"
-  revision = "6f54e04c0fe3a25a11056850ab6c08c7877c00ce"
+  revision = "b79fef014aaf1dd7bc06574cd2bfdc08a2aaad0f"
 
 [[projects]]
   branch = "master"
@@ -1440,7 +1440,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "670fb44ab11b63e8bc91d674196f8806e255d0cc"
+  revision = "83fb33bf8fcfe5c0e021eb6c9bb8733a5b8423c0"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
