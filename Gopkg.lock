@@ -277,11 +277,11 @@
   version = "v0.3.0"
 
 [[projects]]
-  digest = "1:10aa62acd56f635de190110a836aa261b3774e697b2b6a7af27d8263cf856d47"
+  digest = "1:ecc8bd577aaaa8ce2c3ad060e61e1daeadbab1d14a0934f019ad2995c3a666b0"
   name = "github.com/google/go-containerregistry"
   packages = ["pkg/name"]
   pruneopts = "NUT"
-  revision = "b02d448a3705facf11018efff34f1d2830be5724"
+  revision = "ba53fa10e72c7373ef8068e21c9f102f0c20a940"
 
 [[projects]]
   digest = "1:3ec6c8e4b700377066dbb5ab3155c55f97109ab6147fee9423a68506d79bbafa"
@@ -1320,7 +1320,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:594e2e8f9e26efdd32cef30b5c099d422bbe23ac6a9f38f3aed473b610351268"
+  digest = "1:65776685a16dfccc0e9c3845092c38ec253c13101365c37a9ce11d876461fad5"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1371,11 +1371,11 @@
     "webhook/certificates/resources",
   ]
   pruneopts = "T"
-  revision = "5605ade5242dbce408f2d2e5cf6bbc43355dfd6c"
+  revision = "312b1be35ceb863caf610109960158898d23a502"
 
 [[projects]]
   branch = "master"
-  digest = "1:009a7323a8d40d69df413f48c501de15c28f7d45c42a0d3b369f7102b23dc337"
+  digest = "1:308db2e694c1b220e38d4f0070fe78c79cffb9a63268643cfc921e1b97dae54e"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1429,18 +1429,18 @@
     "pkg/resources",
   ]
   pruneopts = "T"
-  revision = "61e7c354b70288556e9483da478b98705aa0b4cf"
+  revision = "1b267d612044be326be8646396cb9ace99db210a"
 
 [[projects]]
   branch = "master"
-  digest = "1:e7ea104eff9c91ce48f1730ab8b4098faa1ea519162ccbbbca68c205428f0e21"
+  digest = "1:5d6439b7856df77cf6df3597a4711e0b39f85cab9986b7784b2521a8b7bdbfbb"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "b818eb8b5c3c93358da6aa219172981c8f79d247"
+  revision = "a8e82a4213f65ffcee2c08cdb05f7636e76c51b6"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
