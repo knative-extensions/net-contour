@@ -26,7 +26,6 @@ import (
 	"knative.dev/pkg/logging"
 
 	fakecontourclient "knative.dev/net-contour/pkg/client/injection/client/fake"
-	fakeservingclient "knative.dev/serving/pkg/client/injection/client/fake"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -356,13 +355,10 @@ func TestReconcile(t *testing.T) {
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		r := &Reconciler{
-			client:          fakeservingclient.Get(ctx),
 			contourClient:   fakecontourclient.Get(ctx),
-			lister:          listers.GetIngressLister(),
 			contourLister:   listers.GetHTTPProxyLister(),
 			serviceLister:   listers.GetK8sServiceLister(),
 			endpointsLister: listers.GetEndpointsLister(),
-			recorder:        controller.GetEventRecorder(ctx),
 			tracker:         &NullTracker{},
 			statusManager: &fakeStatusManager{
 				FakeIsReady: func(context.Context, *v1alpha1.Ingress) (bool, error) {
@@ -406,13 +402,10 @@ func TestReconcileProberNotReady(t *testing.T) {
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		r := &Reconciler{
-			client:          fakeservingclient.Get(ctx),
 			contourClient:   fakecontourclient.Get(ctx),
-			lister:          listers.GetIngressLister(),
 			contourLister:   listers.GetHTTPProxyLister(),
 			serviceLister:   listers.GetK8sServiceLister(),
 			endpointsLister: listers.GetEndpointsLister(),
-			recorder:        controller.GetEventRecorder(ctx),
 			tracker:         &NullTracker{},
 			statusManager: &fakeStatusManager{
 				FakeIsReady: func(context.Context, *v1alpha1.Ingress) (bool, error) {
@@ -460,13 +453,10 @@ func TestReconcileProbeError(t *testing.T) {
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		r := &Reconciler{
-			client:          fakeservingclient.Get(ctx),
 			contourClient:   fakecontourclient.Get(ctx),
-			lister:          listers.GetIngressLister(),
 			contourLister:   listers.GetHTTPProxyLister(),
 			serviceLister:   listers.GetK8sServiceLister(),
 			endpointsLister: listers.GetEndpointsLister(),
-			recorder:        controller.GetEventRecorder(ctx),
 			tracker:         &NullTracker{},
 			statusManager: &fakeStatusManager{
 				FakeIsReady: func(context.Context, *v1alpha1.Ingress) (bool, error) {
