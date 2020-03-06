@@ -39,6 +39,7 @@ import (
 	"knative.dev/net-contour/pkg/reconciler/contour/resources"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/serving/pkg/apis/networking"
@@ -46,7 +47,6 @@ import (
 	servingclient "knative.dev/serving/pkg/client/injection/client/fake"
 	ingressreconciler "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 	servingnetwork "knative.dev/serving/pkg/network"
-	spresources "knative.dev/serving/pkg/resources"
 
 	. "knative.dev/net-contour/pkg/reconciler/testing"
 	. "knative.dev/pkg/reconciler/testing"
@@ -650,7 +650,7 @@ func withMultiProxySpec(i *v1alpha1.Ingress) {
 
 func withAnnotation(ann map[string]string) IngressOption {
 	return func(i *v1alpha1.Ingress) {
-		i.Annotations = spresources.UnionMaps(i.Annotations, ann)
+		i.Annotations = kmeta.UnionMaps(i.Annotations, ann)
 	}
 }
 
