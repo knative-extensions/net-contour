@@ -497,13 +497,13 @@ spec:
     - services:
         - name: s1
           port: 80
-          requestHeaderPolicy:
+          requestHeadersPolicy:
             set:
               - name: X-Foo
                 value: bar
             remove:
               - X-Baz
-          responseHeaderPolicy:
+          responseHeadersPolicy:
             set:
               - name: X-Service-Name
                 value: s1
@@ -848,7 +848,7 @@ spec:
 HTTPProxy supports rewriting the `Host` header after first handling a request and before proxying to an upstream service.
 A common use-case for this is to use Contour to proxy to a resource outside the cluster referenced by an `externalName` service.
 
-The `requestHeaderPolicy` supports a list of `Set` options that currently only supports rewriting `Host` headers defined via a `name` and `value`.
+The `requestHeadersPolicy` supports a list of `Set` options that currently only supports rewriting `Host` headers defined via a `name` and `value`.
 
 ```yaml
 apiVersion: projectcontour.io/v1
@@ -862,7 +862,7 @@ spec:
   - services:
     - name: s1
       port: 80
-    requestHeaderPolicy:
+    requestHeadersPolicy:
       set:
       - name: Host
         value: external.dev
@@ -899,8 +899,8 @@ spec:
 #### Proxy to external resource
 
 To proxy to another resource outside the cluster (e.g. A hosted object store bucket for example), configure that external resource in a service type `externalName`.
-Then define a `headerRequestPolicy` which replaces the `Host` header with the value of the external name service defined previously.
-Finally, if the upstream service is served over TLS, annotate the external name service with: `projectcontour.io/upstream-protocol.tls: 443,https` assuming your service had a port 443 & name `https`.
+Then define a `requestHeadersPolicy` which replaces the `Host` header with the value of the external name service defined previously.
+Finally, if the upstream service is served over TLS, set the `protocol` field on the service to `tls` or annotate the external name service with: `projectcontour.io/upstream-protocol.tls: 443,https` assuming your service had a port 443 and name `https`.
 
 ## HTTPProxy inclusion
 
@@ -1195,6 +1195,44 @@ spec:
       weight: 20
 ```
 In this example `default/parent` delegates the configuration of the TCPProxy services to `app/child`.
+
+#### TCP Proxy health checking
+
+Active health checking can be configured on a per route basis.
+Contour supports TCP health checking and can be configured with various settings to tune the behavior.
+
+During TCP health checking Envoy will send a connect-only health check to the upstream Endpoints.
+It is important to note that these are health checks which Envoy implements and are separate from any 
+other system such as those that exist in Kubernetes.
+
+```yaml
+apiVersion: projectcontour.io/v1
+kind: HTTPProxy
+metadata:
+  name: tcp-health-check
+  namespace: default
+spec:
+  virtualhost:
+    fqdn: health.bar.com
+  tcpproxy:
+    healthCheckPolicy:
+      intervalSeconds: 5
+      timeoutSeconds: 2
+      unhealthyThresholdCount: 3
+      healthyThresholdCount: 5
+    services:
+      - name: s1-health
+        port: 80
+      - name: s2-health
+        port: 80
+```
+
+TCP Health check policy configuration parameters:
+
+- `intervalSeconds`: The interval (seconds) between health checks. Defaults to 5 seconds if not set.
+- `timeoutSeconds`: The time to wait (seconds) for a health check response. If the timeout is reached the health check attempt will be considered a failure. Defaults to 2 seconds if not set.
+- `unhealthyThresholdCount`: The number of unhealthy health checks required before a host is marked unhealthy. Note that for http health checking if a host responds with 503 this threshold is ignored and the host is considered unhealthy immediately. Defaults to 3 if not defined.
+- `healthyThresholdCount`: The number of healthy health checks required before a host is marked healthy. Note that during startup, only a single successful health check is required to mark a host healthy.
 
 ## Upstream Validation
 

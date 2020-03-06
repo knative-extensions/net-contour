@@ -39,8 +39,8 @@ data:
     #   minimum-protocol-version: "1.1"
     # The following config shows the defaults for the leader election.
     # leaderelection:
-    #   configmap-name: contour
-    #   configmap-namespace: leader-elect
+    #   configmap-name: leader-elect
+    #   configmap-namespace: projectcontour
     ### Logging options
     # Default setting
     accesslog-format: envoy
@@ -168,7 +168,8 @@ spec:
                       count:
                         description: NumRetries is maximum allowed number of retries.
                           If not supplied, the number of retries is one.
-                        format: int32
+                        format: int64
+                        minimum: 0
                         type: integer
                       perTryTimeout:
                         description: PerTryTimeout specifies the timeout per retry
@@ -187,7 +188,8 @@ spec:
                             healthyThresholdCount:
                               description: The number of healthy health checks required
                                 before a host is marked healthy
-                              format: int32
+                              format: int64
+                              minimum: 0
                               type: integer
                             host:
                               description: The value of the host header in the HTTP
@@ -210,7 +212,8 @@ spec:
                             unhealthyThresholdCount:
                               description: The number of unhealthy health checks required
                                 before a host is marked unhealthy
-                              format: int32
+                              format: int64
+                              minimum: 0
                               type: integer
                           required:
                           - path
@@ -246,7 +249,8 @@ spec:
                         weight:
                           description: Weight defines percentage of traffic to balance
                             traffic
-                          format: int32
+                          format: int64
+                          minimum: 0
                           type: integer
                       required:
                       - name
@@ -295,7 +299,8 @@ spec:
                           healthyThresholdCount:
                             description: The number of healthy health checks required
                               before a host is marked healthy
-                            format: int32
+                            format: int64
+                            minimum: 0
                             type: integer
                           host:
                             description: The value of the host header in the HTTP
@@ -318,7 +323,8 @@ spec:
                           unhealthyThresholdCount:
                             description: The number of unhealthy health checks required
                               before a host is marked unhealthy
-                            format: int32
+                            format: int64
+                            minimum: 0
                             type: integer
                         required:
                         - path
@@ -354,7 +360,8 @@ spec:
                       weight:
                         description: Weight defines percentage of traffic to balance
                           traffic
-                        format: int32
+                        format: int64
+                        minimum: 0
                         type: integer
                     required:
                     - name
@@ -372,7 +379,7 @@ spec:
                     to the fqdn
                   type: string
                 tls:
-                  description: If present describes tls properties. The CNI names
+                  description: If present describes tls properties. The SNI names
                     that will be matched on are described in fqdn, the tls.secretName
                     secret must contain a matching certificate
                   properties:
@@ -660,7 +667,8 @@ spec:
                       healthyThresholdCount:
                         description: The number of healthy health checks required
                           before a host is marked healthy
-                        format: int32
+                        format: int64
+                        minimum: 0
                         type: integer
                       host:
                         description: The value of the host header in the HTTP health
@@ -683,7 +691,8 @@ spec:
                       unhealthyThresholdCount:
                         description: The number of unhealthy health checks required
                           before a host is marked unhealthy
-                        format: int32
+                        format: int64
+                        minimum: 0
                         type: integer
                     required:
                     - path
@@ -800,7 +809,8 @@ spec:
                       count:
                         description: NumRetries is maximum allowed number of retries.
                           If not supplied, the number of retries is one.
-                        format: int32
+                        format: int64
+                        minimum: 0
                         type: integer
                       perTryTimeout:
                         description: PerTryTimeout specifies the timeout per retry
@@ -829,8 +839,12 @@ spec:
                         protocol:
                           description: Protocol may be used to specify (or override)
                             the protocol used to reach this Service. Values may be
-                            tls, h2, h2c.  It ommitted protocol-selection falls back
+                            tls, h2, h2c. If omitted, protocol-selection falls back
                             on Service annotations.
+                          enum:
+                          - h2
+                          - h2c
+                          - tls
                           type: string
                         requestHeadersPolicy:
                           description: The policy for managing request headers during
@@ -915,7 +929,8 @@ spec:
                         weight:
                           description: Weight defines percentage of traffic to balance
                             traffic
-                          format: int32
+                          format: int64
+                          minimum: 0
                           type: integer
                       required:
                       - name
@@ -942,6 +957,28 @@ spec:
             tcpproxy:
               description: TCPProxy holds TCP proxy information.
               properties:
+                healthCheckPolicy:
+                  description: The health check policy for this tcp proxy
+                  properties:
+                    healthyThresholdCount:
+                      description: The number of healthy health checks required before
+                        a host is marked healthy
+                      format: int32
+                      type: integer
+                    intervalSeconds:
+                      description: The interval (seconds) between health checks
+                      format: int64
+                      type: integer
+                    timeoutSeconds:
+                      description: The time to wait (seconds) for a health check response
+                      format: int64
+                      type: integer
+                    unhealthyThresholdCount:
+                      description: The number of unhealthy health checks required
+                        before a host is marked unhealthy
+                      format: int32
+                      type: integer
+                  type: object
                 includes:
                   description: Include specifies that this tcpproxy should be delegated
                     to another HTTPProxy.
@@ -983,8 +1020,12 @@ spec:
                       protocol:
                         description: Protocol may be used to specify (or override)
                           the protocol used to reach this Service. Values may be tls,
-                          h2, h2c.  It ommitted protocol-selection falls back on Service
+                          h2, h2c. If omitted, protocol-selection falls back on Service
                           annotations.
+                        enum:
+                        - h2
+                        - h2c
+                        - tls
                         type: string
                       requestHeadersPolicy:
                         description: The policy for managing request headers during
@@ -1069,7 +1110,8 @@ spec:
                       weight:
                         description: Weight defines percentage of traffic to balance
                           traffic
-                        format: int32
+                        format: int64
+                        minimum: 0
                         type: integer
                     required:
                     - name
@@ -1087,7 +1129,7 @@ spec:
                     to the fqdn
                   type: string
                 tls:
-                  description: If present describes tls properties. The CNI names
+                  description: If present describes tls properties. The SNI names
                     that will be matched on are described in fqdn, the tls.secretName
                     secret must contain a matching certificate
                   properties:
@@ -1489,7 +1531,7 @@ spec:
         - --contour-key-file=/certs/tls.key
         - --config-path=/config/contour.yaml
         command: ["contour"]
-        image: docker.io/projectcontour/contour:v1.1.0
+        image: docker.io/projectcontour/contour:v1.2.1
         imagePullPolicy: IfNotPresent
         name: contour
         ports:
@@ -1570,6 +1612,26 @@ spec:
         app: envoy
     spec:
       containers:
+      - command:
+        - /bin/contour
+        args:
+          - envoy
+          - shutdown-manager
+        image: docker.io/projectcontour/contour:v1.2.1
+        imagePullPolicy: IfNotPresent
+        lifecycle:
+          preStop:
+            httpGet:
+              path: /shutdown
+              port: 8090
+              scheme: HTTP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8090
+          initialDelaySeconds: 3
+          periodSeconds: 10
+        name: shutdown-manager
       - args:
         - -c
         - /config/envoy.json
@@ -1578,7 +1640,7 @@ spec:
         - --log-level info
         command:
         - envoy
-        image: docker.io/envoyproxy/envoy:v1.12.2
+        image: docker.io/envoyproxy/envoy:v1.13.1
         imagePullPolicy: IfNotPresent
         name: envoy
         env:
@@ -1606,7 +1668,7 @@ spec:
             path: /ready
             port: 8002
           initialDelaySeconds: 3
-          periodSeconds: 3
+          periodSeconds: 4
         volumeMounts:
           - name: envoy-config
             mountPath: /config
@@ -1616,15 +1678,10 @@ spec:
             mountPath: /ca
         lifecycle:
           preStop:
-            exec:
-              command:
-              - bash
-              - -c
-              - --
-              - echo
-              - -ne
-              - "POST /healthcheck/fail HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"
-              - '>/dev/tcp/localhost/9001'
+            httpGet:
+              path: /shutdown
+              port: 8090
+              scheme: HTTP
       initContainers:
       - args:
         - bootstrap
@@ -1636,7 +1693,7 @@ spec:
         - --envoy-key-file=/certs/tls.key
         command:
         - contour
-        image: docker.io/projectcontour/contour:v1.1.0
+        image: docker.io/projectcontour/contour:v1.2.1
         imagePullPolicy: IfNotPresent
         name: envoy-initconfig
         volumeMounts:
@@ -1654,6 +1711,7 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
       automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 300
       volumes:
         - name: envoy-config
           emptyDir: {}

@@ -676,7 +676,8 @@ func (b *Builder) computeRoutes(sw *ObjectStatusWriter, proxy *projcontour.HTTPP
 			return nil
 		}
 
-		if !pathConditionsValid(sw, include.Conditions, "include") {
+		if err := pathConditionsValid(include.Conditions); err != nil {
+			sw.SetInvalid("include: %s", err)
 			return nil
 		}
 
@@ -689,7 +690,8 @@ func (b *Builder) computeRoutes(sw *ObjectStatusWriter, proxy *projcontour.HTTPP
 	}
 
 	for _, route := range proxy.Spec.Routes {
-		if !pathConditionsValid(sw, route.Conditions, "route") {
+		if err := pathConditionsValid(route.Conditions); err != nil {
+			sw.SetInvalid("route: %s", err)
 			return nil
 		}
 
@@ -707,7 +709,7 @@ func (b *Builder) computeRoutes(sw *ObjectStatusWriter, proxy *projcontour.HTTPP
 			return nil
 		}
 
-		respHP, err := headersPolicy(route.ResponseHeadersPolicy, false /* allow Host */)
+		respHP, err := headersPolicy(route.ResponseHeadersPolicy, false /* disallow Host */)
 		if err != nil {
 			sw.SetInvalid(err.Error())
 			return nil
@@ -791,13 +793,13 @@ func (b *Builder) computeRoutes(sw *ObjectStatusWriter, proxy *projcontour.HTTPP
 				}
 			}
 
-			reqHP, err := headersPolicy(service.RequestHeadersPolicy, false /* allow Host */)
+			reqHP, err := headersPolicy(service.RequestHeadersPolicy, true /* allow Host */)
 			if err != nil {
 				sw.SetInvalid(err.Error())
 				return nil
 			}
 
-			respHP, err := headersPolicy(service.ResponseHeadersPolicy, false /* allow Host */)
+			respHP, err := headersPolicy(service.ResponseHeadersPolicy, false /* disallow Host */)
 			if err != nil {
 				sw.SetInvalid(err.Error())
 				return nil
@@ -806,8 +808,8 @@ func (b *Builder) computeRoutes(sw *ObjectStatusWriter, proxy *projcontour.HTTPP
 			c := &Cluster{
 				Upstream:              s,
 				LoadBalancerPolicy:    loadBalancerPolicy(route.LoadBalancerPolicy),
-				Weight:                service.Weight,
-				HealthCheckPolicy:     healthCheckPolicy(route.HealthCheckPolicy),
+				Weight:                uint32(service.Weight),
+				HTTPHealthCheckPolicy: httpHealthCheckPolicy(route.HealthCheckPolicy),
 				UpstreamValidation:    uv,
 				RequestHeadersPolicy:  reqHP,
 				ResponseHeadersPolicy: respHP,
@@ -1002,12 +1004,12 @@ func (b *Builder) processIngressRoutes(sw *ObjectStatusWriter, ir *ingressroutev
 				}
 
 				r.Clusters = append(r.Clusters, &Cluster{
-					Upstream:           s,
-					LoadBalancerPolicy: service.Strategy,
-					Weight:             service.Weight,
-					HealthCheckPolicy:  ingressrouteHealthCheckPolicy(service.HealthCheck),
-					UpstreamValidation: uv,
-					Protocol:           s.Protocol,
+					Upstream:              s,
+					LoadBalancerPolicy:    service.Strategy,
+					Weight:                uint32(service.Weight),
+					HTTPHealthCheckPolicy: ingressrouteHealthCheckPolicy(service.HealthCheck),
+					UpstreamValidation:    uv,
+					Protocol:              s.Protocol,
 				})
 			}
 
@@ -1178,9 +1180,10 @@ func (b *Builder) processHTTPProxyTCPProxy(sw *ObjectStatusWriter, httpproxy *pr
 				return false
 			}
 			proxy.Clusters = append(proxy.Clusters, &Cluster{
-				Upstream:           s,
-				LoadBalancerPolicy: loadBalancerPolicy(tcpproxy.LoadBalancerPolicy),
-				Protocol:           s.Protocol,
+				Upstream:             s,
+				Protocol:             s.Protocol,
+				LoadBalancerPolicy:   loadBalancerPolicy(tcpproxy.LoadBalancerPolicy),
+				TCPHealthCheckPolicy: tcpHealthCheckPolicy(tcpproxy.HealthCheckPolicy),
 			})
 		}
 		b.lookupSecureVirtualHost(host).TCPProxy = &proxy
