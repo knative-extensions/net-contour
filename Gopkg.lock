@@ -432,22 +432,10 @@
   version = "v0.9.1"
 
 [[projects]]
-  digest = "1:422c59c576feaf9b3045f55f2c6039c0d1450feb4ad07fac33300637fca1856a"
+  digest = "1:8f391adda8f9ae924187e999be21d384fcc16e837baecd31953781ace31afb40"
   name = "github.com/projectcontour/contour"
   packages = [
     "apis/contour/v1beta1",
-    "apis/generated/clientset/versioned",
-    "apis/generated/clientset/versioned/scheme",
-    "apis/generated/clientset/versioned/typed/contour/v1beta1",
-    "apis/generated/clientset/versioned/typed/projectcontour/v1",
-    "apis/generated/informers/externalversions",
-    "apis/generated/informers/externalversions/contour",
-    "apis/generated/informers/externalversions/contour/v1beta1",
-    "apis/generated/informers/externalversions/internalinterfaces",
-    "apis/generated/informers/externalversions/projectcontour",
-    "apis/generated/informers/externalversions/projectcontour/v1",
-    "apis/generated/listers/contour/v1beta1",
-    "apis/generated/listers/projectcontour/v1",
     "apis/projectcontour/v1",
     "cmd/contour",
     "internal/certgen",
@@ -463,8 +451,8 @@
     "internal/workgroup",
   ]
   pruneopts = "T"
-  revision = "429147b0400623ec179f9b1d531022193e11a9fd"
-  version = "v1.1.0"
+  revision = "aaef3a1cd46e28dcac27457ad0d6774adb74b2e6"
+  version = "v1.2.1"
 
 [[projects]]
   digest = "1:097cc61836050f45cbb712ae3bb45d66fba464c16b8fac09907fa3c1f753eff6"
@@ -1033,12 +1021,14 @@
   version = "kubernetes-1.16.4"
 
 [[projects]]
-  digest = "1:bc3b442d5bf174f7c4bd5d9bb2a1a6efdeaa2edda7d4c278314c4785b7426455"
+  digest = "1:69b5d3869ac4e95b0549623ef6e83a74d46fe4e5857e11cbeac2c17d72d026a1"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
     "discovery/fake",
     "dynamic",
+    "dynamic/dynamicinformer",
+    "dynamic/dynamiclister",
     "informers",
     "informers/admissionregistration",
     "informers/admissionregistration/v1",

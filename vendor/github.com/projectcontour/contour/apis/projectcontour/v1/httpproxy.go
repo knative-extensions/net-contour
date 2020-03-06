@@ -98,14 +98,14 @@ type VirtualHost struct {
 	// The fully qualified domain name of the root of the ingress tree
 	// all leaves of the DAG rooted at this object relate to the fqdn
 	Fqdn string `json:"fqdn"`
-	// If present describes tls properties. The CNI names that will be matched on
+	// If present describes tls properties. The SNI names that will be matched on
 	// are described in fqdn, the tls.secretName secret must contain a
 	// matching certificate
 	// +optional
 	TLS *TLS `json:"tls,omitempty"`
 }
 
-// TLS describes tls properties. The CNI names that will be matched on
+// TLS describes tls properties. The SNI names that will be matched on
 // are described in fqdn, the tls.secretName secret must contain a
 // matching certificate unless tls.passthrough is set to true.
 type TLS struct {
@@ -174,10 +174,12 @@ type TCPProxy struct {
 	LoadBalancerPolicy *LoadBalancerPolicy `json:"loadBalancerPolicy,omitempty"`
 	// Services are the services to proxy traffic
 	Services []Service `json:"services,omitempty"`
-
 	// Include specifies that this tcpproxy should be delegated to another HTTPProxy.
 	// +optional
 	Include *TCPProxyInclude `json:"includes,omitempty"`
+	// The health check policy for this tcp proxy
+	// +optional
+	HealthCheckPolicy *TCPHealthCheckPolicy `json:"healthCheckPolicy,omitempty"`
 }
 
 // TCPProxyInclude describes a target HTTPProxy document which contains the TCPProxy details.
@@ -197,12 +199,14 @@ type Service struct {
 	// Port (defined as Integer) to proxy traffic to since a service can have multiple defined.
 	Port int `json:"port"`
 	// Protocol may be used to specify (or override) the protocol used to reach this Service.
-	// Values may be tls, h2, h2c.  It ommitted protocol-selection falls back on Service annotations.
+	// Values may be tls, h2, h2c. If omitted, protocol-selection falls back on Service annotations.
+	// +kubebuilder:validation:Enum=h2;h2c;tls
 	// +optional
 	Protocol *string `json:"protocol,omitempty"`
 	// Weight defines percentage of traffic to balance traffic
 	// +optional
-	Weight uint32 `json:"weight,omitempty"`
+	// +kubebuilder:validation:Minimum=0
+	Weight int64 `json:"weight,omitempty"`
 	// UpstreamValidation defines how to verify the backend service's certificate
 	// +optional
 	UpstreamValidation *UpstreamValidation `json:"validation,omitempty"`
@@ -224,6 +228,24 @@ type HTTPHealthCheckPolicy struct {
 	// If left empty (default value), the name "contour-envoy-healthcheck"
 	// will be used.
 	Host string `json:"host,omitempty"`
+	// The interval (seconds) between health checks
+	// +optional
+	IntervalSeconds int64 `json:"intervalSeconds"`
+	// The time to wait (seconds) for a health check response
+	// +optional
+	TimeoutSeconds int64 `json:"timeoutSeconds"`
+	// The number of unhealthy health checks required before a host is marked unhealthy
+	// +optional
+	// +kubebuilder:validation:Minimum=0
+	UnhealthyThresholdCount int64 `json:"unhealthyThresholdCount"`
+	// The number of healthy health checks required before a host is marked healthy
+	// +optional
+	// +kubebuilder:validation:Minimum=0
+	HealthyThresholdCount int64 `json:"healthyThresholdCount"`
+}
+
+// TCPHealthCheckPolicy defines health checks on the upstream service.
+type TCPHealthCheckPolicy struct {
 	// The interval (seconds) between health checks
 	// +optional
 	IntervalSeconds int64 `json:"intervalSeconds"`
@@ -260,7 +282,8 @@ type RetryPolicy struct {
 	// NumRetries is maximum allowed number of retries.
 	// If not supplied, the number of retries is one.
 	// +optional
-	NumRetries uint32 `json:"count"`
+	// +kubebuilder:validation:Minimum=0
+	NumRetries int64 `json:"count"`
 	// PerTryTimeout specifies the timeout per retry attempt.
 	// Ignored if NumRetries is not supplied.
 	PerTryTimeout string `json:"perTryTimeout,omitempty"`

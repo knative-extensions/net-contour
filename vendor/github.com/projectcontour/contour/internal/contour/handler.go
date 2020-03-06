@@ -25,7 +25,6 @@ import (
 	projcontour "github.com/projectcontour/contour/apis/projectcontour/v1"
 	"github.com/projectcontour/contour/internal/dag"
 	"github.com/projectcontour/contour/internal/k8s"
-	"github.com/projectcontour/contour/internal/metrics"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -41,8 +40,6 @@ type EventHandler struct {
 	HoldoffDelay, HoldoffMaxDelay time.Duration
 
 	StatusClient k8s.StatusClient
-
-	*metrics.Metrics
 
 	logrus.FieldLogger
 
@@ -106,8 +103,8 @@ func (e *EventHandler) Start() func(<-chan struct{}) error {
 
 // run is the main event handling loop.
 func (e *EventHandler) run(stop <-chan struct{}) error {
-	e.Info("started")
-	defer e.Info("stopped")
+	e.Info("started event handler")
+	defer e.Info("stopped event handler")
 
 	var (
 		// outstanding counts the number of events received but not
