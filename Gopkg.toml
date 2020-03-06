@@ -15,7 +15,7 @@ required = [
 
 [[override]]
   name = "github.com/projectcontour/contour"
-  version = "1.1.0"
+  version = "1.2.1"
 
 [[override]]
   name = "knative.dev/pkg"

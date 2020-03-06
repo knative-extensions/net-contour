@@ -23,13 +23,13 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 $(dirname ${BASH_SOURCE})
 
 KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 $(dirname ${BASH_SOURCE})/../vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}
 
-# Generate our own client for istio (otherwise injection won't work)
+# Generate our own client for contour (otherwise injection won't work)
 ${CODEGEN_PKG}/generate-groups.sh "client,informer,lister" \
   knative.dev/net-contour/pkg/client github.com/projectcontour/contour/apis \
   "projectcontour:v1" \
   --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
 
-# Knative Injection (for istio)
+# Knative Injection (for contour)
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/net-contour/pkg/client github.com/projectcontour/contour/apis \
   "projectcontour:v1" \
