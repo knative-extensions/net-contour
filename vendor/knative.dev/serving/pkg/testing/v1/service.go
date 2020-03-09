@@ -232,6 +232,21 @@ func WithServiceAnnotations(annotations map[string]string) ServiceOption {
 	}
 }
 
+// WithConfigAnnotations assigns config annotations to a service
+func WithConfigAnnotations(annotations map[string]string) ServiceOption {
+	return func(service *v1.Service) {
+		service.Spec.Template.Annotations = kmeta.UnionMaps(
+			service.Spec.Template.Annotations, annotations)
+	}
+}
+
+// WithBYORevisionName sets the given name to the config spec
+func WithBYORevisionName(name string) ServiceOption {
+	return func(s *v1.Service) {
+		s.Spec.Template.Name = name
+	}
+}
+
 // WithServiceDeletionTimestamp will set the DeletionTimestamp on the Service.
 func WithServiceDeletionTimestamp(r *v1.Service) {
 	t := metav1.NewTime(time.Unix(1e9, 0))
