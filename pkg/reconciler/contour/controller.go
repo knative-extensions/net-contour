@@ -19,6 +19,8 @@ package contour
 import (
 	"context"
 	"flag"
+	projectcontour "github.com/projectcontour/contour/apis/projectcontour/v1"
+	"k8s.io/client-go/dynamic/dynamicinformer"
 	"log"
 
 	//	contourclient "knative.dev/net-contour/pkg/client/injection/client"
@@ -82,6 +84,8 @@ func NewController(
 		log.Fatalf("Failed to create converter : %w", err)
 	}
 
+	dynamicInformers := dynamicinformer.NewDynamicSharedInformerFactory(dynamicClient, 0)
+
 	c := &Reconciler{
 		contourClient:   dynamicClient,
 		serviceLister:   serviceInformer.Lister(),
@@ -112,8 +116,7 @@ func NewController(
 		Handler:    controller.HandleAll(impl.Enqueue),
 	}
 	ingressInformer.Informer().AddEventHandler(ingressHandler)
-	// TODO (fix this)
-	//	proxyInformer.Informer().AddEventHandler(controller.HandleAll(impl.EnqueueControllerOf))
+	dynamicInformers.ForResource(projectcontour.HTTPProxyGVR).Informer().AddEventHandler(controller.HandleAll(impl.EnqueueControllerOf))
 
 	statusProber := status.NewProber(
 		logger.Named("status-manager"),
