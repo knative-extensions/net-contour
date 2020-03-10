@@ -20,14 +20,15 @@ import (
 	"context"
 	"fmt"
 
+	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 
-	contourclientset "knative.dev/net-contour/pkg/client/clientset/versioned"
-	contourlisters "knative.dev/net-contour/pkg/client/listers/projectcontour/v1"
 	ingressreconciler "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
@@ -48,16 +49,13 @@ const (
 
 // Reconciler implements controller.Reconciler for Ingress resources.
 type Reconciler struct {
-	// Client is used to write back status updates.
-	contourClient contourclientset.Interface
-
-	// Listers index properties about resources
-	contourLister   contourlisters.HTTPProxyLister
+	// dynamic Client is used to write back status updates.
+	contourClient   dynamic.Interface
 	serviceLister   corev1listers.ServiceLister
 	endpointsLister corev1listers.EndpointsLister
-
-	statusManager status.Manager
-	tracker       tracker.Interface
+	converter       resources.Converter
+	statusManager   status.Manager
+	tracker         tracker.Interface
 }
 
 var _ ingressreconciler.Interface = (*Reconciler)(nil)
@@ -125,34 +123,50 @@ func (r *Reconciler) reconcileProxies(ctx context.Context, ing *v1alpha1.Ingress
 	}
 
 	for _, proxy := range resources.MakeHTTPProxies(ctx, ing, serviceToProtocol) {
-		selector := labels.Set(map[string]string{
-			resources.ParentKey:     proxy.Labels[resources.ParentKey],
-			resources.DomainHashKey: proxy.Labels[resources.DomainHashKey],
-		}).AsSelector()
-		elts, err := r.contourLister.HTTPProxies(ing.Namespace).List(selector)
+		ls := metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("%s=%s,%s=%s",
+				resources.ParentKey, proxy.Labels[resources.ParentKey],
+				resources.DomainHashKey, proxy.Labels[resources.DomainHashKey]),
+		}
+		elts, err := r.contourClient.Resource(v1.HTTPProxyGVR).Namespace(ing.Namespace).List(ls)
 		if err != nil {
 			return err
 		}
-		if len(elts) == 0 {
-			if _, err := r.contourClient.ProjectcontourV1().HTTPProxies(proxy.Namespace).Create(proxy); err != nil {
+		if len(elts.Items) == 0 {
+			u, err := convertObjtoUnstructured(proxy)
+			if err != nil {
+				return err
+			}
+			if _, err := r.contourClient.Resource(v1.HTTPProxyGVR).Namespace(proxy.Namespace).Create(u, metav1.CreateOptions{}); err != nil {
 				return err
 			}
 			continue
 		}
-		update := elts[0].DeepCopy()
-		update.Annotations = proxy.Annotations
-		update.Labels = proxy.Labels
-		update.Spec = proxy.Spec
-		if equality.Semantic.DeepEqual(elts[0], update) {
+		update := elts.Items[0].DeepCopy()
+
+		up, err := r.convertUnstructuredIntoProxy(update)
+		if err != nil {
+			return err
+		}
+		updateProxy := up.DeepCopy()
+		updateProxy.SetAnnotations(proxy.Annotations)
+		updateProxy.SetLabels(proxy.Labels)
+		updateProxy.Spec = proxy.Spec
+
+		if equality.Semantic.DeepEqual(up, updateProxy) {
 			// Avoid updates that don't change anything.
 			continue
 		}
-		if _, err = r.contourClient.ProjectcontourV1().HTTPProxies(proxy.Namespace).Update(update); err != nil {
+		updateUnstructure, err := convertObjtoUnstructured(updateProxy)
+		if err != nil {
+			return err
+		}
+		if _, err = r.contourClient.Resource(v1.HTTPProxyGVR).Namespace(proxy.Namespace).Update(updateUnstructure, metav1.UpdateOptions{}); err != nil {
 			return err
 		}
 	}
 
-	if err := r.contourClient.ProjectcontourV1().HTTPProxies(ing.Namespace).DeleteCollection(
+	if err := r.contourClient.Resource(v1.HTTPProxyGVR).Namespace(ing.Namespace).DeleteCollection(
 		&metav1.DeleteOptions{},
 		metav1.ListOptions{
 			LabelSelector: fmt.Sprintf("%s=%s,%s!=%d",
@@ -188,4 +202,29 @@ func lbStatus(ctx context.Context, vis v1alpha1.IngressVisibility) (lbs []v1alph
 		}
 	}
 	return
+}
+
+func convertObjtoUnstructured(p metav1.Object) (*unstructured.Unstructured, error) {
+	var u *unstructured.Unstructured
+	proxyObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(p)
+	if err != nil {
+		return nil, err
+	}
+	u.SetUnstructuredContent(proxyObj)
+	return u, nil
+}
+
+func (r Reconciler) convertUnstructuredIntoProxy(u *unstructured.Unstructured) (*v1.HTTPProxy, error) {
+	var p interface{}
+	if r.converter.CanConvert(u) {
+		var err error
+		p, err = r.converter.Convert(u)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if proxy, ok := p.(v1.HTTPProxy); ok {
+		return &proxy, nil
+	}
+	return nil, fmt.Errorf("failed to convert")
 }

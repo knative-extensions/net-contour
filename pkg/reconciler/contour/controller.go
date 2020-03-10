@@ -18,16 +18,20 @@ package contour
 
 import (
 	"context"
+	"flag"
+	"log"
 
-	contourclient "knative.dev/net-contour/pkg/client/injection/client"
-	proxyinformer "knative.dev/net-contour/pkg/client/injection/informers/projectcontour/v1/httpproxy"
+	//	contourclient "knative.dev/net-contour/pkg/client/injection/client"
+	// proxyinformer "knative.dev/net-contour/pkg/client/injection/informers/projectcontour/v1/httpproxy"
 	endpointsinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
+	"knative.dev/pkg/injection/sharedmain"
 	ingressinformer "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress"
 	ingressreconciler "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
+	"knative.dev/net-contour/pkg/reconciler/contour/resources"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -39,6 +43,7 @@ import (
 	"knative.dev/serving/pkg/network/status"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -46,24 +51,42 @@ const (
 	controllerAgentName = "contour-controller"
 )
 
+var (
+	masterURL = flag.String("master", "", "The address of the Kubernetes API server. "+
+		"Overrides any value in kubeconfig. Only required if out-of-cluster.")
+	kubeconfig = flag.String("kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
+)
+
 // NewController returns a new Ingress controller for Project Contour.
 func NewController(
 	ctx context.Context,
 	cmw configmap.Watcher,
 ) *controller.Impl {
-	logger := logging.FromContext(ctx)
 
+	cfg, err := sharedmain.GetConfig(*masterURL, *kubeconfig)
+	if err != nil {
+		log.Fatal("Error building kubeconfig:", err)
+	}
+	dynamicClient, err := dynamic.NewForConfig(cfg)
+	if err != nil {
+		log.Fatalf("Failed to create dynamic interface client: %w", err)
+	}
+
+	logger := logging.FromContext(ctx)
 	endpointsInformer := endpointsinformer.Get(ctx)
 	serviceInformer := serviceinformer.Get(ctx)
 	ingressInformer := ingressinformer.Get(ctx)
-	proxyInformer := proxyinformer.Get(ctx)
 	podInformer := podinformer.Get(ctx)
+	converter, err := resources.NewUnstructuredConverter()
+	if err != nil {
+		log.Fatalf("Failed to create converter : %w", err)
+	}
 
 	c := &Reconciler{
-		contourClient:   contourclient.Get(ctx),
-		contourLister:   proxyInformer.Lister(),
+		contourClient:   dynamicClient,
 		serviceLister:   serviceInformer.Lister(),
 		endpointsLister: endpointsInformer.Lister(),
+		converter:       converter,
 	}
 	myFilterFunc := reconciler.AnnotationFilterFunc(networking.IngressClassAnnotationKey, ContourIngressClassName, false)
 	impl := ingressreconciler.NewImpl(ctx, c,
@@ -89,8 +112,8 @@ func NewController(
 		Handler:    controller.HandleAll(impl.Enqueue),
 	}
 	ingressInformer.Informer().AddEventHandler(ingressHandler)
-
-	proxyInformer.Informer().AddEventHandler(controller.HandleAll(impl.EnqueueControllerOf))
+	// TODO (fix this)
+	//	proxyInformer.Informer().AddEventHandler(controller.HandleAll(impl.EnqueueControllerOf))
 
 	statusProber := status.NewProber(
 		logger.Named("status-manager"),
