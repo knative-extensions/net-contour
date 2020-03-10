@@ -154,6 +154,10 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 		}
 
 		base := v1.HTTPProxy{
+			TypeMeta: metav1.TypeMeta{
+				Kind: "HTTPProxy",
+				APIVersion: v1.SchemeGroupVersion.String(),
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: ing.Namespace,
 				Labels: map[string]string{
