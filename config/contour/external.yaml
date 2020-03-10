@@ -1638,7 +1638,7 @@ spec:
         - envoy
         - shutdown-manager
         command:
-        - /bin/contour
+        - contour
         image: knative.dev/net-contour/vendor/github.com/projectcontour/contour/cmd/contour
         imagePullPolicy: Always
         lifecycle:
