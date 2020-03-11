@@ -19,7 +19,6 @@ package contour
 import (
 	"context"
 	"fmt"
-	"knative.dev/pkg/logging"
 
 	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -54,7 +53,6 @@ type Reconciler struct {
 	contourClient   dynamic.Interface
 	serviceLister   corev1listers.ServiceLister
 	endpointsLister corev1listers.EndpointsLister
-	converter       resources.Converter
 	statusManager   status.Manager
 	tracker         tracker.Interface
 }
@@ -77,8 +75,6 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 }
 
 func (r *Reconciler) reconcileProxies(ctx context.Context, ing *v1alpha1.Ingress) error {
-	logger := logging.FromContext(ctx)
-
 	serviceNames := resources.ServiceNames(ctx, ing)
 	serviceToProtocol := make(map[string]string, len(serviceNames))
 
@@ -126,8 +122,6 @@ func (r *Reconciler) reconcileProxies(ctx context.Context, ing *v1alpha1.Ingress
 	}
 
 	for _, proxy := range resources.MakeHTTPProxies(ctx, ing, serviceToProtocol) {
-		logger.Infof("QQQQ Proxy to create: %#v", proxy)
-
 		ls := metav1.ListOptions{
 			LabelSelector: fmt.Sprintf("%s=%s,%s=%s",
 				resources.ParentKey, proxy.Labels[resources.ParentKey],
@@ -137,46 +131,36 @@ func (r *Reconciler) reconcileProxies(ctx context.Context, ing *v1alpha1.Ingress
 		if err != nil {
 			return err
 		}
-		logger.Infof("QQQQ Total items found: %d", len(elts.Items))
 		if len(elts.Items) == 0 {
 			u, err := convertObjtoUnstructured(proxy)
 			if err != nil {
-				logger.Infof("QQQQ ALERT ALERT WE FAILED WITH ERROR: %#v", err)
 				return err
 			}
 
-			logger.Infof("QQQQ About to create object: %#v", u)
 			if _, err := r.contourClient.Resource(v1.HTTPProxyGVR).Namespace(proxy.Namespace).Create(u, metav1.CreateOptions{}); err != nil {
 				return err
 			}
 			continue
 		}
 		update := elts.Items[0].DeepCopy()
-		logger.Infof("QQQQ Already present US http proxy obj: %#v", update)
-		up, err := r.convertUnstructuredIntoProxy(update)
+		up, err := convertUnstructuredIntoProxy(update)
 		if err != nil {
 			return err
 		}
-		logger.Infof("QQQQ Already present non-US http proxy obj: %#v", up)
-
 		updateProxy := up.DeepCopy()
 		updateProxy.SetAnnotations(proxy.Annotations)
 		updateProxy.SetLabels(proxy.Labels)
 		updateProxy.Spec = proxy.Spec
 
 		if equality.Semantic.DeepEqual(up, updateProxy) {
-			logger.Info("QQQQ do nothing and exit")
 			// Avoid updates that don't change anything.
 			continue
 		}
-		logger.Infof("QQQQ updated obj : %#v", updateProxy)
 		updateUnstructure, err := convertObjtoUnstructured(updateProxy)
 		if err != nil {
 			return err
 		}
-		logger.Infof("QQQQ about to update obj : %#v", updateUnstructure)
 		if _, err = r.contourClient.Resource(v1.HTTPProxyGVR).Namespace(proxy.Namespace).Update(updateUnstructure, metav1.UpdateOptions{}); err != nil {
-			logger.Infof("QQQQ Error updating %#v", err)
 			return err
 		}
 	}
@@ -229,7 +213,7 @@ func convertObjtoUnstructured(p metav1.Object) (*unstructured.Unstructured, erro
 	return u, nil
 }
 
-func (r Reconciler) convertUnstructuredIntoProxy(u *unstructured.Unstructured) (*v1.HTTPProxy, error) {
+func convertUnstructuredIntoProxy(u *unstructured.Unstructured) (*v1.HTTPProxy, error) {
 	p := &v1.HTTPProxy{}
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, p)
 	if err != nil {

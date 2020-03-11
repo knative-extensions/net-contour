@@ -18,19 +18,19 @@ package contour
 
 import (
 	"context"
-	projectcontour "github.com/projectcontour/contour/apis/projectcontour/v1"
-	"k8s.io/client-go/dynamic/dynamicinformer"
-	"knative.dev/pkg/injection/clients/dynamicclient"
-	"log"
 
+	projectcontour "github.com/projectcontour/contour/apis/projectcontour/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic/dynamicinformer"
 	endpointsinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
+	"knative.dev/pkg/injection/clients/dynamicclient"
 	ingressinformer "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress"
 	ingressreconciler "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
-	"knative.dev/net-contour/pkg/reconciler/contour/resources"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -63,16 +63,11 @@ func NewController(
 	serviceInformer := serviceinformer.Get(ctx)
 	ingressInformer := ingressinformer.Get(ctx)
 	podInformer := podinformer.Get(ctx)
-	converter, err := resources.NewUnstructuredConverter()
-	if err != nil {
-		log.Fatalf("Failed to create converter : %w", err)
-	}
 
 	c := &Reconciler{
 		contourClient:   dc,
 		serviceLister:   serviceInformer.Lister(),
 		endpointsLister: endpointsInformer.Lister(),
-		converter:       converter,
 	}
 	myFilterFunc := reconciler.AnnotationFilterFunc(networking.IngressClassAnnotationKey, ContourIngressClassName, false)
 	impl := ingressreconciler.NewImpl(ctx, c,
@@ -101,9 +96,11 @@ func NewController(
 
 	convertFunc := func(enqueueFunc func(interface{})) func(interface{}) {
 		return func(obj interface{}) {
-			if converter.CanConvert(obj) {
-				httpProxy, _ := converter.Convert(obj) // TODO: What to do with error
-				enqueueFunc(httpProxy)
+			var p interface{}
+			unstructured, ok := obj.(*unstructured.Unstructured)
+			if ok {
+				runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured.Object, p)
+				enqueueFunc(p)
 			}
 		}
 	}

@@ -19,7 +19,6 @@ package contour
 import (
 	"testing"
 
-	_ "knative.dev/net-contour/pkg/client/injection/informers/projectcontour/v1/httpproxy/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"

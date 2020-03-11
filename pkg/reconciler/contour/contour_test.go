@@ -25,8 +25,6 @@ import (
 
 	"knative.dev/pkg/logging"
 
-	fakecontourclient "knative.dev/net-contour/pkg/client/injection/client/fake"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -39,6 +37,7 @@ import (
 	"knative.dev/net-contour/pkg/reconciler/contour/resources"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
@@ -355,8 +354,7 @@ func TestReconcile(t *testing.T) {
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		r := &Reconciler{
-			contourClient:   fakecontourclient.Get(ctx),
-			contourLister:   listers.GetHTTPProxyLister(),
+			contourClient:   fakedynamicclient.Get(ctx),
 			serviceLister:   listers.GetK8sServiceLister(),
 			endpointsLister: listers.GetEndpointsLister(),
 			tracker:         &NullTracker{},
@@ -402,8 +400,7 @@ func TestReconcileProberNotReady(t *testing.T) {
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		r := &Reconciler{
-			contourClient:   fakecontourclient.Get(ctx),
-			contourLister:   listers.GetHTTPProxyLister(),
+			contourClient:   fakedynamicclient.Get(ctx),
 			serviceLister:   listers.GetK8sServiceLister(),
 			endpointsLister: listers.GetEndpointsLister(),
 			tracker:         &NullTracker{},
@@ -453,8 +450,7 @@ func TestReconcileProbeError(t *testing.T) {
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		r := &Reconciler{
-			contourClient:   fakecontourclient.Get(ctx),
-			contourLister:   listers.GetHTTPProxyLister(),
+			contourClient:   fakedynamicclient.Get(ctx),
 			serviceLister:   listers.GetK8sServiceLister(),
 			endpointsLister: listers.GetEndpointsLister(),
 			tracker:         &NullTracker{},

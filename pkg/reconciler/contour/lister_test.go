@@ -31,7 +31,6 @@ import (
 	"knative.dev/serving/pkg/network/status"
 
 	"github.com/google/go-cmp/cmp"
-	. "knative.dev/net-contour/pkg/reconciler/testing"
 )
 
 func TestListProbeTargets(t *testing.T) {
