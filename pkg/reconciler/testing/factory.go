@@ -18,15 +18,12 @@ package testing
 
 import (
 	"context"
-	"encoding/json"
 	"testing"
 
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	fakeservingclient "knative.dev/serving/pkg/client/injection/client/fake"
 
-	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	ktesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
@@ -60,7 +57,7 @@ func MakeFactory(ctor Ctor) rtesting.Factory {
 		ctx, client := fakeservingclient.With(ctx, ls.GetServingObjects()...)
 		ctx, kubeclient := fakekubeclient.With(ctx, ls.GetKubeObjects()...)
 		ctx, dynamicClient := fakedynamicclient.With(ctx,
-			ls.NewScheme(), ToUnstructured(t, ls.NewScheme(), r.Objects)...)
+			ls.NewScheme(), r.Objects...)
 
 		// This is needed by the Configuration controller tests, which
 		// use GenerateName to produce Revisions.
@@ -97,37 +94,4 @@ func MakeFactory(ctor Ctor) rtesting.Factory {
 
 		return c, actionRecorderList, eventList
 	}
-}
-
-// ToUnstructured takes a list of k8s resources and converts them to
-// Unstructured objects.
-// We must pass objects as Unstructured to the dynamic client fake, or it
-// won't handle them properly.
-func ToUnstructured(t *testing.T, sch *runtime.Scheme, objs []runtime.Object) (us []runtime.Object) {
-	for _, obj := range objs {
-		obj = obj.DeepCopyObject() // Don't mess with the primary copy
-		// Determine and set the TypeMeta for this object based on our test scheme.
-		gvks, _, err := sch.ObjectKinds(obj)
-		if err != nil {
-			t.Fatalf("Unable to determine kind for type: %v", err)
-		}
-		apiv, k := gvks[0].ToAPIVersionAndKind()
-		ta, err := meta.TypeAccessor(obj)
-		if err != nil {
-			t.Fatalf("Unable to create type accessor: %v", err)
-		}
-		ta.SetAPIVersion(apiv)
-		ta.SetKind(k)
-
-		b, err := json.Marshal(obj)
-		if err != nil {
-			t.Fatalf("Unable to marshal: %v", err)
-		}
-		u := &unstructured.Unstructured{}
-		if err := json.Unmarshal(b, u); err != nil {
-			t.Fatalf("Unable to unmarshal: %v", err)
-		}
-		us = append(us, u)
-	}
-	return
 }

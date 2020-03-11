@@ -27,7 +27,7 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
 	"knative.dev/pkg/configmap"
-	dynamicfake "knative.dev/pkg/injection/clients/dynamicclient/fake"
+	dynamicclientfake "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/system"
 	_ "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
 	"knative.dev/serving/pkg/network"
@@ -37,7 +37,7 @@ import (
 
 func TestNew(t *testing.T) {
 	ctx, _ := SetupFakeContext(t)
-	ctx, _ = dynamicfake.With(ctx, runtime.NewScheme())
+	ctx, _ = dynamicclientfake.With(ctx, runtime.NewScheme())
 	c := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: system.Namespace(),

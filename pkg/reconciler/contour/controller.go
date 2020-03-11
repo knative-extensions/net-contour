@@ -54,18 +54,18 @@ func NewController(
 	ctx context.Context,
 	cmw configmap.Watcher,
 ) *controller.Impl {
-
-	dc := dynamicclient.Get(ctx)
-	dynamicInformers := dynamicinformer.NewDynamicSharedInformerFactory(dc, 0)
-
 	logger := logging.FromContext(ctx)
+
+	dynamicClient := dynamicclient.Get(ctx)
+
+	dynamicInformers := dynamicinformer.NewDynamicSharedInformerFactory(dynamicClient, controller.DefaultResyncPeriod)
 	endpointsInformer := endpointsinformer.Get(ctx)
 	serviceInformer := serviceinformer.Get(ctx)
 	ingressInformer := ingressinformer.Get(ctx)
 	podInformer := podinformer.Get(ctx)
 
 	c := &Reconciler{
-		contourClient:   dc,
+		contourClient:   dynamicClient,
 		serviceLister:   serviceInformer.Lister(),
 		endpointsLister: endpointsInformer.Lister(),
 	}
@@ -94,18 +94,7 @@ func NewController(
 	}
 	ingressInformer.Informer().AddEventHandler(ingressHandler)
 
-	convertFunc := func(enqueueFunc func(interface{})) func(interface{}) {
-		return func(obj interface{}) {
-			var p interface{}
-			unstructured, ok := obj.(*unstructured.Unstructured)
-			if ok {
-				runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured.Object, p)
-				enqueueFunc(p)
-			}
-		}
-	}
-
-	dynamicInformers.ForResource(projectcontour.HTTPProxyGVR).Informer().AddEventHandler(controller.HandleAll(convertFunc(impl.EnqueueControllerOf)))
+	dynamicInformers.ForResource(projectcontour.HTTPProxyGVR).Informer().AddEventHandler(controller.HandleAll(convertUnstructuredFuncHandler(impl.EnqueueControllerOf)))
 
 	statusProber := status.NewProber(
 		logger.Named("status-manager"),
@@ -148,4 +137,16 @@ func NewController(
 	))
 
 	return impl
+}
+
+// convertUnstructuredFuncHandler converts unstructured type to obj
+func convertUnstructuredFuncHandler(enqueueFunc func(interface{})) func(interface{}) {
+	return func(obj interface{}) {
+		var p interface{}
+		unstructured, ok := obj.(*unstructured.Unstructured)
+		if ok {
+			runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured.Object, p)
+			enqueueFunc(p)
+		}
+	}
 }

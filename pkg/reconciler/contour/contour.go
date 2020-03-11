@@ -18,6 +18,7 @@ package contour
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
@@ -141,25 +142,25 @@ func (r *Reconciler) reconcileProxies(ctx context.Context, ing *v1alpha1.Ingress
 			}
 			continue
 		}
-		update := elts.Items[0].DeepCopy()
-		up, err := convertUnstructuredIntoProxy(update)
+		us := elts.Items[0].DeepCopy()
+		update := us.DeepCopy()
+		update.SetLabels(proxy.Labels)
+		update.SetAnnotations(proxy.Annotations)
+		// Update spec
+		b, err := json.Marshal(proxy)
 		if err != nil {
 			return err
 		}
-		updateProxy := up.DeepCopy()
-		updateProxy.SetAnnotations(proxy.Annotations)
-		updateProxy.SetLabels(proxy.Labels)
-		updateProxy.Spec = proxy.Spec
-
-		if equality.Semantic.DeepEqual(up, updateProxy) {
+		u := &unstructured.Unstructured{}
+		if err := json.Unmarshal(b, u); err != nil {
+			return err
+		}
+		update.Object["spec"] = u.Object["spec"]
+		if equality.Semantic.DeepEqual(us, update) {
 			// Avoid updates that don't change anything.
 			continue
 		}
-		updateUnstructure, err := convertObjtoUnstructured(updateProxy)
-		if err != nil {
-			return err
-		}
-		if _, err = r.contourClient.Resource(v1.HTTPProxyGVR).Namespace(proxy.Namespace).Update(updateUnstructure, metav1.UpdateOptions{}); err != nil {
+		if _, err = r.contourClient.Resource(v1.HTTPProxyGVR).Namespace(proxy.Namespace).Update(update, metav1.UpdateOptions{}); err != nil {
 			return err
 		}
 	}
@@ -210,14 +211,4 @@ func convertObjtoUnstructured(p metav1.Object) (*unstructured.Unstructured, erro
 	u := &unstructured.Unstructured{}
 	u.SetUnstructuredContent(proxyObj)
 	return u, nil
-}
-
-func convertUnstructuredIntoProxy(u *unstructured.Unstructured) (*v1.HTTPProxy, error) {
-	p := &v1.HTTPProxy{}
-	err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, p)
-	if err != nil {
-		return nil, err
-	}
-
-	return p, nil
 }
