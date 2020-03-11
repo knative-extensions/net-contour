@@ -39,6 +39,13 @@ const (
 	privateClass = "this-is-the-private-class"
 )
 
+var (
+	proxyMeta = metav1.TypeMeta{
+		Kind:       "HTTPProxy",
+		APIVersion: v1.SchemeGroupVersion.String(),
+	}
+)
+
 func TestMakeProxies(t *testing.T) {
 	protocol := "h2c"
 	serviceToProtocol := map[string]string{
@@ -92,6 +99,7 @@ func TestMakeProxies(t *testing.T) {
 			},
 		},
 		want: []*v1.HTTPProxy{{
+			TypeMeta: proxyMeta,
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
 				Name:      "bar-example.com",
@@ -183,6 +191,7 @@ func TestMakeProxies(t *testing.T) {
 			},
 		},
 		want: []*v1.HTTPProxy{{
+			TypeMeta: proxyMeta,
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
 				Name:      "bar-foo.bar",
@@ -224,6 +233,7 @@ func TestMakeProxies(t *testing.T) {
 				}},
 			},
 		}, {
+			TypeMeta: proxyMeta,
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
 				Name:      "bar-foo.bar.svc",
@@ -265,6 +275,7 @@ func TestMakeProxies(t *testing.T) {
 				}},
 			},
 		}, {
+			TypeMeta: proxyMeta,
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
 				Name:      "bar-foo.bar.svc.cluster.local",
@@ -337,6 +348,7 @@ func TestMakeProxies(t *testing.T) {
 			},
 		},
 		want: []*v1.HTTPProxy{{
+			TypeMeta: proxyMeta,
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
 				Name:      "bar-example.com",
@@ -421,6 +433,7 @@ func TestMakeProxies(t *testing.T) {
 			},
 		},
 		want: []*v1.HTTPProxy{{
+			TypeMeta: proxyMeta,
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
 				Name:      "bar-example.com",
@@ -529,6 +542,7 @@ func TestMakeProxies(t *testing.T) {
 			},
 		},
 		want: []*v1.HTTPProxy{{
+			TypeMeta: proxyMeta,
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
 				Name:      "bar-example.com",
@@ -639,6 +653,7 @@ func TestMakeProxies(t *testing.T) {
 			},
 		},
 		want: []*v1.HTTPProxy{{
+			TypeMeta: proxyMeta,
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
 				Name:      "bar-example.com",

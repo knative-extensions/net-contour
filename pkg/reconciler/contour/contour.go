@@ -49,7 +49,6 @@ const (
 
 // Reconciler implements controller.Reconciler for Ingress resources.
 type Reconciler struct {
-	// dynamic Client is used to write back status updates.
 	contourClient   dynamic.Interface
 	serviceLister   corev1listers.ServiceLister
 	endpointsLister corev1listers.EndpointsLister

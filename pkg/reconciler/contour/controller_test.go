@@ -19,16 +19,17 @@ package contour
 import (
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"knative.dev/net-contour/pkg/reconciler/contour/config"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
-	_ "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
-
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/net-contour/pkg/reconciler/contour/config"
 	"knative.dev/pkg/configmap"
+	dynamicfake "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/system"
+	_ "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
 	"knative.dev/serving/pkg/network"
 
 	. "knative.dev/pkg/reconciler/testing"
@@ -36,7 +37,7 @@ import (
 
 func TestNew(t *testing.T) {
 	ctx, _ := SetupFakeContext(t)
-
+	ctx, _ = dynamicfake.With(ctx, runtime.NewScheme())
 	c := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: system.Namespace(),

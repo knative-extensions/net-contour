@@ -24,16 +24,16 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 $(dirname ${BASH_SOURCE})
 KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 $(dirname ${BASH_SOURCE})/../vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}
 
 # Generate our own client for contour (otherwise injection won't work)
-${CODEGEN_PKG}/generate-groups.sh "informer,lister" \
-  knative.dev/net-contour/pkg/client github.com/projectcontour/contour/apis \
-  "projectcontour:v1" \
-  --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
+# ${CODEGEN_PKG}/generate-groups.sh "informer,lister" \
+#   knative.dev/net-contour/pkg/client github.com/projectcontour/contour/apis \
+#   "projectcontour:v1" \
+#   --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
 
 # Knative Injection (for contour)
-${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
-  knative.dev/net-contour/pkg/client github.com/projectcontour/contour/apis \
-  "projectcontour:v1" \
-  --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
+# ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
+#   knative.dev/net-contour/pkg/client github.com/projectcontour/contour/apis \
+#   "projectcontour:v1" \
+#   --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
 
 # Depends on generate-groups.sh to install bin/deepcopy-gen
 ${GOPATH}/bin/deepcopy-gen \
