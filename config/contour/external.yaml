@@ -1634,12 +1634,12 @@ spec:
         app: envoy
     spec:
       containers:
-      - args:
+      - command:
+        - /bin/contour
+        args:
         - envoy
         - shutdown-manager
-        command:
-        - contour
-        image: knative.dev/net-contour/vendor/github.com/projectcontour/contour/cmd/contour
+        image: ko://knative.dev/net-contour/vendor/github.com/projectcontour/contour/cmd/contour
         imagePullPolicy: Always
         lifecycle:
           preStop:
@@ -1662,7 +1662,7 @@ spec:
         - --log-level info
         command:
         - envoy
-        image: docker.io/envoyproxy/envoy:v1.12.2
+        image: docker.io/envoyproxy/envoy:v1.13.1
         imagePullPolicy: IfNotPresent
         name: envoy
         env:
@@ -1676,15 +1676,6 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.name
-        image: docker.io/envoyproxy/envoy:v1.13.1
-        imagePullPolicy: IfNotPresent
-        lifecycle:
-          preStop:
-            httpGet:
-              path: /shutdown
-              port: 8090
-              scheme: HTTP
-        name: envoy
         ports:
         - containerPort: 80
           # hostPort: 80
@@ -1709,16 +1700,10 @@ spec:
           mountPath: /ca
         lifecycle:
           preStop:
-            exec:
-              command:
-              - bash
-              - -c
-              - --
-              - echo
-              - -ne
-              - "POST /healthcheck/fail HTTP/1.1\r\nHost: localhost\r\nConnection:
-                close\r\n\r\n"
-              - '>/dev/tcp/localhost/9001'
+            httpGet:
+              path: /shutdown
+              port: 8090
+              scheme: HTTP
       initContainers:
       - args:
         - bootstrap
@@ -1748,7 +1733,6 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
       automountServiceAccountToken: false
-      restartPolicy: Always
       terminationGracePeriodSeconds: 300
       volumes:
       - name: envoy-config
