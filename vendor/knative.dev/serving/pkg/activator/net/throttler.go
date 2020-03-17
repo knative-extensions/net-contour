@@ -22,7 +22,6 @@ import (
 	"math"
 	"math/rand"
 	"sort"
-	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -142,9 +141,6 @@ type revisionThrottler struct {
 	//request path. This is: trackers, clusterIPDest.
 	mux sync.RWMutex
 
-	// Used to atomically calculate and set capacity.
-	capacityMux sync.Mutex
-
 	logger *zap.SugaredLogger
 }
 
@@ -246,29 +242,39 @@ func (rt *revisionThrottler) resetTrackers() {
 	}
 }
 
+// updateCapacity updates the capacity of the throttler and recomputes
+// the assigned trackers to the Activator instance.
+// Currently updateCapacity is ensured to be invoked from a single go routine
+// and this does not synchronize
 func (rt *revisionThrottler) updateCapacity(backendCount int) {
 	// We have to make assignments on each updateCapacity, since if number
 	// of activators changes, then we need to rebalance the assignedTrackers.
 
 	ac, ai := int(atomic.LoadInt32(&rt.numActivators)), int(atomic.LoadInt32(&rt.activatorIndex))
 	numTrackers := func() int {
-		rt.mux.Lock()
-		defer rt.mux.Unlock()
+		// We do not have to process the `podTrackers` under lock, since
+		// updateCapacity is guaranteed to be executed by a single goroutine.
+		// But `assignedTrackers` is being read by the serving thread, so the
+		// actual assignment has to be done under lock.
+
 		// We're using cluster IP.
 		if rt.clusterIPTracker != nil {
 			return 0
 		}
-		// Infinite capacity or unassigned revision, assign all.
-		if rt.containerConcurrency == 0 {
-			rt.assignedTrackers = rt.podTrackers
-		} else {
+
+		assigned := rt.podTrackers
+		if rt.containerConcurrency != 0 {
 			rt.resetTrackers()
 			// TODO(vagababov): pull assign slice into RT.
-			rt.assignedTrackers = assignSlice(rt.podTrackers,
+			assigned = assignSlice(rt.podTrackers,
 				ai, ac, rt.containerConcurrency)
 		}
 		rt.logger.Debugf("Trackers %d/%d:  %v", ai, ac, rt.assignedTrackers)
-		return len(rt.assignedTrackers)
+		// The actual write out of the assigned trackers has to be under lock.
+		rt.mux.Lock()
+		defer rt.mux.Unlock()
+		rt.assignedTrackers = assigned
+		return len(assigned)
 	}()
 
 	capacity := 0
@@ -283,10 +289,6 @@ func (rt *revisionThrottler) updateCapacity(backendCount int) {
 	}
 	rt.logger.Infof("Set capacity to %d (backends: %d, index: %d/%d)",
 		capacity, backendCount, ai, ac)
-
-	// TODO(vagababov): analyze to see if we need this mutex at all?
-	rt.capacityMux.Lock()
-	defer rt.capacityMux.Unlock()
 
 	rt.backendCount = backendCount
 	rt.breaker.UpdateConcurrency(capacity)
@@ -589,15 +591,30 @@ func (t *Throttler) handlePubEpsUpdate(eps *corev1.Endpoints) {
 
 func (rt *revisionThrottler) handlePubEpsUpdate(eps *corev1.Endpoints, selfIP string) {
 	// NB: this is guaranteed to be executed on a single thread.
-	epSet, _ := endpointsToDests(eps, rt.protocol)
+	epSet := healthyAddresses(eps, rt.protocol)
+	if !epSet.Has(selfIP) {
+		// No need to do anything, this activator is not in path.
+		return
+	}
+
 	// We are using List to have the IP addresses sorted for consistent results.
 	epsL := epSet.List()
-	atomic.StoreInt32(&rt.numActivators, int32(len(epsL)))
-	atomic.StoreInt32(&rt.activatorIndex, int32(inferIndex(epsL, selfIP)))
-	// Note that if the revision is served directly or this activator is not
-	// part of the subset it will be `-1/X`. And that's OK, since this activator
-	// should not be receiving requests for the revision.
-	rt.logger.Infof("This activator index is %d/%d", rt.activatorIndex, rt.numActivators)
+	newNA, newAI := int32(len(epsL)), int32(inferIndex(epsL, selfIP))
+	if newAI == -1 {
+		// No need to do anything, this activator is not in path.
+		return
+	}
+
+	na, ai := atomic.LoadInt32(&rt.numActivators), atomic.LoadInt32(&rt.activatorIndex)
+	if na == newNA && ai == newAI {
+		// The state didn't change, do nothing
+		return
+	}
+
+	atomic.StoreInt32(&rt.numActivators, newNA)
+	atomic.StoreInt32(&rt.activatorIndex, newAI)
+	rt.logger.Infof("This activator index is %d/%d was %d/%d",
+		rt.activatorIndex, rt.numActivators, newAI, newNA)
 	rt.updateCapacity(rt.backendCount)
 }
 
@@ -609,12 +626,11 @@ func (rt *revisionThrottler) handlePubEpsUpdate(eps *corev1.Endpoints, selfIP st
 // For now we are just sorting the IP addresses of all activators
 // and finding our index in that list.
 func inferIndex(eps []string, ipAddress string) int {
-	// `eps` will contain port, so binary search of the insertion point would be fine.
 	idx := sort.SearchStrings(eps, ipAddress)
 
 	// Check if this activator is part of the endpoints slice?
-	if idx == len(eps) || !strings.HasPrefix(eps[idx], ipAddress) {
-		idx = -1
+	if idx == len(eps) || eps[idx] != ipAddress {
+		return -1
 	}
 	return idx
 }
