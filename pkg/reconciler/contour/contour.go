@@ -69,6 +69,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 	}
 	ing.Status.InitializeConditions()
 
+	// TODO(mattmoor): DO NOT SUBMIT
+
 	if err := r.reconcileProxies(ctx, ing); err != nil {
 		return err
 	}
