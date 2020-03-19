@@ -28,7 +28,7 @@ function setup_auto_tls_env_variables() {
   # Google Cloud project that hosts the DNS server for the testing domain `kn-e2e.dev`
   export CLOUD_DNS_PROJECT="knative-e2e-dns"
   # The service account credential file used to access the DNS server.
-  export CLOUD_DNS_SERVICE_ACCOUNT_KEY_FILE="/etc/test-account/service-account.json"
+  export CLOUD_DNS_SERVICE_ACCOUNT_KEY_FILE="${GOOGLE_APPLICATION_CREDENTIALS}"
 
   export CUSTOM_DOMAIN_SUFFIX="$(($RANDOM % 10000)).${E2E_PROJECT_ID}.kn-e2e.dev"
 
@@ -92,11 +92,18 @@ function setup_http01_auto_tls() {
   # The name of the Knative Service deployed in Auto TLS E2E test.
   export TLS_SERVICE_NAME="http01"
   # The full host name of the Knative Service. This is used to configure the DNS record.
-  export FULL_HOST_NAME="${TLS_SERVICE_NAME}.serving-tests.${CUSTOM_DOMAIN_SUFFIX}"
+  export FULL_HOST_NAME="*.serving-tests.${CUSTOM_DOMAIN_SUFFIX}"
 
   kubectl delete kcert --all -n serving-tests
 
-  kubectl apply -f test/config/autotls/certmanager/http01/
+  if [[ -z "${MESH}" ]]; then
+    echo "Install cert-manager no-mesh ClusterIssuer"
+    kubectl apply -f test/config/autotls/certmanager/http01/issuer.yaml
+  else
+    echo "Install cert-manager mesh ClusterIssuer"
+    kubectl apply -f test/config/autotls/certmanager/http01/mesh-issuer.yaml
+  fi
+  kubectl apply -f test/config/autotls/certmanager/http01/config-certmanager.yaml
   setup_dns_record
 }
 
