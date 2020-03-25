@@ -32,6 +32,9 @@ import (
 )
 
 type serveContext struct {
+	// Enable debug logging
+	Debug bool
+
 	// contour's kubernetes client parameters
 	InCluster  bool   `yaml:"incluster,omitempty"`
 	Kubeconfig string `yaml:"kubeconfig,omitempty"`
@@ -100,14 +103,12 @@ type serveContext struct {
 	// RequestTimeout sets the client request timeout globally for Contour.
 	RequestTimeout time.Duration `yaml:"request-timeout,omitempty"`
 
-	// Should Contour fall back to registering an informer for the deprecated
-	// extensions/v1beta1.Ingress type.
-	// By default this value is false, meaning Contour will register an informer for
-	// networking/v1beta1.Ingress and expect the API server to rewrite extensions/v1beta1.Ingress
-	// objects transparently.
-	// If the value is true, Contour will register for extensions/v1beta1.Ingress type and do
-	// the rewrite itself.
-	UseExtensionsV1beta1Ingress bool `yaml:"-"`
+	// Should Contour register to watch the new service-apis types?
+	// By default this value is false, meaning Contour will not do anything with any of the new
+	// types.
+	// If the value is true, Contour will register for all the service-apis types
+	// (GatewayClass, Gateway, HTTPRoute, TCPRoute, and any more as they are added)
+	UseExperimentalServiceAPITypes bool `yaml:"-"`
 }
 
 // newServeContext returns a serveContext initialized to defaults.
@@ -163,7 +164,7 @@ func newServeContext() *serveContext {
 			Namespace:     "projectcontour",
 			Name:          "leader-elect",
 		},
-		UseExtensionsV1beta1Ingress: false,
+		UseExperimentalServiceAPITypes: false,
 	}
 }
 

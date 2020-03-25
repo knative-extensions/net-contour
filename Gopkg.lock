@@ -468,7 +468,7 @@
   version = "v0.9.1"
 
 [[projects]]
-  digest = "1:8f391adda8f9ae924187e999be21d384fcc16e837baecd31953781ace31afb40"
+  digest = "1:8db5558d02c67ba3b86114c8ecd5955fe4ab645afa0bfa5b31fe61fa70f9039f"
   name = "github.com/projectcontour/contour"
   packages = [
     "apis/contour/v1beta1",
@@ -487,8 +487,8 @@
     "internal/workgroup",
   ]
   pruneopts = "T"
-  revision = "aaef3a1cd46e28dcac27457ad0d6774adb74b2e6"
-  version = "v1.2.1"
+  revision = "59a3958428a4cd537ca8cf0798aa3993dd43a8ef"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:097cc61836050f45cbb712ae3bb45d66fba464c16b8fac09907fa3c1f753eff6"
@@ -1531,6 +1531,22 @@
   ]
   pruneopts = "UT"
   revision = "9a501343b4dafbac1a1a5dcfe2cb46975a78abb5"
+
+[[projects]]
+  digest = "1:c4e8f6509ee8cec911985a812ed3f9cc024404acc45ac613fa103f735cf3222a"
+  name = "sigs.k8s.io/controller-runtime"
+  packages = ["pkg/scheme"]
+  pruneopts = "NUT"
+  revision = "525a2d7dce5661cb90395b40a31575589ae504a2"
+  version = "v0.5.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:ca8eb29415031b1921edb2dbdba7eb79693aa3b917c7b9ef59808b7d4abe69b8"
+  name = "sigs.k8s.io/service-apis"
+  packages = ["api/v1alpha1"]
+  pruneopts = "NUT"
+  revision = "914e9fe48b3ca7b77e5819da929f07be8992c32b"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"

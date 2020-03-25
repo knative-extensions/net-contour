@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
+	serviceapis "sigs.k8s.io/service-apis/api/v1alpha1"
 )
 
 // DynamicClientHandler converts *unstructured.Unstructured from the
@@ -39,52 +40,39 @@ type DynamicClientHandler struct {
 }
 
 func (d *DynamicClientHandler) OnAdd(obj interface{}) {
-	if d.Converter.CanConvert(obj) {
-		var err error
-		obj, err = d.Converter.Convert(obj)
-		if err != nil {
-			d.Logger.Error(err)
-			return
-		}
+	obj, err := d.Converter.Convert(obj)
+	if err != nil {
+		d.Logger.Error(err)
+		return
 	}
 	d.Next.OnAdd(obj)
 }
 
 func (d *DynamicClientHandler) OnUpdate(oldObj, newObj interface{}) {
-	if d.Converter.CanConvert(oldObj) {
-		var err error
-		oldObj, err = d.Converter.Convert(oldObj)
-		if err != nil {
-			d.Logger.Error(err)
-			return
-		}
+	oldObj, err := d.Converter.Convert(oldObj)
+	if err != nil {
+		d.Logger.Error(err)
+		return
 	}
-	if d.Converter.CanConvert(newObj) {
-		var err error
-		newObj, err = d.Converter.Convert(newObj)
-		if err != nil {
-			d.Logger.Error(err)
-			return
-		}
+	newObj, err = d.Converter.Convert(newObj)
+	if err != nil {
+		d.Logger.Error(err)
+		return
 	}
 	d.Next.OnUpdate(oldObj, newObj)
 }
 
 func (d *DynamicClientHandler) OnDelete(obj interface{}) {
-	if d.Converter.CanConvert(obj) {
-		var err error
-		obj, err = d.Converter.Convert(obj)
-		if err != nil {
-			d.Logger.Error(err)
-			return
-		}
+	obj, err := d.Converter.Convert(obj)
+	if err != nil {
+		d.Logger.Error(err)
+		return
 	}
 	d.Next.OnDelete(obj)
 }
 
 type Converter interface {
 	Convert(obj interface{}) (interface{}, error)
-	CanConvert(obj interface{}) bool
 }
 
 // UnstructuredConverter handles conversions between unstructured.Unstructured and Contour types
@@ -94,7 +82,7 @@ type UnstructuredConverter struct {
 }
 
 // NewUnstructuredConverter returns a new UnstructuredConverter initialized
-func NewUnstructuredConverter() *UnstructuredConverter {
+func NewUnstructuredConverter() (*UnstructuredConverter, error) {
 	uc := &UnstructuredConverter{
 		scheme: runtime.NewScheme(),
 	}
@@ -103,19 +91,20 @@ func NewUnstructuredConverter() *UnstructuredConverter {
 	projectcontour.AddKnownTypes(uc.scheme)
 	ingressroutev1.AddKnownTypes(uc.scheme)
 
-	return uc
+	// The kubebuilder tools' contract here is different, yay.
+	if err := serviceapis.AddToScheme(uc.scheme); err != nil {
+		return nil, err
+	}
+
+	return uc, nil
 }
 
-func (c *UnstructuredConverter) CanConvert(obj interface{}) bool {
-	_, ok := obj.(*unstructured.Unstructured)
-	return ok
-}
-
-// Convert converts an unstructured.Unstructured to typed struct
+// Convert converts an unstructured.Unstructured to typed struct. If obj
+// is not an unstructured.Unstructured it is returned without further processing.
 func (c *UnstructuredConverter) Convert(obj interface{}) (interface{}, error) {
 	unstructured, ok := obj.(*unstructured.Unstructured)
 	if !ok {
-		return nil, fmt.Errorf("unsupported object type: %T", obj)
+		return obj, nil
 	}
 	switch unstructured.GetKind() {
 	case "HTTPProxy":
@@ -139,6 +128,22 @@ func (c *UnstructuredConverter) Convert(obj interface{}) (interface{}, error) {
 		default:
 			return nil, fmt.Errorf("unsupported object type: %T", obj)
 		}
+	case "GatewayClass":
+		gc := &serviceapis.GatewayClass{}
+		err := c.scheme.Convert(obj, gc, nil)
+		return gc, err
+	case "Gateway":
+		g := &serviceapis.Gateway{}
+		err := c.scheme.Convert(obj, g, nil)
+		return g, err
+	case "HTTPRoute":
+		hr := &serviceapis.HTTPRoute{}
+		err := c.scheme.Convert(obj, hr, nil)
+		return hr, err
+	case "TcpRoute":
+		tr := &serviceapis.TcpRoute{}
+		err := c.scheme.Convert(obj, tr, nil)
+		return tr, err
 	default:
 		return nil, fmt.Errorf("unsupported object type: %T", obj)
 	}
