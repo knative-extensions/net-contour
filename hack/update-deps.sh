@@ -83,6 +83,9 @@ function privatize_loadbalancer() {
 
 rm -rf config/contour/*
 
+# Apply patch to contour
+git apply ${ROOT_DIR}/hack/contour.patch
+
 # We do this manually because it's challenging to rewrite
 # the ClusterRoleBinding without collateral damage.
 cat > config/contour/internal.yaml <<EOF

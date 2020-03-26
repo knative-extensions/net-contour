@@ -468,22 +468,10 @@
   version = "v0.9.1"
 
 [[projects]]
-  digest = "1:422c59c576feaf9b3045f55f2c6039c0d1450feb4ad07fac33300637fca1856a"
+  digest = "1:8db5558d02c67ba3b86114c8ecd5955fe4ab645afa0bfa5b31fe61fa70f9039f"
   name = "github.com/projectcontour/contour"
   packages = [
     "apis/contour/v1beta1",
-    "apis/generated/clientset/versioned",
-    "apis/generated/clientset/versioned/scheme",
-    "apis/generated/clientset/versioned/typed/contour/v1beta1",
-    "apis/generated/clientset/versioned/typed/projectcontour/v1",
-    "apis/generated/informers/externalversions",
-    "apis/generated/informers/externalversions/contour",
-    "apis/generated/informers/externalversions/contour/v1beta1",
-    "apis/generated/informers/externalversions/internalinterfaces",
-    "apis/generated/informers/externalversions/projectcontour",
-    "apis/generated/informers/externalversions/projectcontour/v1",
-    "apis/generated/listers/contour/v1beta1",
-    "apis/generated/listers/projectcontour/v1",
     "apis/projectcontour/v1",
     "cmd/contour",
     "internal/certgen",
@@ -499,8 +487,8 @@
     "internal/workgroup",
   ]
   pruneopts = "T"
-  revision = "429147b0400623ec179f9b1d531022193e11a9fd"
-  version = "v1.1.0"
+  revision = "59a3958428a4cd537ca8cf0798aa3993dd43a8ef"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:097cc61836050f45cbb712ae3bb45d66fba464c16b8fac09907fa3c1f753eff6"
@@ -1104,12 +1092,14 @@
   version = "kubernetes-1.16.4"
 
 [[projects]]
-  digest = "1:bc3b442d5bf174f7c4bd5d9bb2a1a6efdeaa2edda7d4c278314c4785b7426455"
+  digest = "1:69b5d3869ac4e95b0549623ef6e83a74d46fe4e5857e11cbeac2c17d72d026a1"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
     "discovery/fake",
     "dynamic",
+    "dynamic/dynamicinformer",
+    "dynamic/dynamiclister",
     "informers",
     "informers/admissionregistration",
     "informers/admissionregistration/v1",
@@ -1541,6 +1531,22 @@
   ]
   pruneopts = "UT"
   revision = "9a6c4b1d41ce980537cebe2b34c4b8c92fbd2b47"
+
+[[projects]]
+  digest = "1:c4e8f6509ee8cec911985a812ed3f9cc024404acc45ac613fa103f735cf3222a"
+  name = "sigs.k8s.io/controller-runtime"
+  packages = ["pkg/scheme"]
+  pruneopts = "NUT"
+  revision = "525a2d7dce5661cb90395b40a31575589ae504a2"
+  version = "v0.5.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:ca8eb29415031b1921edb2dbdba7eb79693aa3b917c7b9ef59808b7d4abe69b8"
+  name = "sigs.k8s.io/service-apis"
+  packages = ["api/v1alpha1"]
+  pruneopts = "NUT"
+  revision = "914e9fe48b3ca7b77e5819da929f07be8992c32b"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
