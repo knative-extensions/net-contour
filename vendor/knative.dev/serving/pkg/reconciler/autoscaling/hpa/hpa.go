@@ -83,7 +83,8 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, pa *pav1alpha1.PodAutosc
 		}
 	}
 
-	sks, err := c.ReconcileSKS(ctx, pa, nv1alpha1.SKSOperationModeServe)
+	// 0 num activators will work as "all".
+	sks, err := c.ReconcileSKS(ctx, pa, nv1alpha1.SKSOperationModeServe, 0 /*numActivators*/)
 	if err != nil {
 		return fmt.Errorf("error reconciling SKS: %w", err)
 	}
@@ -102,11 +103,6 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, pa *pav1alpha1.PodAutosc
 		pa.Status.MarkInactive("ServicesNotReady", "SKS Services are not ready yet")
 	} else {
 		pa.Status.MarkActive()
-	}
-
-	// Metrics services are no longer needed as we use the private services now.
-	if err := c.DeleteMetricsServices(ctx, pa); err != nil {
-		return err
 	}
 
 	pa.Status.ObservedGeneration = pa.Generation
