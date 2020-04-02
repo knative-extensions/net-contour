@@ -124,7 +124,7 @@ func TestMakeProxies(t *testing.T) {
 							Value: "bar",
 						}, {
 							Name:  "K-Network-Hash",
-							Value: "b98d17095f532da226fc16c810b0cab2",
+							Value: "99dbaae65d712842149f0be3a930d0e229226f86fadddd36bb7b87b0a38ffd3e",
 						}},
 					},
 					Services: []v1.Service{{
@@ -212,7 +212,7 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "5f9c220556b3016e24b5f71c167a02ed",
+							Value: "fb6afb0467a7a36edf6d1144ed747e9942a57b82f425e6571113bef5081978b5",
 						}},
 					},
 					Services: []v1.Service{{
@@ -253,7 +253,7 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "5f9c220556b3016e24b5f71c167a02ed",
+							Value: "fb6afb0467a7a36edf6d1144ed747e9942a57b82f425e6571113bef5081978b5",
 						}},
 					},
 					Services: []v1.Service{{
@@ -294,7 +294,7 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "5f9c220556b3016e24b5f71c167a02ed",
+							Value: "fb6afb0467a7a36edf6d1144ed747e9942a57b82f425e6571113bef5081978b5",
 						}},
 					},
 					Services: []v1.Service{{
@@ -373,7 +373,7 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "e575018d997eb75b21be41c6ea6d886b",
+							Value: "b53cd0662ebbe11c2eebbcab7728ae3992b7e9b7167bed423b2aa10646dc3e8e",
 						}},
 					},
 					Services: []v1.Service{{
@@ -453,7 +453,7 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "161ee2f274e62d1fecd08dd62806823c",
+							Value: "7d87a7e5d6e51afb3cdf3148b52cce9c2d209da112df5fb99fed39791b574d4e",
 						}},
 					},
 					Services: []v1.Service{{
@@ -471,7 +471,7 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "161ee2f274e62d1fecd08dd62806823c",
+							Value: "7d87a7e5d6e51afb3cdf3148b52cce9c2d209da112df5fb99fed39791b574d4e",
 						}},
 					},
 					Services: []v1.Service{{
@@ -564,7 +564,7 @@ func TestMakeProxies(t *testing.T) {
 							Value: "bar",
 						}, {
 							Name:  "K-Network-Hash",
-							Value: "6a37b2e310a27b20eff64b90c3de4f63",
+							Value: "7b03a20b9872f4e43fb6ab07c484ba4f6701d838bccfea40e49c02ac074ecf33",
 						}},
 					},
 					Services: []v1.Service{{
@@ -674,7 +674,7 @@ func TestMakeProxies(t *testing.T) {
 							Value: "bar",
 						}, {
 							Name:  "K-Network-Hash",
-							Value: "6a37b2e310a27b20eff64b90c3de4f63",
+							Value: "7b03a20b9872f4e43fb6ab07c484ba4f6701d838bccfea40e49c02ac074ecf33",
 						}},
 					},
 					Services: []v1.Service{{
