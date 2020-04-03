@@ -1444,7 +1444,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:fc0897a9818e7fba629e8b50937e1b3d61da1e754f591ce79135d2fe24059765"
+  digest = "1:5f78ed341576ef8bcbee496951128d933b59a0b5b190a422bd46f4c5dafc6b9a"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1519,7 +1519,7 @@
     "test/v1alpha1",
   ]
   pruneopts = ""
-  revision = "172bcb5a83f48531d72b8c77e17a8d0ddcb0133c"
+  revision = "dc98e1cd54aa3ba52ac449ac67cc9e550de9c6f3"
 
 [[projects]]
   branch = "master"
@@ -1530,7 +1530,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "cdec09517ea85b37691ab4a81ee85d74e7e91b7e"
+  revision = "01c151837ed80fcf977e2adb50aeebeecab0d75e"
 
 [[projects]]
   digest = "1:c4e8f6509ee8cec911985a812ed3f9cc024404acc45ac613fa103f735cf3222a"
