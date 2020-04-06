@@ -53,7 +53,10 @@ rm -rf $(find vendor/ -path '*/pkg/*_test.go')
 rm -rf $(find vendor/ -path '*/e2e/*_test.go')
 
 function delete_contour_cluster_role_bindings() {
-  sed '/apiVersion/{:a;N;/---/!ba};/kind: ClusterRoleBinding/d'
+# Removes ClusterRoleBinding role object.
+# Limitation: This command relies on input yaml file ending with `---` only for BSD(macOS) version of sed.
+# The behaviour you see is that the yaml block from the last occurence of `---` to the end of file will be deleted.
+  sed -e '/apiVersion: rbac/{' -e ':a' -e 'N' -e '/---/!ba' -e '}' -e '/kind: ClusterRoleBinding/d'
 }
 
 function rewrite_contour_namespace() {
