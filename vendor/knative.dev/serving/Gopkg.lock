@@ -55,15 +55,18 @@
   version = "v0.1.1"
 
 [[projects]]
-  digest = "1:042dd95511f495f6e7c0ad6a9398b8c5c77bf940efa6e568cbac9f818401f36a"
+  digest = "1:1a40023a7d224fa3c920f498269891b39b5be7b2e5dec5a8c6ca42d4e6bad373"
   name = "github.com/Azure/azure-sdk-for-go"
-  packages = ["arm/containerregistry"]
+  packages = [
+    "services/containerregistry/mgmt/2019-05-01/containerregistry",
+    "version",
+  ]
   pruneopts = "NUT"
-  revision = "2d1d76c9013c4feb6695a2346f0e66ea0ef77aa6"
-  version = "v11.3.0-beta"
+  revision = "68963eeeb7479a7f78fa571b07d745b49cd8d747"
+  version = "v38.2.0"
 
 [[projects]]
-  digest = "1:90df11ad9349a69d46e08211d47eb8db80311bf985a447dd88cb30d5b5f54add"
+  digest = "1:3145d0b3c746de44906703baa44c009d97a00f3daca6df01928d7b149bfe1514"
   name = "github.com/Azure/go-autorest"
   packages = [
     "autorest",
@@ -73,11 +76,11 @@
     "autorest/to",
     "autorest/validation",
     "logger",
-    "version",
+    "tracing",
   ]
   pruneopts = "NUT"
-  revision = "1ffcc8896ef6dfe022d90a4317d866f925cf0f9e"
-  version = "v11.1.2"
+  revision = "327ff6ce8b902f9afe648d5ea8ff6dc26c26f150"
+  version = "v13.4.0"
 
 [[projects]]
   digest = "1:632e5f740de6cafce1c08f659bfa10e75f7e7938dfaeb3d99c82fcbf484484e2"
@@ -225,39 +228,36 @@
   version = "v3.2.0"
 
 [[projects]]
-  digest = "1:740dc3cccfcdb302c323d17da5f4f2dfa65f7b8c666e0a9ac8bc64f560fb2974"
-  name = "github.com/docker/docker"
+  digest = "1:1e61b611e13790f615913b6e67ba701fac934ab0522a78d1d9bab46fdc815194"
+  name = "github.com/docker/cli"
   packages = [
-    "api/types",
-    "api/types/blkiodev",
-    "api/types/container",
-    "api/types/filters",
-    "api/types/mount",
-    "api/types/network",
-    "api/types/registry",
-    "api/types/strslice",
-    "api/types/swarm",
-    "api/types/versions",
+    "cli/config",
+    "cli/config/configfile",
+    "cli/config/credentials",
+    "cli/config/types",
   ]
+  pruneopts = "NUT"
+  revision = "a4bedce16568a9649bcb579f9fe9645d27bf1ae3"
+  version = "v19.03.6"
+
+[[projects]]
+  digest = "1:37062c859c33abe56ae571c9631aac620a072c827b2d21e74264b7599b3e4842"
+  name = "github.com/docker/docker"
+  packages = ["pkg/homedir"]
   pruneopts = "NUT"
   revision = "092cba3727bb9b4a2f0e922cd6c0f93ea270e363"
   version = "v1.13.1"
 
 [[projects]]
-  digest = "1:ade935c55cd6d0367c843b109b09c9d748b1982952031414740750fdf94747eb"
-  name = "github.com/docker/go-connections"
-  packages = ["nat"]
+  digest = "1:9f3f49b4e32d3da2dd6ed07cc568627b53cc80205c0dcf69f4091f027416cb60"
+  name = "github.com/docker/docker-credential-helpers"
+  packages = [
+    "client",
+    "credentials",
+  ]
   pruneopts = "NUT"
-  revision = "7395e3f8aa162843a74ed6d48e79627d9792ac55"
-  version = "v0.4.0"
-
-[[projects]]
-  digest = "1:4340101f42556a9cb2f7a360a0e95a019bfef6247d92e6c4c46f2433cf86a482"
-  name = "github.com/docker/go-units"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "47565b4f722fb6ceae66b95f853feed578a4a51c"
-  version = "v0.3.3"
+  revision = "54f0238b6bf101fc3ad3b34114cb5520beb562f5"
+  version = "v0.6.3"
 
 [[projects]]
   digest = "1:4f48083a56b5ac1f38cfbd8c0ccc19273079c97f9e4967a63f130c4f4b8bcfc5"
@@ -393,7 +393,7 @@
   version = "v1.3.2"
 
 [[projects]]
-  digest = "1:010d46ea3c1e730897e53058d1013a963f3f987675dda87df64f891b945281db"
+  digest = "1:f0ae868d945753df81e797524bb7f3c577bcf751ce515c18162d259ca3ff8de7"
   name = "github.com/google/go-cmp"
   packages = [
     "cmp",
@@ -404,10 +404,11 @@
     "cmp/internal/value",
   ]
   pruneopts = "NUT"
-  revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
+  revision = "5a6f75716e1203a923a78c9efb94089d857df0f6"
+  version = "v0.4.0"
 
 [[projects]]
-  digest = "1:244554add7692579a59f70199e2a09b217c21a328279a71b05ecf261b32aaf03"
+  digest = "1:dbb3e0b020b97ef9fa4aac07fab3c0040ff8f9b149e91de14d1059489fffc08e"
   name = "github.com/google/go-containerregistry"
   packages = [
     "pkg/authn",
@@ -429,7 +430,7 @@
     "pkg/v1/v1util",
   ]
   pruneopts = "NUT"
-  revision = "b02d448a3705facf11018efff34f1d2830be5724"
+  revision = "3d03ed9b1ca2ad5d78d43832e8e46adc31d2b961"
 
 [[projects]]
   digest = "1:91099c6f78b1e7bdf9ed06eb4cb7f017174293a3689d76b995a06f4c8d64a7f0"
@@ -611,14 +612,6 @@
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
 
 [[projects]]
-  branch = "master"
-  digest = "1:cf68a79fd02ab0f6942b9567d03d054b6568212fcc22de2a4afdefd096923749"
-  name = "github.com/kballard/go-shellquote"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "95032a82bc518f77982ea72343cc1ade730072f0"
-
-[[projects]]
   digest = "1:08c58ac78a8c1f61e9a96350066d30fe194b8779799bd932a79932a5166a173f"
   name = "github.com/kelseyhightower/envconfig"
   packages = ["."]
@@ -706,6 +699,14 @@
   revision = "2ae31c8b6b30d2f4c8100c20d527b571e9c433bb"
 
 [[projects]]
+  digest = "1:918dbd46ad099418ce9760291bb156ebf23d441aad4cb682dd9bf09e2d3c0c7b"
+  name = "github.com/opencontainers/runc"
+  packages = ["libcontainer/user"]
+  pruneopts = "NUT"
+  revision = "baf6536d6259209c3edfa2b22237af82942d3dfa"
+  version = "v0.1.1"
+
+[[projects]]
   digest = "1:ba4312bc8a900105f0c5b85d23b289d594dc88af6608ce971c8696435f43ae85"
   name = "github.com/openzipkin/zipkin-go"
   packages = [
@@ -728,6 +729,14 @@
   pruneopts = "NUT"
   revision = "adf5a7427709b9deb95d29d3fa8a2bf9cfd388f1"
   version = "v1.2"
+
+[[projects]]
+  digest = "1:4047c378584616813d610c9f993bf90dd0d07aed8d94bd3bc299cd35ececdcba"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "614d223910a179a466c1767a985424175c39b465"
+  version = "v0.9.1"
 
 [[projects]]
   digest = "1:e411054f54a332ecadd5fe5a4a68d092f36583e554037587da86da298cffc72d"
@@ -832,6 +841,20 @@
   ]
   pruneopts = "NUT"
   revision = "ab06ddb56e2f6097bba8c5a6d168621088867949"
+
+[[projects]]
+  digest = "1:d551cf37521fd4048380f88443356d4884536f5dcbbcef18a5b79c02f970f55d"
+  name = "github.com/vdemeester/k8s-pkg-credentialprovider"
+  packages = [
+    ".",
+    "aws",
+    "azure",
+    "gcp",
+    "secrets",
+  ]
+  pruneopts = "NUT"
+  revision = "7b4add7cc8e027500562518bff49a4354f49f691"
+  version = "v1.17.4"
 
 [[projects]]
   digest = "1:0e3fd52087079d1289983e4fef32268ca965973f5370b69204e2934185527baa"
@@ -1016,6 +1039,17 @@
   revision = "fbec762f837dc349b73d1eaa820552e2ad177942"
 
 [[projects]]
+  branch = "master"
+  digest = "1:325a1b73817aa79fc85f10376ed41ea607f7dd7f6c6bfa46df6a28ef2857941f"
+  name = "golang.org/x/xerrors"
+  packages = [
+    ".",
+    "internal",
+  ]
+  pruneopts = "NUT"
+  revision = "9bdfabe68543c54f90421aeb9a60ef8061b5b544"
+
+[[projects]]
   digest = "1:8392b5c29adedc5f85c66b48bb53b6c49dd91d8540f3cad5d43ef7277946718f"
   name = "gomodules.xyz/jsonpatch"
   packages = ["v2"]
@@ -1161,12 +1195,12 @@
   version = "v2.1"
 
 [[projects]]
-  digest = "1:accc3bfe4e404aa53ac3621470e7cf9fce1efe48f0fabcfe6d12a72579d9d91f"
+  digest = "1:d9b9ac6943a512737f76bf3d61b08d97121c66686bc02ffc231313563230b468"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "f221b8435cfb71e54062f6c6e99e9ade30b124d5"
-  version = "v2.2.4"
+  revision = "53403b58ad1b561927d19068c655246f2db79d48"
+  version = "v2.2.8"
 
 [[projects]]
   digest = "1:9579dd8b1ccd8cf54ed576af68438b69588cc136eac90b10aa7c8d1a1c8334ff"
@@ -1738,20 +1772,12 @@
   revision = "743ec37842bffe49dd4221d9026f30fb1d5adbc4"
 
 [[projects]]
-  digest = "1:82f9b2deb157470451063cea72fe0a7155f68c97bd43c6f5e671ba347d72e4a0"
-  name = "k8s.io/kubernetes"
-  packages = [
-    "pkg/cloudprovider/providers/azure/auth",
-    "pkg/credentialprovider",
-    "pkg/credentialprovider/aws",
-    "pkg/credentialprovider/azure",
-    "pkg/credentialprovider/gcp",
-    "pkg/credentialprovider/secrets",
-    "pkg/version",
-  ]
+  digest = "1:94200bdf759648846fb4e38e4d438a0b91faa44c6cb485f2402d90341260c817"
+  name = "k8s.io/legacy-cloud-providers"
+  packages = ["azure/auth"]
   pruneopts = "NUT"
-  revision = "81753b10df112992bf51bbc2c2f85208aad78335"
-  version = "v1.10.2"
+  revision = "0a38a432f2802c7bff22aa0d11e634ad8aaae637"
+  version = "v0.17.3"
 
 [[projects]]
   digest = "1:281a4b2b38d55df26339f669931486a38836671606e8f84703a61beefbb5797b"
@@ -1785,7 +1811,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cc1ad7ece65e84799152801726e967c5519628669c14e4c5f23ee458397fe051"
+  digest = "1:ce7432b8720a9cee1655ed2686dacdefb52d4cd8f98cb779ea9faac4bd0eb1b6"
   name = "knative.dev/caching"
   packages = [
     "pkg/apis/caching",
@@ -1808,11 +1834,11 @@
     "pkg/client/listers/caching/v1alpha1",
   ]
   pruneopts = "T"
-  revision = "e2e5784288b6ca1e3f8b047521f73c68da79a748"
+  revision = "da7a156ad6fd5471a9d1a75c149d1bff48350b5b"
 
 [[projects]]
-  branch = "release-0.13"
-  digest = "1:77db7d7e7364e6acb7fe627ddb377f94e5199b020be96aa0e8654cd864db2d7a"
+  branch = "master"
+  digest = "1:ae72dd6d2950c1ffe31061c827bb8904fce102f9134c4309cca0fe1ac5864c26"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1849,6 +1875,7 @@
     "client/injection/kube/informers/core/v1/service/fake",
     "client/injection/kube/informers/factory",
     "client/injection/kube/informers/factory/fake",
+    "client/injection/kube/reconciler/core/v1/namespace",
     "codegen/cmd/injection-gen",
     "codegen/cmd/injection-gen/args",
     "codegen/cmd/injection-gen/generators",
@@ -1858,6 +1885,8 @@
     "injection",
     "injection/clients/dynamicclient",
     "injection/clients/dynamicclient/fake",
+    "injection/clients/namespacedkube/informers/core/v1/secret",
+    "injection/clients/namespacedkube/informers/factory",
     "injection/sharedmain",
     "kmeta",
     "kmp",
@@ -1879,11 +1908,12 @@
     "system",
     "system/testing",
     "test",
-    "test/cmd",
+    "test/gcs",
     "test/ghutil",
     "test/gke",
     "test/helpers",
     "test/ingress",
+    "test/junit",
     "test/logging",
     "test/logstream",
     "test/mako",
@@ -1892,9 +1922,12 @@
     "test/mako/alerter/slack",
     "test/mako/config",
     "test/monitoring",
+    "test/performance",
     "test/prometheus",
+    "test/prow",
     "test/slackutil",
     "test/spoof",
+    "test/testgrid",
     "test/vegeta/pacers",
     "test/webhook-apicoverage/coveragecalculator",
     "test/webhook-apicoverage/resourcetree",
@@ -1920,24 +1953,18 @@
     "websocket",
   ]
   pruneopts = "T"
-  revision = "2006e107e39eb0e661e4437ba76b16465162689e"
+  revision = "55250e6aab62f767b8680a12ddeb771c519d78fe"
 
 [[projects]]
   branch = "master"
-  digest = "1:ed2bc53a52c6d986713ba16c92bdd64ad910403d92735db9a2056d9152c75299"
+  digest = "1:d8858077778bca77705b26d5b5262bf33a6bfbaa701fffca1578fd7ef4c4b975"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
-    "shared/common",
-    "shared/gcs",
-    "shared/junit",
-    "shared/performance",
-    "shared/prow",
-    "shared/testgrid",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "8c4b7ba9225ef684492032fb787f5f99d021545d"
+  revision = "cdec09517ea85b37691ab4a81ee85d74e7e91b7e"
 
 [[projects]]
   digest = "1:92b88da51692abe195601cb17d35bbb9b6bc2011237a2f234fedba7411ed8122"
@@ -1967,8 +1994,6 @@
   input-imports = [
     "github.com/davecgh/go-spew/spew",
     "github.com/ghodss/yaml",
-    "github.com/gogo/protobuf/proto",
-    "github.com/gogo/protobuf/types",
     "github.com/golang/protobuf/proto",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
@@ -1984,6 +2009,7 @@
     "github.com/google/mako/clients/proto/analyzers/threshold_analyzer_go_proto",
     "github.com/google/mako/go/quickstore",
     "github.com/google/mako/spec/proto/mako_go_proto",
+    "github.com/google/uuid",
     "github.com/gorilla/websocket",
     "github.com/hashicorp/golang-lru",
     "github.com/jetstack/cert-manager/pkg/apis/acme/v1alpha2",
@@ -2021,6 +2047,7 @@
     "istio.io/client-go/pkg/apis/networking/v1alpha3",
     "k8s.io/api/apps/v1",
     "k8s.io/api/authentication/v1",
+    "k8s.io/api/autoscaling/v1",
     "k8s.io/api/autoscaling/v2beta1",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/apitesting/fuzzer",
@@ -2071,7 +2098,6 @@
     "k8s.io/code-generator/cmd/defaulter-gen",
     "k8s.io/code-generator/cmd/informer-gen",
     "k8s.io/code-generator/cmd/lister-gen",
-    "k8s.io/kubernetes/pkg/version",
     "k8s.io/metrics/pkg/apis/custom_metrics",
     "knative.dev/caching/pkg/apis/caching",
     "knative.dev/caching/pkg/apis/caching/v1alpha1",
@@ -2104,10 +2130,10 @@
     "knative.dev/pkg/client/injection/kube/informers/core/v1/namespace/fake",
     "knative.dev/pkg/client/injection/kube/informers/core/v1/pod",
     "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake",
-    "knative.dev/pkg/client/injection/kube/informers/core/v1/secret",
     "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake",
     "knative.dev/pkg/client/injection/kube/informers/core/v1/service",
     "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake",
+    "knative.dev/pkg/client/injection/kube/reconciler/core/v1/namespace",
     "knative.dev/pkg/codegen/cmd/injection-gen",
     "knative.dev/pkg/configmap",
     "knative.dev/pkg/configmap/testing",
@@ -2138,11 +2164,15 @@
     "knative.dev/pkg/test",
     "knative.dev/pkg/test/helpers",
     "knative.dev/pkg/test/ingress",
+    "knative.dev/pkg/test/junit",
     "knative.dev/pkg/test/logging",
     "knative.dev/pkg/test/logstream",
     "knative.dev/pkg/test/mako",
+    "knative.dev/pkg/test/performance",
     "knative.dev/pkg/test/prometheus",
+    "knative.dev/pkg/test/prow",
     "knative.dev/pkg/test/spoof",
+    "knative.dev/pkg/test/testgrid",
     "knative.dev/pkg/test/vegeta/pacers",
     "knative.dev/pkg/test/webhook-apicoverage/coveragecalculator",
     "knative.dev/pkg/test/webhook-apicoverage/resourcetree",
@@ -2164,10 +2194,6 @@
     "knative.dev/pkg/webhook/resourcesemantics/validation",
     "knative.dev/pkg/websocket",
     "knative.dev/test-infra/scripts",
-    "knative.dev/test-infra/shared/junit",
-    "knative.dev/test-infra/shared/performance",
-    "knative.dev/test-infra/shared/prow",
-    "knative.dev/test-infra/shared/testgrid",
     "knative.dev/test-infra/tools/dep-collector",
   ]
   solver-name = "gps-cdcl"
