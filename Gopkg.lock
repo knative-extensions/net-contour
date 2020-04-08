@@ -412,14 +412,6 @@
   version = "v1.1.9"
 
 [[projects]]
-  branch = "master"
-  digest = "1:cf68a79fd02ab0f6942b9567d03d054b6568212fcc22de2a4afdefd096923749"
-  name = "github.com/kballard/go-shellquote"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "95032a82bc518f77982ea72343cc1ade730072f0"
-
-[[projects]]
   digest = "1:58999a98719fddbac6303cb17e8d85b945f60b72f48e3a2df6b950b97fa926f1"
   name = "github.com/konsorten/go-windows-terminal-sequences"
   packages = ["."]
@@ -1389,7 +1381,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:462fe2b87ea48e65015f45b404de9db04ebd1332fca8f06e19642641308869f7"
+  digest = "1:fd955f65a7ffe4d650b8cec23497a2db7d237c7d01806dc8758cb27acbf53e09"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1436,7 +1428,6 @@
     "system",
     "system/testing",
     "test",
-    "test/cmd",
     "test/helpers",
     "test/ingress",
     "test/logging",
@@ -1449,11 +1440,11 @@
     "webhook/certificates/resources",
   ]
   pruneopts = "T"
-  revision = "466c676678ddd57b3ec05a06a2d0bc6cfca8c3db"
+  revision = "fdb7691d92e136e47af2ea962a0d8b56625bd1eb"
 
 [[projects]]
   branch = "master"
-  digest = "1:f9169bd29d5a710933c954e7623864bd2822460afa40785687e5d2444798e8c0"
+  digest = "1:c7f941b7117c1c2ebe8e8567e5e9668ccc31f4988944036742bbfb69ed85b510"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1528,18 +1519,18 @@
     "test/v1alpha1",
   ]
   pruneopts = ""
-  revision = "877f5a24bf4145253ba989c75051f93d8b82a1fe"
+  revision = "c21fc71fca9587022406eb0e999893ad1d861b04"
 
 [[projects]]
   branch = "master"
-  digest = "1:ce8214f24f811aa582a58b2680e3380ff3fac7668a00d490fb23349a21051dcb"
+  digest = "1:50482e6fd500cf50c4a29d640cda026206145c6716dff72e4368a5e57fdb7095"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "a7b18bf0c37bf1a10743fba5c1ce988b7c2e0e30"
+  revision = "193c078363dbb0b817068820dcbe7b238dd2eb02"
 
 [[projects]]
   digest = "1:c4e8f6509ee8cec911985a812ed3f9cc024404acc45ac613fa103f735cf3222a"
