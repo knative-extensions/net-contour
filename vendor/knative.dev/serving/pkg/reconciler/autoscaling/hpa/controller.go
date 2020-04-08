@@ -21,10 +21,8 @@ import (
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	hpainformer "knative.dev/pkg/client/injection/kube/informers/autoscaling/v2beta1/horizontalpodautoscaler"
-	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	"knative.dev/pkg/logging"
 	servingclient "knative.dev/serving/pkg/client/injection/client"
-	"knative.dev/serving/pkg/client/injection/ducks/autoscaling/v1alpha1/podscalable"
 	metricinformer "knative.dev/serving/pkg/client/injection/informers/autoscaling/v1alpha1/metric"
 	painformer "knative.dev/serving/pkg/client/injection/informers/autoscaling/v1alpha1/podautoscaler"
 	sksinformer "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/serverlessservice"
@@ -36,34 +34,36 @@ import (
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/serving/pkg/apis/autoscaling"
 	autoscalerconfig "knative.dev/serving/pkg/autoscaler/config"
+	servingreconciler "knative.dev/serving/pkg/reconciler"
 	areconciler "knative.dev/serving/pkg/reconciler/autoscaling"
 	"knative.dev/serving/pkg/reconciler/autoscaling/config"
 )
+
+const controllerAgentName = "hpa-class-podautoscaler-controller"
 
 // NewController returns a new HPA reconcile controller.
 func NewController(
 	ctx context.Context,
 	cmw configmap.Watcher,
 ) *controller.Impl {
+	ctx = servingreconciler.AnnotateLoggerWithName(ctx, controllerAgentName)
 	logger := logging.FromContext(ctx)
 	paInformer := painformer.Get(ctx)
 	sksInformer := sksinformer.Get(ctx)
 	hpaInformer := hpainformer.Get(ctx)
-	serviceInformer := serviceinformer.Get(ctx)
 	metricInformer := metricinformer.Get(ctx)
 
 	onlyHpaClass := pkgreconciler.AnnotationFilterFunc(autoscaling.ClassAnnotationKey, autoscaling.HPA, false)
 
 	c := &Reconciler{
 		Base: &areconciler.Base{
-			KubeClient:        kubeclient.Get(ctx),
-			Client:            servingclient.Get(ctx),
-			SKSLister:         sksInformer.Lister(),
-			ServiceLister:     serviceInformer.Lister(),
-			MetricLister:      metricInformer.Lister(),
-			PSInformerFactory: podscalable.Get(ctx),
+			Client:       servingclient.Get(ctx),
+			SKSLister:    sksInformer.Lister(),
+			MetricLister: metricInformer.Lister(),
 		},
-		hpaLister: hpaInformer.Lister(),
+
+		kubeClient: kubeclient.Get(ctx),
+		hpaLister:  hpaInformer.Lister(),
 	}
 	impl := pareconciler.NewImpl(ctx, c, autoscaling.HPA, func(impl *controller.Impl) controller.Options {
 		logger.Info("Setting up ConfigMap receivers")
