@@ -1381,7 +1381,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:848ae8fad4b88bbe3e0944f2a68052e14c4e1bb345d7b32f9d0a0ffdc2c90b46"
+  digest = "1:df83f070e3345a7acfbe668cb3a685a6ea8255200bf1a170b4f222cc4f1ae2e3"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1440,11 +1440,11 @@
     "webhook/certificates/resources",
   ]
   pruneopts = "T"
-  revision = "4e57475bc87c1aba3e7fcc0207b593dc7186eb83"
+  revision = "e247dc308deaabaa6e1c8a8dcac98d8a6ac91e13"
 
 [[projects]]
   branch = "master"
-  digest = "1:398a4306a489e4329b0ed60a09d178d8ce8d98281510d8ab885751b5937ba552"
+  digest = "1:d3f51fd8cf2ece9f5ab997109985cea102c41cec61ddb053ec4375303f3d32fb"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1519,7 +1519,7 @@
     "test/v1alpha1",
   ]
   pruneopts = ""
-  revision = "9985919eee99248255428f59adfc333019715d35"
+  revision = "3b0753f3c5bc3794f82dbab06b152ca69a06bbbb"
 
 [[projects]]
   branch = "master"
@@ -1530,7 +1530,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "74b24ca44778c3a69ecc193250cdddb5d0e64b88"
+  revision = "9cf64fb1b912898b2934e0e963bf3c61b96d7a2c"
 
 [[projects]]
   digest = "1:c4e8f6509ee8cec911985a812ed3f9cc024404acc45ac613fa103f735cf3222a"
