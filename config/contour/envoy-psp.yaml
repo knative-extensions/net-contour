@@ -1,0 +1,45 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: contour-envoy
+  labels:
+    serving.knative.dev/release: devel
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+
+  volumes:
+  - 'emptyDir'
+  - 'configMap'
+  - 'secret'
+
+  runAsUser:
+    rule: 'RunAsAny'
+  seLinux:
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+    - min: 1
+      max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+    - min: 1
+      max: 65535
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: contour-envoy-psp
+  labels:
+    serving.knative.dev/release: devel
+rules:
+  - apiGroups: ["policy"]
+    resources: ["podsecuritypolicies"]
+    resourceNames: ["contour-envoy"]
+    verbs: ["use"]
+

@@ -18,7 +18,7 @@ source $(dirname $0)/e2e-common.sh
 
 
 # Script entry point.
-initialize $@  --skip-istio-addon
+initialize $@  --skip-istio-addon --cluster-creation-flag "--enable-pod-security-policy"
 
 go_test_e2e -timeout=20m -parallel=12 \
 	    ./vendor/knative.dev/serving/test/conformance/ingress \

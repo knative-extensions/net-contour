@@ -81,6 +81,10 @@ function rewrite_command() {
   sed -e $'s@/bin/contour@contour@g'
 }
 
+function rewrite_uid() {
+  sed -e $'s@65534@65532@g'
+}
+
 function disable_hostport() {
   sed -e $'s@hostPort:@# hostPort:@g'
 }
@@ -94,6 +98,54 @@ rm -rf config/contour/*
 
 # Apply patch to contour
 git apply ${ROOT_DIR}/hack/contour.patch
+
+cat > config/contour/envoy-psp.yaml <<EOF
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: contour-envoy
+  labels:
+    serving.knative.dev/release: devel
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+
+  volumes:
+  - 'emptyDir'
+  - 'configMap'
+  - 'secret'
+
+  runAsUser:
+    rule: 'RunAsAny'
+  seLinux:
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+    - min: 1
+      max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+    - min: 1
+      max: 65535
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: contour-envoy-psp
+  labels:
+    serving.knative.dev/release: devel
+rules:
+  - apiGroups: ["policy"]
+    resources: ["podsecuritypolicies"]
+    resourceNames: ["contour-envoy"]
+    verbs: ["use"]
+
+EOF
 
 # We do this manually because it's challenging to rewrite
 # the ClusterRoleBinding without collateral damage.
@@ -111,6 +163,35 @@ subjects:
   name: contour
   namespace: contour-internal
 ---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: contour-internal-psp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: knative-serving-psp
+subjects:
+- kind: ServiceAccount
+  name: contour
+  namespace: contour-internal
+- kind: ServiceAccount
+  name: contour-certgen
+  namespace: contour-internal
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: contour-envoy-internal-psp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: contour-envoy-psp
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: contour-internal
+---
 EOF
 
 KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour/examples/contour/ \
@@ -119,7 +200,7 @@ KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour
   | configure_leader_election contour-internal \
   | rewrite_serve_args contour-internal \
   | rewrite_certgen_args contour-internal \
-  | rewrite_image | rewrite_command | disable_hostport | privatize_loadbalancer >> config/contour/internal.yaml
+  | rewrite_image | rewrite_command | rewrite_uid | disable_hostport | privatize_loadbalancer >> config/contour/internal.yaml
 
 # We do this manually because it's challenging to rewrite
 # the ClusterRoleBinding without collateral damage.
@@ -137,6 +218,35 @@ subjects:
   name: contour
   namespace: contour-external
 ---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: contour-external-psp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: knative-serving-psp
+subjects:
+- kind: ServiceAccount
+  name: contour
+  namespace: contour-external
+- kind: ServiceAccount
+  name: contour-certgen
+  namespace: contour-external
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: contour-envoy-external-psp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: contour-envoy-psp
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: contour-external
+---
 EOF
 
 KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour/examples/contour/ \
@@ -145,4 +255,4 @@ KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour
   | configure_leader_election contour-external \
   | rewrite_serve_args contour-external \
   | rewrite_certgen_args contour-external \
-  | rewrite_image | rewrite_command | disable_hostport >> config/contour/external.yaml
+  | rewrite_image | rewrite_command | rewrite_uid | disable_hostport >> config/contour/external.yaml
