@@ -31,6 +31,7 @@ import (
 	"github.com/projectcontour/contour/internal/envoy"
 	"github.com/projectcontour/contour/internal/protobuf"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // DefaultCluster returns a copy of c, updated with default values.
@@ -109,7 +110,20 @@ func cluster(name, servicename, statName string) *v2.Cluster {
 
 func tlsCluster(c *v2.Cluster, ca []byte, subjectName string, sni string, alpnProtocols ...string) *v2.Cluster {
 	c.TransportSocket = envoy.UpstreamTLSTransportSocket(
-		envoy.UpstreamTLSContext(ca, subjectName, sni, alpnProtocols...),
+		envoy.UpstreamTLSContext(
+			&dag.PeerValidationContext{
+				CACertificate: &dag.Secret{Object: &v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Type: "kubernetes.io/tls",
+					Data: map[string][]byte{dag.CACertificateKey: ca},
+				}},
+				SubjectName: subjectName},
+			sni,
+			alpnProtocols...,
+		),
 	)
 	return c
 }
@@ -205,14 +219,16 @@ func weightedClusters(clusters []weightedCluster) *envoy_api_v2_route.WeightedCl
 	return &wc
 }
 
-func filterchaintls(domain string, secret *v1.Secret, filter *envoy_api_v2_listener.Filter, alpn ...string) []*envoy_api_v2_listener.FilterChain {
+func filterchaintls(domain string, secret *v1.Secret, filter *envoy_api_v2_listener.Filter, peerValidationContext *dag.PeerValidationContext, alpn ...string) []*envoy_api_v2_listener.FilterChain {
 	return []*envoy_api_v2_listener.FilterChain{
 		envoy.FilterChainTLS(
 			domain,
-			&dag.Secret{Object: secret},
+			envoy.DownstreamTLSContext(
+				&dag.Secret{Object: secret},
+				envoy_api_v2_auth.TlsParameters_TLSv1_1,
+				peerValidationContext,
+				alpn...),
 			envoy.Filters(filter),
-			envoy_api_v2_auth.TlsParameters_TLSv1_1,
-			alpn...,
 		),
 	}
 }
