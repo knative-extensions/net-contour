@@ -1414,7 +1414,6 @@ spec:
         command:
         - contour
         - certgen
-        - --namespace=contour-internal
         - --incluster
         - --kube
         - --namespace=$(CONTOUR_NAMESPACE)
