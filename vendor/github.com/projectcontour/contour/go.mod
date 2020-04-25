@@ -7,7 +7,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
 	github.com/client9/misspell v0.3.4
-	github.com/envoyproxy/go-control-plane v0.9.2
+	github.com/envoyproxy/go-control-plane v0.9.5
 	github.com/evanphx/json-patch v4.5.0+incompatible
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef // indirect
 	github.com/golang/protobuf v1.3.2
@@ -30,6 +30,7 @@ require (
 	k8s.io/code-generator v0.0.0-20190912054826-cd179ad6a269
 	k8s.io/gengo v0.0.0-20191120174120-e74f70b9b27e // indirect
 	k8s.io/klog v1.0.0
+	k8s.io/utils v0.0.0-20191114184206-e782cd3c129f
 	sigs.k8s.io/controller-tools v0.2.4
 	sigs.k8s.io/kustomize/kyaml v0.1.1
 	sigs.k8s.io/service-apis v0.0.0-20200213014236-51691dd89266

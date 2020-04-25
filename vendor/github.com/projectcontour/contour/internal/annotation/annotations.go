@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dag
+package annotation
 
 import (
 	"fmt"
@@ -21,9 +21,14 @@ import (
 
 	envoy_api_v2_auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	"k8s.io/api/networking/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func annotationIsKnown(key string) bool {
+// DEFAULT_INGRESS_CLASS is the Contour default.
+const DEFAULT_INGRESS_CLASS = "contour"
+
+// IsKnown checks if an annotation is one Contour knows about.
+func IsKnown(key string) bool {
 	// We should know about everything with a Contour prefix.
 	if strings.HasPrefix(key, "projectcontour.io/") ||
 		strings.HasPrefix(key, "contour.heptio.com/") {
@@ -77,7 +82,8 @@ var annotationsByKind = map[string]map[string]struct{}{
 	},
 }
 
-func validAnnotationForKind(kind string, key string) bool {
+// ValidForKind checks if a particular annotation is valid for a given Kind.
+func ValidForKind(kind string, key string) bool {
 	if a, ok := annotationsByKind[kind]; ok {
 		// Canonicalize the name while we still have legacy support.
 		key = strings.Replace(key, "contour.heptio.com/", "projectcontour.io/", -1)
@@ -95,10 +101,10 @@ func validAnnotationForKind(kind string, key string) bool {
 	return true
 }
 
-// compatAnnotation checks the Object for the given annotation, first with the
+// CompatAnnotation checks the Object for the given annotation, first with the
 // "projectcontour.io/" prefix, and then with the "contour.heptio.com/" prefix
 // if that is not found.
-func compatAnnotation(o Object, key string) string {
+func CompatAnnotation(o metav1.ObjectMetaAccessor, key string) string {
 	a := o.GetObjectMeta().GetAnnotations()
 
 	if val, ok := a["projectcontour.io/"+key]; ok {
@@ -108,7 +114,7 @@ func compatAnnotation(o Object, key string) string {
 	return a["contour.heptio.com/"+key]
 }
 
-// parseUInt32 parses the supplied string as if it were a uint32.
+// ParseUInt32 parses the supplied string as if it were a uint32.
 // If the value is not present, or malformed, or outside uint32's range, zero is returned.
 func parseUInt32(s string) uint32 {
 	v, err := strconv.ParseUint(s, 10, 32)
@@ -118,10 +124,10 @@ func parseUInt32(s string) uint32 {
 	return uint32(v)
 }
 
-// parseUpstreamProtocols parses the annotations map for contour.heptio.com/upstream-protocol.{protocol}
+// ParseUpstreamProtocols parses the annotations map for contour.heptio.com/upstream-protocol.{protocol}
 // and projectcontour.io/upstream-protocol.{protocol} annotations.
 // 'protocol' identifies which protocol must be used in the upstream.
-func parseUpstreamProtocols(m map[string]string) map[string]string {
+func ParseUpstreamProtocols(m map[string]string) map[string]string {
 	annotations := []string{
 		"contour.heptio.com/upstream-protocol",
 		"projectcontour.io/upstream-protocol",
@@ -142,19 +148,21 @@ func parseUpstreamProtocols(m map[string]string) map[string]string {
 	return up
 }
 
-// httpAllowed returns true unless the kubernetes.io/ingress.allow-http annotation is
+// HTTPAllowed returns true unless the kubernetes.io/ingress.allow-http annotation is
 // present and set to false.
-func httpAllowed(i *v1beta1.Ingress) bool {
+func HTTPAllowed(i *v1beta1.Ingress) bool {
 	return !(i.Annotations["kubernetes.io/ingress.allow-http"] == "false")
 }
 
-// tlsRequired returns true if the ingress.kubernetes.io/force-ssl-redirect annotation is
+// TLSRequired returns true if the ingress.kubernetes.io/force-ssl-redirect annotation is
 // present and set to true.
-func tlsRequired(i *v1beta1.Ingress) bool {
+func TLSRequired(i *v1beta1.Ingress) bool {
 	return i.Annotations["ingress.kubernetes.io/force-ssl-redirect"] == "true"
 }
 
-func websocketRoutes(i *v1beta1.Ingress) map[string]bool {
+// WebsocketRoutes retrieves the details of routes that should have websockets enabled from the
+// associated websocket-routes annotation.
+func WebsocketRoutes(i *v1beta1.Ingress) map[string]bool {
 	routes := make(map[string]bool)
 	for _, v := range strings.Split(i.Annotations["projectcontour.io/websocket-routes"], ",") {
 		route := strings.TrimSpace(v)
@@ -171,23 +179,23 @@ func websocketRoutes(i *v1beta1.Ingress) map[string]bool {
 	return routes
 }
 
-// numRetries returns the number of retries specified by the "contour.heptio.com/num-retries"
+// NumRetries returns the number of retries specified by the "contour.heptio.com/num-retries"
 // or "projectcontour.io/num-retries" annotation.
-func numRetries(i *v1beta1.Ingress) uint32 {
-	return parseUInt32(compatAnnotation(i, "num-retries"))
+func NumRetries(i *v1beta1.Ingress) uint32 {
+	return parseUInt32(CompatAnnotation(i, "num-retries"))
 }
 
-// perTryTimeout returns the duration envoy will wait per retry cycle.
-func perTryTimeout(i *v1beta1.Ingress) time.Duration {
-	return parseTimeout(compatAnnotation(i, "per-try-timeout"))
+// PerTryTimeout returns the duration envoy will wait per retry cycle.
+func PerTryTimeout(i *v1beta1.Ingress) time.Duration {
+	return ParseTimeout(CompatAnnotation(i, "per-try-timeout"))
 }
 
-// ingressClass returns the first matching ingress class for the following
+// IngressClass returns the first matching ingress class for the following
 // annotations:
 // 1. projectcontour.io/ingress.class
 // 2. contour.heptio.com/ingress.class
 // 3. kubernetes.io/ingress.class
-func ingressClass(o Object) string {
+func IngressClass(o metav1.ObjectMetaAccessor) string {
 	a := o.GetObjectMeta().GetAnnotations()
 	if class, ok := a["projectcontour.io/ingress.class"]; ok {
 		return class
@@ -199,6 +207,25 @@ func ingressClass(o Object) string {
 		return class
 	}
 	return ""
+}
+
+// MatchesIngressClass checks that the passed object has an ingress class that matches
+// either the passed ingress-class string, or DEFAULT_INGRESS_CLASS if it's empty.
+func MatchesIngressClass(o metav1.ObjectMetaAccessor, ic string) bool {
+
+	switch IngressClass(o) {
+	case ic:
+		// Handles ic == "" and ic == "custom".
+		return true
+	case DEFAULT_INGRESS_CLASS:
+		// ic == "" implicitly matches the default too.
+		if ic == "" {
+			return true
+		}
+	}
+
+	return false
+
 }
 
 // MinProtoVersion returns the TLS protocol version specified by an ingress annotation
@@ -215,24 +242,42 @@ func MinProtoVersion(version string) envoy_api_v2_auth.TlsParameters_TlsProtocol
 	}
 }
 
-// maxConnections returns the value of the first matching max-connections
+// MaxConnections returns the value of the first matching max-connections
 // annotation for the following annotations:
 // 1. projectcontour.io/max-connections
 // 2. contour.heptio.com/max-connections
 //
 // '0' is returned if the annotation is absent or unparseable.
-func maxConnections(o Object) uint32 {
-	return parseUInt32(compatAnnotation(o, "max-connections"))
+func MaxConnections(o metav1.ObjectMetaAccessor) uint32 {
+	return parseUInt32(CompatAnnotation(o, "max-connections"))
 }
 
-func maxPendingRequests(o Object) uint32 {
-	return parseUInt32(compatAnnotation(o, "max-pending-requests"))
+// MaxPendingRequests returns the value of the first matching max-pending-requests
+// annotation for the following annotations:
+// 1. projectcontour.io/max-pending-requests
+// 2. contour.heptio.com/max-pending-requests
+//
+// '0' is returned if the annotation is absent or unparseable.
+func MaxPendingRequests(o metav1.ObjectMetaAccessor) uint32 {
+	return parseUInt32(CompatAnnotation(o, "max-pending-requests"))
 }
 
-func maxRequests(o Object) uint32 {
-	return parseUInt32(compatAnnotation(o, "max-requests"))
+// MaxRequests returns the value of the first matching max-requests
+// annotation for the following annotations:
+// 1. projectcontour.io/max-requests
+// 2. contour.heptio.com/max-requests
+//
+// '0' is returned if the annotation is absent or unparseable.
+func MaxRequests(o metav1.ObjectMetaAccessor) uint32 {
+	return parseUInt32(CompatAnnotation(o, "max-requests"))
 }
 
-func maxRetries(o Object) uint32 {
-	return parseUInt32(compatAnnotation(o, "max-retries"))
+// MaxRetries returns the value of the first matching max-retries
+// annotation for the following annotations:
+// 1. projectcontour.io/max-retries
+// 2. contour.heptio.com/max-retries
+//
+// '0' is returned if the annotation is absent or unparseable.
+func MaxRetries(o metav1.ObjectMetaAccessor) uint32 {
+	return parseUInt32(CompatAnnotation(o, "max-retries"))
 }
