@@ -45,6 +45,7 @@ function test_setup() {
 
   echo ">> Bringing up net-contour"
   ko apply -f config/ || return 1
+  wait_until_service_has_external_http_address contour-external envoy || return 1
 
   # Wait for pods to be running.
   echo ">> Waiting for Serving components to be running..."
