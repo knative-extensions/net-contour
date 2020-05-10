@@ -25,7 +25,7 @@ import (
 )
 
 func main() {
-	sharedmain.Main("controller",
+	sharedmain.Main("contour-ingress-controller",
 		contour.NewController,
 	)
 }
