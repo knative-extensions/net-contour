@@ -19,5 +19,6 @@ replace (
 	k8s.io/api => k8s.io/api v0.16.4
 	k8s.io/apimachinery => k8s.io/apimachinery v0.16.4
 	k8s.io/client-go => k8s.io/client-go v0.16.4
+	k8s.io/code-generator => k8s.io/code-generator v0.16.5-beta.1
 	knative.dev/serving => knative.dev/serving v0.14.1-0.20200511192146-700e26c4f365
 )

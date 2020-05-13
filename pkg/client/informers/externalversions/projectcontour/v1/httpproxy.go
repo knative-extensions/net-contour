@@ -19,7 +19,6 @@ limitations under the License.
 package v1
 
 import (
-	"context"
 	time "time"
 
 	projectcontourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
@@ -62,13 +61,13 @@ func NewFilteredHTTPProxyInformer(client versioned.Interface, namespace string, 
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ProjectcontourV1().HTTPProxies(namespace).List(context.TODO(), options)
+				return client.ProjectcontourV1().HTTPProxies(namespace).List(options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ProjectcontourV1().HTTPProxies(namespace).Watch(context.TODO(), options)
+				return client.ProjectcontourV1().HTTPProxies(namespace).Watch(options)
 			},
 		},
 		&projectcontourv1.HTTPProxy{},

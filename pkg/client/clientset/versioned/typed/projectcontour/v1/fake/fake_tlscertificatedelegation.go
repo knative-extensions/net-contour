@@ -19,8 +19,6 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-
 	projectcontourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -41,7 +39,7 @@ var tlscertificatedelegationsResource = schema.GroupVersionResource{Group: "proj
 var tlscertificatedelegationsKind = schema.GroupVersionKind{Group: "projectcontour.io", Version: "v1", Kind: "TLSCertificateDelegation"}
 
 // Get takes name of the tLSCertificateDelegation, and returns the corresponding tLSCertificateDelegation object, and an error if there is any.
-func (c *FakeTLSCertificateDelegations) Get(ctx context.Context, name string, options v1.GetOptions) (result *projectcontourv1.TLSCertificateDelegation, err error) {
+func (c *FakeTLSCertificateDelegations) Get(name string, options v1.GetOptions) (result *projectcontourv1.TLSCertificateDelegation, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(tlscertificatedelegationsResource, c.ns, name), &projectcontourv1.TLSCertificateDelegation{})
 
@@ -52,7 +50,7 @@ func (c *FakeTLSCertificateDelegations) Get(ctx context.Context, name string, op
 }
 
 // List takes label and field selectors, and returns the list of TLSCertificateDelegations that match those selectors.
-func (c *FakeTLSCertificateDelegations) List(ctx context.Context, opts v1.ListOptions) (result *projectcontourv1.TLSCertificateDelegationList, err error) {
+func (c *FakeTLSCertificateDelegations) List(opts v1.ListOptions) (result *projectcontourv1.TLSCertificateDelegationList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(tlscertificatedelegationsResource, tlscertificatedelegationsKind, c.ns, opts), &projectcontourv1.TLSCertificateDelegationList{})
 
@@ -74,14 +72,14 @@ func (c *FakeTLSCertificateDelegations) List(ctx context.Context, opts v1.ListOp
 }
 
 // Watch returns a watch.Interface that watches the requested tLSCertificateDelegations.
-func (c *FakeTLSCertificateDelegations) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeTLSCertificateDelegations) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(tlscertificatedelegationsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a tLSCertificateDelegation and creates it.  Returns the server's representation of the tLSCertificateDelegation, and an error, if there is any.
-func (c *FakeTLSCertificateDelegations) Create(ctx context.Context, tLSCertificateDelegation *projectcontourv1.TLSCertificateDelegation, opts v1.CreateOptions) (result *projectcontourv1.TLSCertificateDelegation, err error) {
+func (c *FakeTLSCertificateDelegations) Create(tLSCertificateDelegation *projectcontourv1.TLSCertificateDelegation) (result *projectcontourv1.TLSCertificateDelegation, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(tlscertificatedelegationsResource, c.ns, tLSCertificateDelegation), &projectcontourv1.TLSCertificateDelegation{})
 
@@ -92,7 +90,7 @@ func (c *FakeTLSCertificateDelegations) Create(ctx context.Context, tLSCertifica
 }
 
 // Update takes the representation of a tLSCertificateDelegation and updates it. Returns the server's representation of the tLSCertificateDelegation, and an error, if there is any.
-func (c *FakeTLSCertificateDelegations) Update(ctx context.Context, tLSCertificateDelegation *projectcontourv1.TLSCertificateDelegation, opts v1.UpdateOptions) (result *projectcontourv1.TLSCertificateDelegation, err error) {
+func (c *FakeTLSCertificateDelegations) Update(tLSCertificateDelegation *projectcontourv1.TLSCertificateDelegation) (result *projectcontourv1.TLSCertificateDelegation, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(tlscertificatedelegationsResource, c.ns, tLSCertificateDelegation), &projectcontourv1.TLSCertificateDelegation{})
 
@@ -103,7 +101,7 @@ func (c *FakeTLSCertificateDelegations) Update(ctx context.Context, tLSCertifica
 }
 
 // Delete takes name of the tLSCertificateDelegation and deletes it. Returns an error if one occurs.
-func (c *FakeTLSCertificateDelegations) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *FakeTLSCertificateDelegations) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(tlscertificatedelegationsResource, c.ns, name), &projectcontourv1.TLSCertificateDelegation{})
 
@@ -111,15 +109,15 @@ func (c *FakeTLSCertificateDelegations) Delete(ctx context.Context, name string,
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeTLSCertificateDelegations) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(tlscertificatedelegationsResource, c.ns, listOpts)
+func (c *FakeTLSCertificateDelegations) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(tlscertificatedelegationsResource, c.ns, listOptions)
 
 	_, err := c.Fake.Invokes(action, &projectcontourv1.TLSCertificateDelegationList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched tLSCertificateDelegation.
-func (c *FakeTLSCertificateDelegations) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *projectcontourv1.TLSCertificateDelegation, err error) {
+func (c *FakeTLSCertificateDelegations) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *projectcontourv1.TLSCertificateDelegation, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(tlscertificatedelegationsResource, c.ns, name, pt, data, subresources...), &projectcontourv1.TLSCertificateDelegation{})
 
