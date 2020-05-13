@@ -10,15 +10,14 @@ require (
 	k8s.io/api v0.18.2
 	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/pkg v0.0.0-20200511160847-a468cb85692f
-	knative.dev/serving v0.14.1-0.20200429130642-78994f29e07e
-	knative.dev/test-infra v0.0.0-20200509000045-c7114387eed5
+	knative.dev/pkg v0.0.0-20200513155558-ba44ff8d5730
+	knative.dev/serving v0.14.1-0.20200513160458-6d108422d2a2
+	knative.dev/test-infra v0.0.0-20200513011557-d03429a76034
 )
 
 replace (
 	k8s.io/api => k8s.io/api v0.16.4
 	k8s.io/apimachinery => k8s.io/apimachinery v0.16.4
 	k8s.io/client-go => k8s.io/client-go v0.16.4
-	k8s.io/code-generator => k8s.io/code-generator v0.16.5-beta.1
-	knative.dev/serving => knative.dev/serving v0.14.1-0.20200511192146-700e26c4f365
+	k8s.io/code-generator => k8s.io/code-generator v0.16.4
 )

@@ -672,7 +672,7 @@ k8s.io/client-go/util/jsonpath
 k8s.io/client-go/util/keyutil
 k8s.io/client-go/util/retry
 k8s.io/client-go/util/workqueue
-# k8s.io/code-generator v0.18.0 => k8s.io/code-generator v0.16.5-beta.1
+# k8s.io/code-generator v0.18.0 => k8s.io/code-generator v0.16.4
 k8s.io/code-generator
 k8s.io/code-generator/cmd/client-gen
 k8s.io/code-generator/cmd/client-gen/args
@@ -732,7 +732,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/pkg v0.0.0-20200511160847-a468cb85692f
+# knative.dev/pkg v0.0.0-20200513155558-ba44ff8d5730
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -789,7 +789,7 @@ knative.dev/pkg/tracker
 knative.dev/pkg/version
 knative.dev/pkg/webhook
 knative.dev/pkg/webhook/certificates/resources
-# knative.dev/serving v0.14.1-0.20200429130642-78994f29e07e => knative.dev/serving v0.14.1-0.20200511192146-700e26c4f365
+# knative.dev/serving v0.14.1-0.20200513160458-6d108422d2a2
 ## explicit
 knative.dev/serving/config/core/configmaps
 knative.dev/serving/pkg/apis/autoscaling
@@ -863,7 +863,7 @@ knative.dev/serving/test/test_images/timeout
 knative.dev/serving/test/test_images/wsserver
 knative.dev/serving/test/types
 knative.dev/serving/test/v1alpha1
-# knative.dev/test-infra v0.0.0-20200509000045-c7114387eed5
+# knative.dev/test-infra v0.0.0-20200513011557-d03429a76034
 ## explicit
 knative.dev/test-infra/scripts
 # sigs.k8s.io/yaml v1.1.0
@@ -871,5 +871,4 @@ sigs.k8s.io/yaml
 # k8s.io/api => k8s.io/api v0.16.4
 # k8s.io/apimachinery => k8s.io/apimachinery v0.16.4
 # k8s.io/client-go => k8s.io/client-go v0.16.4
-# k8s.io/code-generator => k8s.io/code-generator v0.16.5-beta.1
-# knative.dev/serving => knative.dev/serving v0.14.1-0.20200511192146-700e26c4f365
+# k8s.io/code-generator => k8s.io/code-generator v0.16.4
