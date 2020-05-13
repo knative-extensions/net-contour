@@ -14,6 +14,11 @@ contrib.go.opencensus.io/exporter/stackdriver/monitoredresource
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 github.com/PuerkitoBio/urlesc
+# github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+github.com/alecthomas/template
+github.com/alecthomas/template/parse
+# github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4
+github.com/alecthomas/units
 # github.com/aws/aws-sdk-go v1.29.34
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/awserr
@@ -63,11 +68,42 @@ github.com/census-instrumentation/opencensus-proto/gen-go/resource/v1
 github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1
 # github.com/cespare/xxhash/v2 v2.1.1
 github.com/cespare/xxhash/v2
+# github.com/cncf/udpa/go v0.0.0-20200313221541-5f7e5dd04533
+github.com/cncf/udpa/go/udpa/annotations
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/emicklei/go-restful v2.9.5+incompatible
 github.com/emicklei/go-restful
 github.com/emicklei/go-restful/log
+# github.com/envoyproxy/go-control-plane v0.9.5
+github.com/envoyproxy/go-control-plane/envoy/annotations
+github.com/envoyproxy/go-control-plane/envoy/api/v2
+github.com/envoyproxy/go-control-plane/envoy/api/v2/auth
+github.com/envoyproxy/go-control-plane/envoy/api/v2/cluster
+github.com/envoyproxy/go-control-plane/envoy/api/v2/core
+github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint
+github.com/envoyproxy/go-control-plane/envoy/api/v2/listener
+github.com/envoyproxy/go-control-plane/envoy/api/v2/route
+github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v2
+github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2
+github.com/envoyproxy/go-control-plane/envoy/config/filter/accesslog/v2
+github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2
+github.com/envoyproxy/go-control-plane/envoy/config/filter/network/tcp_proxy/v2
+github.com/envoyproxy/go-control-plane/envoy/config/listener/v2
+github.com/envoyproxy/go-control-plane/envoy/config/metrics/v2
+github.com/envoyproxy/go-control-plane/envoy/config/overload/v2alpha
+github.com/envoyproxy/go-control-plane/envoy/config/trace/v2
+github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2
+github.com/envoyproxy/go-control-plane/envoy/service/load_stats/v2
+github.com/envoyproxy/go-control-plane/envoy/type
+github.com/envoyproxy/go-control-plane/envoy/type/matcher
+github.com/envoyproxy/go-control-plane/envoy/type/metadata/v2
+github.com/envoyproxy/go-control-plane/envoy/type/tracing/v2
+github.com/envoyproxy/go-control-plane/pkg/conversion
+github.com/envoyproxy/go-control-plane/pkg/resource/v2
+github.com/envoyproxy/go-control-plane/pkg/wellknown
+# github.com/envoyproxy/protoc-gen-validate v0.1.0
+github.com/envoyproxy/protoc-gen-validate/validate
 # github.com/evanphx/json-patch v4.5.0+incompatible
 github.com/evanphx/json-patch
 # github.com/ghodss/yaml v1.0.0
@@ -125,6 +161,8 @@ github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
 # github.com/gorilla/websocket v1.4.0
 github.com/gorilla/websocket
+# github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
+github.com/grpc-ecosystem/go-grpc-prometheus
 # github.com/grpc-ecosystem/grpc-gateway v1.12.2
 github.com/grpc-ecosystem/grpc-gateway/internal
 github.com/grpc-ecosystem/grpc-gateway/runtime
@@ -138,6 +176,8 @@ github.com/imdario/mergo
 github.com/jmespath/go-jmespath
 # github.com/json-iterator/go v1.1.9
 github.com/json-iterator/go
+# github.com/konsorten/go-windows-terminal-sequences v1.0.2
+github.com/konsorten/go-windows-terminal-sequences
 # github.com/mailru/easyjson v0.7.0
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer
@@ -156,8 +196,25 @@ github.com/openzipkin/zipkin-go/model
 github.com/pkg/errors
 # github.com/projectcontour/contour v1.4.1-0.20200507033955-65d52b253570
 ## explicit
+github.com/projectcontour/contour/apis/contour/v1beta1
 github.com/projectcontour/contour/apis/projectcontour/v1
+github.com/projectcontour/contour/cmd/contour
 github.com/projectcontour/contour/examples/contour
+github.com/projectcontour/contour/internal/annotation
+github.com/projectcontour/contour/internal/build
+github.com/projectcontour/contour/internal/certgen
+github.com/projectcontour/contour/internal/contour
+github.com/projectcontour/contour/internal/dag
+github.com/projectcontour/contour/internal/debug
+github.com/projectcontour/contour/internal/envoy
+github.com/projectcontour/contour/internal/grpc
+github.com/projectcontour/contour/internal/health
+github.com/projectcontour/contour/internal/httpsvc
+github.com/projectcontour/contour/internal/k8s
+github.com/projectcontour/contour/internal/metrics
+github.com/projectcontour/contour/internal/protobuf
+github.com/projectcontour/contour/internal/sorter
+github.com/projectcontour/contour/internal/workgroup
 # github.com/prometheus/client_golang v1.5.0
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
@@ -172,6 +229,8 @@ github.com/prometheus/common/model
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
+# github.com/sirupsen/logrus v1.4.2
+github.com/sirupsen/logrus
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
 # go.opencensus.io v0.22.3
@@ -362,6 +421,8 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
+# gopkg.in/alecthomas/kingpin.v2 v2.2.6
+gopkg.in/alecthomas/kingpin.v2
 # gopkg.in/inf.v0 v0.9.1
 gopkg.in/inf.v0
 # gopkg.in/yaml.v2 v2.2.8
@@ -472,6 +533,8 @@ k8s.io/apimachinery/third_party/forked/golang/reflect
 k8s.io/client-go/discovery
 k8s.io/client-go/discovery/fake
 k8s.io/client-go/dynamic
+k8s.io/client-go/dynamic/dynamicinformer
+k8s.io/client-go/dynamic/dynamiclister
 k8s.io/client-go/informers
 k8s.io/client-go/informers/admissionregistration
 k8s.io/client-go/informers/admissionregistration/v1
@@ -731,6 +794,7 @@ k8s.io/kube-openapi/pkg/util/sets
 k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
+k8s.io/utils/strings
 k8s.io/utils/trace
 # knative.dev/pkg v0.0.0-20200513155558-ba44ff8d5730
 ## explicit
@@ -866,6 +930,10 @@ knative.dev/serving/test/v1alpha1
 # knative.dev/test-infra v0.0.0-20200513011557-d03429a76034
 ## explicit
 knative.dev/test-infra/scripts
+# sigs.k8s.io/controller-runtime v0.5.0
+sigs.k8s.io/controller-runtime/pkg/scheme
+# sigs.k8s.io/service-apis v0.0.0-20200213014236-51691dd89266
+sigs.k8s.io/service-apis/api/v1alpha1
 # sigs.k8s.io/yaml v1.1.0
 sigs.k8s.io/yaml
 # k8s.io/api => k8s.io/api v0.16.4

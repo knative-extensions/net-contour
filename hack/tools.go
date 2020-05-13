@@ -32,5 +32,6 @@ import (
 	_ "knative.dev/serving/test/test_images/timeout"
 	_ "knative.dev/serving/test/test_images/wsserver"
 
+	_ "github.com/projectcontour/contour/cmd/contour"
 	_ "github.com/projectcontour/contour/examples/contour"
 )
