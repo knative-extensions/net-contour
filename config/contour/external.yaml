@@ -1409,7 +1409,7 @@ spec:
         # if we change this on each version, you can no longer upgrade
         # just by applying the deployment YAML.
         # See #2423, #2395, #2150, and #2030 for earlier questions about this.
-        image: ko://knative.dev/net-contour/vendor/github.com/projectcontour/contour/cmd/contour
+        image: ko://github.com/projectcontour/contour/cmd/contour
         imagePullPolicy: Always
         command:
         - contour
@@ -1642,7 +1642,7 @@ spec:
         - --contour-key-file=/certs/tls.key
         - --config-path=/config/contour.yaml
         command: ["contour"]
-        image: ko://knative.dev/net-contour/vendor/github.com/projectcontour/contour/cmd/contour
+        image: ko://github.com/projectcontour/contour/cmd/contour
         imagePullPolicy: Always
         name: contour
         ports:
@@ -1734,7 +1734,7 @@ spec:
         args:
         - envoy
         - shutdown-manager
-        image: ko://knative.dev/net-contour/vendor/github.com/projectcontour/contour/cmd/contour
+        image: ko://github.com/projectcontour/contour/cmd/contour
         imagePullPolicy: Always
         lifecycle:
           preStop:
@@ -1810,7 +1810,7 @@ spec:
         - --envoy-key-file=/certs/tls.key
         command:
         - contour
-        image: ko://knative.dev/net-contour/vendor/github.com/projectcontour/contour/cmd/contour
+        image: ko://github.com/projectcontour/contour/cmd/contour
         imagePullPolicy: Always
         name: envoy-initconfig
         volumeMounts:
