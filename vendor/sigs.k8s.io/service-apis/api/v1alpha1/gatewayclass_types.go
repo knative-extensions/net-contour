@@ -34,7 +34,7 @@ import (
 //
 // Support: Core.
 type GatewayClass struct {
-	metav1.TypeMeta   `json:",inline" protobuf:"bytes,4,opt,name=typeMeta"`
+	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// Spec for this GatewayClass.
@@ -66,23 +66,15 @@ type GatewayClassSpec struct {
 	// class. This is optional if the controller does not require
 	// any additional configuration.
 	//
-	// Valid resources for reference are up to the Controller. Examples
-	// include "configmap" (using the empty string to indicate the core API
-	// group) or a custom resource (CRD).
+	// Valid types for reference are up to the
+	// Controller. Examples include `core.ConfigMap` or a custom
+	// resource (CRD).
 	//
 	// Support: Custom
 	//
 	// +optional
-	// +protobuf=false
-	ParametersRef *GatewayClassParametersObjectReference `json:"parameters,omitempty" protobuf:"bytes,2,opt,name=parametersRef"`
+	ParametersRef *core.ObjectReference `json:"parameters,omitempty" protobuf:"bytes,2,opt,name=parametersRef"`
 }
-
-// GatewayClassParametersObjectReference identifies a parameters object for a
-// gateway class within a known namespace.
-//
-// +k8s:deepcopy-gen=false
-// +protobuf=false
-type GatewayClassParametersObjectReference = LocalObjectReference
 
 // GatewayClassConditionType is the type of status conditions.
 type GatewayClassConditionType string
@@ -138,7 +130,7 @@ type GatewayClassCondition struct {
 
 // GatewayClassList contains a list of GatewayClass
 type GatewayClassList struct {
-	metav1.TypeMeta `json:",inline" protobuf:"bytes,3,opt,name=typeMeta"`
+	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	Items           []GatewayClass `json:"items" protobuf:"bytes,2,rep,name=items"`
 }
