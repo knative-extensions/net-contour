@@ -17,6 +17,8 @@ kind: Deployment
 metadata:
   name: contour-ingress-controller
   namespace: knative-serving
+  labels:
+    networking.knative.dev/ingress-provider: contour
 spec:
   replicas: 1
   selector:

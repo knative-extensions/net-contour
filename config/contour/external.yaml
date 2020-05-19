@@ -2,6 +2,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: contour-external
+  labels:
+    networking.knative.dev/ingress-provider: contour
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -15,25 +17,32 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: contour-external
+  labels:
+    networking.knative.dev/ingress-provider: contour
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: contour
   namespace: contour-external
+  labels:
+    networking.knative.dev/ingress-provider: contour
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: envoy
   namespace: contour-external
-
+  labels:
+    networking.knative.dev/ingress-provider: contour
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: contour
   namespace: contour-external
+  labels:
+    networking.knative.dev/ingress-provider: contour
 data:
   contour.yaml: |
     leaderelection:
@@ -100,6 +109,8 @@ metadata:
     controller-gen.kubebuilder.io/version: v0.2.4
   creationTimestamp: null
   name: ingressroutes.contour.heptio.com
+  labels:
+    networking.knative.dev/ingress-provider: contour
 spec:
   additionalPrinterColumns:
   - JSONPath: .spec.virtualhost.fqdn
@@ -469,6 +480,8 @@ metadata:
     controller-gen.kubebuilder.io/version: v0.2.4
   creationTimestamp: null
   name: tlscertificatedelegations.contour.heptio.com
+  labels:
+    networking.knative.dev/ingress-provider: contour
 spec:
   group: contour.heptio.com
   names:
@@ -545,6 +558,8 @@ metadata:
     controller-gen.kubebuilder.io/version: v0.2.4
   creationTimestamp: null
   name: httpproxies.projectcontour.io
+  labels:
+    networking.knative.dev/ingress-provider: contour
 spec:
   additionalPrinterColumns:
   - JSONPath: .spec.virtualhost.fqdn
@@ -1280,6 +1295,8 @@ metadata:
     controller-gen.kubebuilder.io/version: v0.2.4
   creationTimestamp: null
   name: tlscertificatedelegations.projectcontour.io
+  labels:
+    networking.knative.dev/ingress-provider: contour
 spec:
   group: projectcontour.io
   names:
@@ -1357,12 +1374,16 @@ kind: ServiceAccount
 metadata:
   name: contour-certgen
   namespace: contour-external
+  labels:
+    networking.knative.dev/ingress-provider: contour
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
   name: contour
   namespace: contour-external
+  labels:
+    networking.knative.dev/ingress-provider: contour
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -1377,6 +1398,8 @@ kind: Role
 metadata:
   name: contour-certgen
   namespace: contour-external
+  labels:
+    networking.knative.dev/ingress-provider: contour
 rules:
 - apiGroups:
   - ""
@@ -1396,6 +1419,8 @@ kind: Job
 metadata:
   name: contour-certgen
   namespace: contour-external
+  labels:
+    networking.knative.dev/ingress-provider: contour
 spec:
   ttlSecondsAfterFinished: 0
   template:
@@ -1437,6 +1462,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   name: contour
+  labels:
+    networking.knative.dev/ingress-provider: contour
 rules:
 - apiGroups:
   - ""
@@ -1515,6 +1542,8 @@ kind: Role
 metadata:
   name: contour-leaderelection
   namespace: contour-external
+  labels:
+    networking.knative.dev/ingress-provider: contour
 rules:
 - apiGroups:
   - ""
@@ -1540,6 +1569,8 @@ kind: RoleBinding
 metadata:
   name: contour-leaderelection
   namespace: contour-external
+  labels:
+    networking.knative.dev/ingress-provider: contour
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -1555,6 +1586,8 @@ kind: Service
 metadata:
   name: contour
   namespace: contour-external
+  labels:
+    networking.knative.dev/ingress-provider: contour
 spec:
   ports:
   - port: 8001
@@ -1571,6 +1604,8 @@ kind: Service
 metadata:
   name: envoy
   namespace: contour-external
+  labels:
+    networking.knative.dev/ingress-provider: contour
   annotations:
     # This annotation puts the AWS ELB into "TCP" mode so that it does not
     # do HTTP negotiation for HTTPS connections at the ELB edge.
@@ -1597,6 +1632,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    networking.knative.dev/ingress-provider: contour
     app: contour
   name: contour
   namespace: contour-external
@@ -1708,6 +1744,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
+    networking.knative.dev/ingress-provider: contour
     app: envoy
   name: envoy
   namespace: contour-external

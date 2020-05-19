@@ -18,8 +18,8 @@ metadata:
   name: config-contour
   namespace: knative-serving
   labels:
+    networking.knative.dev/ingress-provider: contour
     serving.knative.dev/release: devel
-
 data:
   _example: |
     ################################

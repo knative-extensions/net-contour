@@ -5,6 +5,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: knative-contour-core
   labels:
+    networking.knative.dev/ingress-provider: contour
     serving.knative.dev/controller: "true"
 rules:
   - apiGroups: ["projectcontour.io"]
