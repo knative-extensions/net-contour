@@ -30,9 +30,9 @@ CONTOUR_VERSION="release-1.4" # This is for controlling which version of contour
 # The list of dependencies that we track at HEAD and periodically
 # float forward in this repository.
 FLOATING_DEPS=(
-  "knative.dev/pkg@${KN_VERSION}"
+  "knative.dev/pkg@release-0.15"
   "knative.dev/serving@${KN_VERSION}"
-  "knative.dev/test-infra@${KN_VERSION}"
+  "knative.dev/test-infra@release-0.15"
   "github.com/projectcontour/contour@${CONTOUR_VERSION}"
 )
 
