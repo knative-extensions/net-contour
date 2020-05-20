@@ -233,6 +233,8 @@ func TestReconcile(t *testing.T) {
 			Object: ing("name", "ns", withContour, withGeneration(1), withBasicSpec2, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
 				i.Status.InitializeConditions()
+				i.Status.ObservedGeneration = 1
+				i.Status.MarkIngressNotReady("NewObservedGenFailure", "unsuccessfully observed a new generation")
 			}),
 		}},
 		WantEvents: []string{
