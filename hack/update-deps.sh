@@ -179,3 +179,4 @@ KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour
   | rewrite_serve_args contour-external \
   | rewrite_image | rewrite_command | disable_hostport \
   | add_ingress_provider_labels >> config/contour/external.yaml
+
