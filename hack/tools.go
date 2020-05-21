@@ -34,4 +34,5 @@ import (
 
 	_ "github.com/projectcontour/contour/cmd/contour"
 	_ "github.com/projectcontour/contour/examples/contour"
+	_ "github.com/mikefarah/yq/v3"
 )
