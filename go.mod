@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/google/go-cmp v0.4.0
 	github.com/gorilla/websocket v1.4.0
+	github.com/mikefarah/yq/v3 v3.0.0-20200501003153-6fc3566acd3a
 	github.com/projectcontour/contour v1.4.1-0.20200507033955-65d52b253570
 	google.golang.org/grpc v1.28.1
 	gopkg.in/yaml.v2 v2.2.8

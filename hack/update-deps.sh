@@ -71,6 +71,20 @@ rm -rf $(find vendor/ -path '*/e2e/*_test.go')
 # Add permission for shell scripts
 chmod +x $(find vendor -type f -name '*.sh')
 
+function install_yq() {
+  if [ -x "$(command -v yq)" ]; then
+    return
+  fi
+  go get github.com/mikefarah/yq/v3
+}
+
+# install yq
+install_yq
+
+function add_ingress_provider_labels() {
+  sed '${/---/d;}' | yq m - ./hack/labels.yaml -d "*"
+}
+
 function delete_contour_cluster_role_bindings() {
   sed -e '/apiVersion: rbac.authorization.k8s.io/{' -e ':a' -e '${' -e 'p' -e 'd'  -e '}' -e 'N' -e '/---/!ba' -e '/kind: ClusterRoleBinding/d' -e '}'
 }
@@ -117,6 +131,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: contour-internal
+  labels:
+    networking.knative.dev/ingress-provider: contour
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -133,7 +149,8 @@ KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour
   | rewrite_contour_namespace contour-internal \
   | configure_leader_election contour-internal \
   | rewrite_serve_args contour-internal \
-  | rewrite_image | rewrite_command | disable_hostport | privatize_loadbalancer >> config/contour/internal.yaml
+  | rewrite_image | rewrite_command | disable_hostport | privatize_loadbalancer \
+  | add_ingress_provider_labels  >> config/contour/internal.yaml
 
 # We do this manually because it's challenging to rewrite
 # the ClusterRoleBinding without collateral damage.
@@ -142,6 +159,8 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: contour-external
+  labels:
+    networking.knative.dev/ingress-provider: contour
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -158,4 +177,6 @@ KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour
   | rewrite_contour_namespace contour-external \
   | configure_leader_election contour-external \
   | rewrite_serve_args contour-external \
-  | rewrite_image | rewrite_command | disable_hostport >> config/contour/external.yaml
+  | rewrite_image | rewrite_command | disable_hostport \
+  | add_ingress_provider_labels >> config/contour/external.yaml
+

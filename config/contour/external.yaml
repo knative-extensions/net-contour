@@ -100,7 +100,6 @@ data:
     #   - "upstream_service_time"
     #   - "user_agent"
     #   - "x_forwarded_for"
-
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -1367,7 +1366,6 @@ status:
     plural: ""
   conditions: []
   storedVersions: []
-
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -1456,7 +1454,6 @@ spec:
   parallelism: 1
   completions: 1
   backoffLimit: 1
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -1579,7 +1576,6 @@ subjects:
 - kind: ServiceAccount
   name: contour
   namespace: contour-external
-
 ---
 apiVersion: v1
 kind: Service
@@ -1597,15 +1593,12 @@ spec:
   selector:
     app: contour
   type: ClusterIP
-
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: envoy
   namespace: contour-external
-  labels:
-    networking.knative.dev/ingress-provider: contour
   annotations:
     # This annotation puts the AWS ELB into "TCP" mode so that it does not
     # do HTTP negotiation for HTTPS connections at the ELB edge.
@@ -1614,6 +1607,8 @@ metadata:
     # for information about enabling the PROXY protocol on the ELB to recover
     # the original remote IP address.
     service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+  labels:
+    networking.knative.dev/ingress-provider: contour
 spec:
   externalTrafficPolicy: Local
   ports:
@@ -1626,14 +1621,13 @@ spec:
   selector:
     app: envoy
   type: LoadBalancer
-
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    networking.knative.dev/ingress-provider: contour
     app: contour
+    networking.knative.dev/ingress-provider: contour
   name: contour
   namespace: contour-external
 spec:
@@ -1738,14 +1732,13 @@ spec:
           items:
           - key: contour.yaml
             path: contour.yaml
-
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    networking.knative.dev/ingress-provider: contour
     app: envoy
+    networking.knative.dev/ingress-provider: contour
   name: envoy
   namespace: contour-external
 spec:
@@ -1876,5 +1869,3 @@ spec:
         secret:
           secretName: cacert
       restartPolicy: Always
-
----
