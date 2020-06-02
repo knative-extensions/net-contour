@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/google/go-cmp v0.4.0
-	github.com/mikefarah/yq/v3 v3.0.0-20200501003153-6fc3566acd3a
+	github.com/mikefarah/yq/v3 v3.0.0-20200601230220-721dd57ed41b
 	github.com/projectcontour/contour v1.4.1-0.20200507033955-65d52b253570
 	gopkg.in/yaml.v2 v2.2.8
 	istio.io/client-go v0.0.0-20200505182340-146ba01d5357 // indirect

@@ -202,7 +202,7 @@ github.com/mattn/go-colorable
 github.com/mattn/go-isatty
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
-# github.com/mikefarah/yq/v3 v3.0.0-20200501003153-6fc3566acd3a
+# github.com/mikefarah/yq/v3 v3.0.0-20200601230220-721dd57ed41b
 ## explicit
 github.com/mikefarah/yq/v3
 github.com/mikefarah/yq/v3/cmd
