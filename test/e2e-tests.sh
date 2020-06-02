@@ -23,7 +23,7 @@ initialize $@  --skip-istio-addon
 go_test_e2e -timeout=20m -parallel=12 \
 	    ./test/conformance \
             `# TODO(#12): TestUpdate is consistently failing.` \
-	     -run=".*/([^u]|u[^p]|up[^d]|upd[^a]|upda[^t]|updat[^e]).*" \
+	     -run="TestIngressConformance/[^u]" \
 	    --ingressClass=contour.ingress.networking.knative.dev || fail_test
 
 success
