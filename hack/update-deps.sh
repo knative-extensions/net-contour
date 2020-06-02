@@ -52,13 +52,6 @@ if (( GO_GET )); then
   go get -d ${FLOATING_DEPS[@]}
 fi
 
-# Create a copy of the knative.dev/serving conformace/ingress test suite.
-go mod vendor
-SERVING_MODULE="$(go list -f '{{.Dir}}' -mod=readonly -m knative.dev/serving)"
-mkdir -p test/conformance/ingress
-rm -rf test/conformance/ingress/*
-rsync -r --no-perms "$SERVING_MODULE"/test/conformance/ingress/ test/conformance/ingress
-
 # Prune modules.
 go mod tidy
 go mod vendor
