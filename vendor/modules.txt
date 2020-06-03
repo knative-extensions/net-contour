@@ -168,7 +168,6 @@ github.com/googleapis/gnostic/OpenAPIv2
 github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
 # github.com/gorilla/websocket v1.4.0
-## explicit
 github.com/gorilla/websocket
 # github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 github.com/grpc-ecosystem/go-grpc-prometheus
@@ -203,7 +202,7 @@ github.com/mattn/go-colorable
 github.com/mattn/go-isatty
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
-# github.com/mikefarah/yq/v3 v3.0.0-20200501003153-6fc3566acd3a
+# github.com/mikefarah/yq/v3 v3.0.0-20200601230220-721dd57ed41b
 ## explicit
 github.com/mikefarah/yq/v3
 github.com/mikefarah/yq/v3/cmd
@@ -396,7 +395,6 @@ google.golang.org/genproto/googleapis/rpc/status
 google.golang.org/genproto/googleapis/type/calendarperiod
 google.golang.org/genproto/protobuf/field_mask
 # google.golang.org/grpc v1.28.1
-## explicit
 google.golang.org/grpc
 google.golang.org/grpc/attributes
 google.golang.org/grpc/backoff
@@ -883,7 +881,7 @@ knative.dev/pkg/tracker
 knative.dev/pkg/version
 knative.dev/pkg/webhook
 knative.dev/pkg/webhook/certificates/resources
-# knative.dev/serving v0.15.1-0.20200529200802-e0b4b30c6461
+# knative.dev/serving v0.15.1-0.20200602192917-906630816f4a
 ## explicit
 knative.dev/serving/config/core/configmaps
 knative.dev/serving/pkg/apis/autoscaling
