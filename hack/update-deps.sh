@@ -64,15 +64,7 @@ rm -rf $(find vendor/ -path '*/e2e/*_test.go')
 # Add permission for shell scripts
 chmod +x $(find vendor -type f -name '*.sh')
 
-function install_yq() {
-  if [ -x "$(command -v yq)" ]; then
-    return
-  fi
-  go get github.com/mikefarah/yq/v3
-}
-
-# install yq
-install_yq
+go install ${ROOT_DIR}/vendor/github.com/mikefarah/yq/v3
 
 function add_ingress_provider_labels() {
   sed '${/---/d;}' | yq m - ./hack/labels.yaml -d "*"
