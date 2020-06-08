@@ -7,13 +7,13 @@ require (
 	github.com/mikefarah/yq/v3 v3.0.0-20200601230220-721dd57ed41b
 	github.com/projectcontour/contour v1.4.1-0.20200507033955-65d52b253570
 	gopkg.in/yaml.v2 v2.2.8
-	istio.io/client-go v0.0.0-20200505182340-146ba01d5357 // indirect
 	k8s.io/api v0.18.1
 	k8s.io/apimachinery v0.18.1
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/pkg v0.0.0-20200606224418-7ed1d4a552bc
-	knative.dev/serving v0.15.1-0.20200608134619-efb0203dfa53
-	knative.dev/test-infra v0.0.0-20200606045118-14ebc4a42974
+	knative.dev/networking v0.0.0-20200607161819-2086ac6759c2
+	knative.dev/pkg v0.0.0-20200608155520-39a1f43fc050
+	knative.dev/serving v0.15.1-0.20200608213432-f1582404be27
+	knative.dev/test-infra v0.0.0-20200608183332-3442736aebd0
 )
 
 replace (

@@ -23,8 +23,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	logtesting "knative.dev/pkg/logging/testing"
 
+	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	. "knative.dev/pkg/configmap/testing"
-	"knative.dev/serving/pkg/apis/networking/v1alpha1"
 	"knative.dev/serving/pkg/network"
 )
 

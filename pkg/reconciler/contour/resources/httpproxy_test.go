@@ -27,10 +27,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
+	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/ptr"
 	"knative.dev/pkg/reconciler"
-	"knative.dev/serving/pkg/apis/networking/v1alpha1"
 	servingnetwork "knative.dev/serving/pkg/network"
 )
 

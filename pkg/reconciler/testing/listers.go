@@ -25,10 +25,10 @@ import (
 	"k8s.io/client-go/tools/cache"
 	fakecontourclientset "knative.dev/net-contour/pkg/client/clientset/versioned/fake"
 	contourlisters "knative.dev/net-contour/pkg/client/listers/projectcontour/v1"
+	networking "knative.dev/networking/pkg/apis/networking/v1alpha1"
+	fakeservingclientset "knative.dev/networking/pkg/client/clientset/versioned/fake"
+	networkinglisters "knative.dev/networking/pkg/client/listers/networking/v1alpha1"
 	"knative.dev/pkg/reconciler/testing"
-	networking "knative.dev/serving/pkg/apis/networking/v1alpha1"
-	fakeservingclientset "knative.dev/serving/pkg/client/clientset/versioned/fake"
-	networkinglisters "knative.dev/serving/pkg/client/listers/networking/v1alpha1"
 )
 
 var clientSetSchemes = []func(*runtime.Scheme) error{
@@ -71,7 +71,7 @@ func (l *Listers) IndexerFor(obj runtime.Object) cache.Indexer {
 	return l.sorter.IndexerForObjectType(obj)
 }
 
-func (l *Listers) GetServingObjects() []runtime.Object {
+func (l *Listers) GetNetworkingObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(fakeservingclientset.AddToScheme)
 }
 
