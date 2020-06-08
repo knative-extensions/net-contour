@@ -20,10 +20,10 @@ import (
 	"testing"
 
 	_ "knative.dev/net-contour/pkg/client/injection/informers/projectcontour/v1/httpproxy/fake"
+	_ "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
-	_ "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
