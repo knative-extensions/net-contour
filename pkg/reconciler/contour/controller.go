@@ -42,10 +42,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-const (
-	controllerAgentName = "contour-controller"
-)
-
 // NewController returns a new Ingress controller for Project Contour.
 func NewController(
 	ctx context.Context,
