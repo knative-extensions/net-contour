@@ -414,7 +414,7 @@ func TestMakeProxies(t *testing.T) {
 						}, {
 							Path: "/doo",
 							Headers: map[string]v1alpha1.HeaderMatch{
-								"tag": v1alpha1.HeaderMatch{
+								"tag": {
 									Exact: "doo",
 								},
 							},
