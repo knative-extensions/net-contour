@@ -386,7 +386,7 @@ func TestMakeProxies(t *testing.T) {
 			},
 		}},
 	}, {
-		name: "multiple paths",
+		name: "multiple paths with header conditions",
 		ing: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
@@ -399,6 +399,11 @@ func TestMakeProxies(t *testing.T) {
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
 							Path: "/goo",
+							Headers: map[string]v1alpha1.HeaderMatch{
+								"tag": v1alpha1.HeaderMatch{
+									Exact: "goo",
+								},
+							},
 							Splits: []v1alpha1.IngressBackendSplit{{
 								IngressBackend: v1alpha1.IngressBackend{
 									ServiceName: "goo",
@@ -408,6 +413,11 @@ func TestMakeProxies(t *testing.T) {
 							}},
 						}, {
 							Path: "/doo",
+							Headers: map[string]v1alpha1.HeaderMatch{
+								"tag": v1alpha1.HeaderMatch{
+									Exact: "doo",
+								},
+							},
 							Splits: []v1alpha1.IngressBackendSplit{{
 								IngressBackend: v1alpha1.IngressBackend{
 									ServiceName: "doo",
@@ -447,13 +457,18 @@ func TestMakeProxies(t *testing.T) {
 				Routes: []v1.Route{{
 					Conditions: []v1.Condition{{
 						Prefix: "/goo",
+					}, {
+						Header: &v1.HeaderCondition{
+							Name:  "tag",
+							Exact: "goo",
+						},
 					}},
 					EnableWebsockets: true,
 					PermitInsecure:   true,
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "7d87a7e5d6e51afb3cdf3148b52cce9c2d209da112df5fb99fed39791b574d4e",
+							Value: "c464aab77f2a40e9bf60890d0b57471049d2cd5377f99e36d3a0e3906a84ff70",
 						}},
 					},
 					Services: []v1.Service{{
@@ -465,13 +480,18 @@ func TestMakeProxies(t *testing.T) {
 				}, {
 					Conditions: []v1.Condition{{
 						Prefix: "/doo",
+					}, {
+						Header: &v1.HeaderCondition{
+							Name:  "tag",
+							Exact: "doo",
+						},
 					}},
 					EnableWebsockets: true,
 					PermitInsecure:   true,
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "7d87a7e5d6e51afb3cdf3148b52cce9c2d209da112df5fb99fed39791b574d4e",
+							Value: "c464aab77f2a40e9bf60890d0b57471049d2cd5377f99e36d3a0e3906a84ff70",
 						}},
 					},
 					Services: []v1.Service{{
