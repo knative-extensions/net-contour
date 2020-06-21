@@ -400,7 +400,7 @@ func TestMakeProxies(t *testing.T) {
 						Paths: []v1alpha1.HTTPIngressPath{{
 							Path: "/goo",
 							Headers: map[string]v1alpha1.HeaderMatch{
-								"tag": v1alpha1.HeaderMatch{
+								"tag": {
 									Exact: "goo",
 								},
 							},
