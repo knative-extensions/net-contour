@@ -89,6 +89,7 @@ github.com/envoyproxy/go-control-plane/envoy/api/v2/route
 github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v2
 github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2
 github.com/envoyproxy/go-control-plane/envoy/config/filter/accesslog/v2
+github.com/envoyproxy/go-control-plane/envoy/config/filter/http/lua/v2
 github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2
 github.com/envoyproxy/go-control-plane/envoy/config/filter/network/tcp_proxy/v2
 github.com/envoyproxy/go-control-plane/envoy/config/listener/v2
@@ -96,13 +97,16 @@ github.com/envoyproxy/go-control-plane/envoy/config/metrics/v2
 github.com/envoyproxy/go-control-plane/envoy/config/overload/v2alpha
 github.com/envoyproxy/go-control-plane/envoy/config/trace/v2
 github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2
-github.com/envoyproxy/go-control-plane/envoy/service/load_stats/v2
 github.com/envoyproxy/go-control-plane/envoy/type
 github.com/envoyproxy/go-control-plane/envoy/type/matcher
 github.com/envoyproxy/go-control-plane/envoy/type/metadata/v2
 github.com/envoyproxy/go-control-plane/envoy/type/tracing/v2
+github.com/envoyproxy/go-control-plane/pkg/cache/types
+github.com/envoyproxy/go-control-plane/pkg/cache/v2
 github.com/envoyproxy/go-control-plane/pkg/conversion
+github.com/envoyproxy/go-control-plane/pkg/log
 github.com/envoyproxy/go-control-plane/pkg/resource/v2
+github.com/envoyproxy/go-control-plane/pkg/server/v2
 github.com/envoyproxy/go-control-plane/pkg/wellknown
 # github.com/envoyproxy/protoc-gen-validate v0.1.0
 github.com/envoyproxy/protoc-gen-validate/validate
@@ -219,12 +223,10 @@ github.com/modern-go/reflect2
 github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
-# github.com/projectcontour/contour v1.4.1-0.20200507033955-65d52b253570
+# github.com/projectcontour/contour v1.4.1-0.20200507033955-65d52b253570 => github.com/stevesloka/contour v0.13.0-beta.2.0.20200622143240-715aab4e4b1a
 ## explicit
-github.com/projectcontour/contour/apis/contour/v1beta1
 github.com/projectcontour/contour/apis/projectcontour/v1
 github.com/projectcontour/contour/cmd/contour
-github.com/projectcontour/contour/examples/contour
 github.com/projectcontour/contour/internal/annotation
 github.com/projectcontour/contour/internal/build
 github.com/projectcontour/contour/internal/certgen
@@ -517,7 +519,7 @@ istio.io/api/networking/v1alpha3
 istio.io/client-go/pkg/apis/networking/v1alpha3
 # istio.io/gogo-genproto v0.0.0-20191029161641-f7d19ec0141d
 istio.io/gogo-genproto/googleapis/google/api
-# k8s.io/api v0.18.1 => k8s.io/api v0.17.6
+# k8s.io/api v0.18.2 => k8s.io/api v0.17.6
 ## explicit
 k8s.io/api/admission/v1
 k8s.io/api/admissionregistration/v1
@@ -882,7 +884,7 @@ k8s.io/kube-openapi/pkg/generators
 k8s.io/kube-openapi/pkg/generators/rules
 k8s.io/kube-openapi/pkg/util/proto
 k8s.io/kube-openapi/pkg/util/sets
-# k8s.io/utils v0.0.0-20200124190032-861946025e34
+# k8s.io/utils v0.0.0-20200324210504-a9aa75ae1b89
 k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
@@ -1029,6 +1031,7 @@ sigs.k8s.io/controller-runtime/pkg/scheme
 sigs.k8s.io/service-apis/api/v1alpha1
 # sigs.k8s.io/yaml v1.2.0
 sigs.k8s.io/yaml
+# github.com/projectcontour/contour => github.com/stevesloka/contour v0.13.0-beta.2.0.20200622143240-715aab4e4b1a
 # k8s.io/api => k8s.io/api v0.17.6
 # k8s.io/apimachinery => k8s.io/apimachinery v0.17.6
 # k8s.io/client-go => k8s.io/client-go v0.17.6

@@ -17,9 +17,9 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
+
 	envoy_api_v2_auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
-	resource "github.com/envoyproxy/go-control-plane/pkg/resource/v2"
-	"github.com/golang/protobuf/proto"
 	"github.com/projectcontour/contour/internal/dag"
 	"github.com/projectcontour/contour/internal/envoy"
 	"github.com/projectcontour/contour/internal/protobuf"
@@ -30,20 +30,17 @@ import (
 type SecretCache struct {
 	mu     sync.Mutex
 	values map[string]*envoy_api_v2_auth.Secret
-	Cond
 }
 
 // Update replaces the contents of the cache with the supplied map.
 func (c *SecretCache) Update(v map[string]*envoy_api_v2_auth.Secret) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-
 	c.values = v
-	c.Cond.Notify()
 }
 
 // Contents returns a copy of the cache's contents.
-func (c *SecretCache) Contents() []proto.Message {
+func (c *SecretCache) Contents() []types.Resource {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	var values []*envoy_api_v2_auth.Secret
@@ -53,24 +50,6 @@ func (c *SecretCache) Contents() []proto.Message {
 	sort.Stable(sorter.For(values))
 	return protobuf.AsMessages(values)
 }
-
-func (c *SecretCache) Query(names []string) []proto.Message {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	var values []*envoy_api_v2_auth.Secret
-	for _, n := range names {
-		// we can only return secrets where their value is
-		// known. if the secret is not registered in the cache
-		// we return nothing.
-		if v, ok := c.values[n]; ok {
-			values = append(values, v)
-		}
-	}
-	sort.Stable(sorter.For(values))
-	return protobuf.AsMessages(values)
-}
-
-func (*SecretCache) TypeURL() string { return resource.SecretType }
 
 type secretVisitor struct {
 	secrets map[string]*envoy_api_v2_auth.Secret

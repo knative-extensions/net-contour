@@ -17,6 +17,7 @@ package dag
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -79,7 +80,14 @@ type HeaderCondition struct {
 }
 
 func (hc *HeaderCondition) String() string {
-	return "header: " + hc.Name
+	details := strings.Join([]string{
+		"name=" + hc.Name,
+		"value=" + hc.Value,
+		"matchtype=", hc.MatchType,
+		"invert=", strconv.FormatBool(hc.Invert),
+	}, "&")
+
+	return "header: " + details
 }
 
 // Route defines the properties of a route to a Cluster.
@@ -260,6 +268,9 @@ type SecureVirtualHost struct {
 
 	// The cert and key for this host.
 	Secret *Secret
+
+	// FallbackCertificate
+	FallbackCertificate *Secret
 
 	// Service to TCP proxy all incoming connections.
 	*TCPProxy

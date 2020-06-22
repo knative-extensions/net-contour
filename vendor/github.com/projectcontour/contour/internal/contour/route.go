@@ -18,10 +18,10 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
+
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	envoy_api_v2_route "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
-	resource "github.com/envoyproxy/go-control-plane/pkg/resource/v2"
-	"github.com/golang/protobuf/proto"
 	"github.com/projectcontour/contour/internal/dag"
 	"github.com/projectcontour/contour/internal/envoy"
 	"github.com/projectcontour/contour/internal/protobuf"
@@ -32,7 +32,6 @@ import (
 type RouteCache struct {
 	mu     sync.Mutex
 	values map[string]*v2.RouteConfiguration
-	Cond
 }
 
 // Update replaces the contents of the cache with the supplied map.
@@ -41,11 +40,10 @@ func (c *RouteCache) Update(v map[string]*v2.RouteConfiguration) {
 	defer c.mu.Unlock()
 
 	c.values = v
-	c.Cond.Notify()
 }
 
 // Contents returns a copy of the cache's contents.
-func (c *RouteCache) Contents() []proto.Message {
+func (c *RouteCache) Contents() []types.Resource {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -57,35 +55,6 @@ func (c *RouteCache) Contents() []proto.Message {
 	sort.Stable(sorter.For(values))
 	return protobuf.AsMessages(values)
 }
-
-// Query searches the RouteCache for the named RouteConfiguration entries.
-func (c *RouteCache) Query(names []string) []proto.Message {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	var values []*v2.RouteConfiguration
-	for _, n := range names {
-		v, ok := c.values[n]
-		if !ok {
-			// if there is no route registered with the cache
-			// we return a blank route configuration. This is
-			// not the same as returning nil, we're choosing to
-			// say "the configuration you asked for _does exists_,
-			// but it contains no useful information.
-			v = &v2.RouteConfiguration{
-				Name: n,
-			}
-		}
-		values = append(values, v)
-	}
-
-	//sort.RouteConfigurations(values)
-	sort.Stable(sorter.For(values))
-	return protobuf.AsMessages(values)
-}
-
-// TypeURL returns the string type of RouteCache Resource.
-func (*RouteCache) TypeURL() string { return resource.RouteType }
 
 type routeVisitor struct {
 	routes map[string]*v2.RouteConfiguration
@@ -189,6 +158,19 @@ func (v *routeVisitor) onSecureVirtualHost(svh *dag.SecureVirtualHost) {
 
 		v.routes[name].VirtualHosts = append(v.routes[name].VirtualHosts,
 			envoy.VirtualHost(svh.VirtualHost.Name, routes...))
+
+		// A fallback route configuration contains routes for all the vhosts that have the fallback certificate enabled.
+		// When a request is received, the default TLS filterchain will accept the connection,
+		// and this routing table in RDS defines where the request proxies next.
+		if svh.FallbackCertificate != nil {
+			// Add fallback route if not already
+			if _, ok := v.routes[ENVOY_FALLBACK_ROUTECONFIG]; !ok {
+				v.routes[ENVOY_FALLBACK_ROUTECONFIG] = envoy.RouteConfiguration(ENVOY_FALLBACK_ROUTECONFIG)
+			}
+
+			v.routes[ENVOY_FALLBACK_ROUTECONFIG].VirtualHosts = append(v.routes[ENVOY_FALLBACK_ROUTECONFIG].VirtualHosts,
+				envoy.VirtualHost(svh.Name, routes...))
+		}
 	}
 }
 

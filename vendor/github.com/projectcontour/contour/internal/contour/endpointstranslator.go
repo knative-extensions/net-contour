@@ -18,10 +18,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
+
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	envoy_api_v2_endpoint "github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint"
-	resource "github.com/envoyproxy/go-control-plane/pkg/resource/v2"
-	"github.com/golang/protobuf/proto"
 	"github.com/projectcontour/contour/internal/envoy"
 	"github.com/projectcontour/contour/internal/protobuf"
 	"github.com/projectcontour/contour/internal/sorter"
@@ -36,6 +36,8 @@ import (
 type EndpointsTranslator struct {
 	logrus.FieldLogger
 	clusterLoadAssignmentCache
+
+	SnapshotHandler *SnapshotHandler
 }
 
 func (e *EndpointsTranslator) OnAdd(obj interface{}) {
@@ -72,31 +74,11 @@ func (e *EndpointsTranslator) OnDelete(obj interface{}) {
 	}
 }
 
-func (e *EndpointsTranslator) Contents() []proto.Message {
+func (e *EndpointsTranslator) Contents() []types.Resource {
 	values := e.clusterLoadAssignmentCache.Contents()
 	sort.Stable(sorter.For(values))
 	return protobuf.AsMessages(values)
 }
-
-func (e *EndpointsTranslator) Query(names []string) []proto.Message {
-	e.clusterLoadAssignmentCache.mu.Lock()
-	defer e.clusterLoadAssignmentCache.mu.Unlock()
-	values := make([]*v2.ClusterLoadAssignment, 0, len(names))
-	for _, n := range names {
-		v, ok := e.entries[n]
-		if !ok {
-			v = &v2.ClusterLoadAssignment{
-				ClusterName: n,
-			}
-		}
-		values = append(values, v)
-	}
-
-	sort.Stable(sorter.For(values))
-	return protobuf.AsMessages(values)
-}
-
-func (*EndpointsTranslator) TypeURL() string { return resource.EndpointType }
 
 func (e *EndpointsTranslator) addEndpoints(ep *v1.Endpoints) {
 	e.recomputeClusterLoadAssignment(nil, ep)
@@ -182,12 +164,12 @@ func (e *EndpointsTranslator) recomputeClusterLoadAssignment(oldep, newep *v1.En
 		}
 	}
 
+	e.SnapshotHandler.UpdateSnapshot()
 }
 
 type clusterLoadAssignmentCache struct {
 	mu      sync.Mutex
 	entries map[string]*v2.ClusterLoadAssignment
-	Cond
 }
 
 // Add adds an entry to the cache. If a ClusterLoadAssignment with the same
@@ -199,7 +181,6 @@ func (c *clusterLoadAssignmentCache) Add(a *v2.ClusterLoadAssignment) {
 		c.entries = make(map[string]*v2.ClusterLoadAssignment)
 	}
 	c.entries[a.ClusterName] = a
-	c.Notify(a.ClusterName)
 }
 
 // Remove removes the named entry from the cache. If the entry
@@ -208,7 +189,6 @@ func (c *clusterLoadAssignmentCache) Remove(name string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	delete(c.entries, name)
-	c.Notify(name)
 }
 
 // Contents returns a copy of the contents of the cache.

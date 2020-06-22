@@ -33,6 +33,8 @@ type CacheHandler struct {
 	ClusterCache
 	SecretCache
 
+	SnapshotHandler *SnapshotHandler
+
 	*metrics.Metrics
 
 	logrus.FieldLogger
@@ -46,6 +48,8 @@ func (ch *CacheHandler) OnChange(dag *dag.DAG) {
 	ch.updateListeners(dag)
 	ch.updateRoutes(dag)
 	ch.updateClusters(dag)
+
+	ch.SnapshotHandler.UpdateSnapshot()
 
 	ch.SetDAGLastRebuilt(time.Now())
 }

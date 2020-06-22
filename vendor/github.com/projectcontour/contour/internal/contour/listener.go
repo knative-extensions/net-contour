@@ -1,4 +1,4 @@
-// Copyright © 2019 VMware
+// Copyright © 2020 VMware
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,12 +19,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
+
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	envoy_api_v2_auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	envoy_api_v2_listener "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 	envoy_api_v2_accesslog "github.com/envoyproxy/go-control-plane/envoy/config/filter/accesslog/v2"
-	resource "github.com/envoyproxy/go-control-plane/pkg/resource/v2"
-	"github.com/golang/protobuf/proto"
 	"github.com/projectcontour/contour/internal/dag"
 	"github.com/projectcontour/contour/internal/envoy"
 	"github.com/projectcontour/contour/internal/protobuf"
@@ -33,6 +33,7 @@ import (
 
 const (
 	ENVOY_HTTP_LISTENER            = "ingress_http"
+	ENVOY_FALLBACK_ROUTECONFIG     = "ingress_fallbackcert"
 	ENVOY_HTTPS_LISTENER           = "ingress_https"
 	DEFAULT_HTTP_ACCESS_LOG        = "/dev/stdout"
 	DEFAULT_HTTP_LISTENER_ADDRESS  = "0.0.0.0"
@@ -208,7 +209,6 @@ type ListenerCache struct {
 	mu           sync.Mutex
 	values       map[string]*v2.Listener
 	staticValues map[string]*v2.Listener
-	Cond
 }
 
 // NewListenerCache returns an instance of a ListenerCache
@@ -227,11 +227,10 @@ func (c *ListenerCache) Update(v map[string]*v2.Listener) {
 	defer c.mu.Unlock()
 
 	c.values = v
-	c.Cond.Notify()
 }
 
 // Contents returns a copy of the cache's contents.
-func (c *ListenerCache) Contents() []proto.Message {
+func (c *ListenerCache) Contents() []types.Resource {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	var values []*v2.Listener
@@ -244,33 +243,6 @@ func (c *ListenerCache) Contents() []proto.Message {
 	sort.Stable(sorter.For(values))
 	return protobuf.AsMessages(values)
 }
-
-// Query returns the proto.Messages in the ListenerCache that match
-// a slice of strings
-func (c *ListenerCache) Query(names []string) []proto.Message {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	var values []*v2.Listener
-	for _, n := range names {
-		v, ok := c.values[n]
-		if !ok {
-			v, ok = c.staticValues[n]
-			if !ok {
-				// if the listener is not registered in
-				// dynamic or static values then skip it
-				// as there is no way to return a blank
-				// listener because the listener address
-				// field is required.
-				continue
-			}
-		}
-		values = append(values, v)
-	}
-	sort.Stable(sorter.For(values))
-	return protobuf.AsMessages(values)
-}
-
-func (*ListenerCache) TypeURL() string { return resource.ListenerType }
 
 type listenerVisitor struct {
 	*ListenerVisitorConfig
@@ -294,9 +266,10 @@ func visitListeners(root dag.Vertex, lvc *ListenerVisitorConfig) map[string]*v2.
 
 	lv.visit(root)
 
-	// Add a listener if there are vhosts bound to http.
 	if lv.http {
+		// Add a listener if there are vhosts bound to http.
 		cm := envoy.HTTPConnectionManagerBuilder().
+			DefaultFilters().
 			RouteConfigName(ENVOY_HTTP_LISTENER).
 			MetricsPrefix(ENVOY_HTTP_LISTENER).
 			AccessLoggers(lvc.newInsecureAccessLog()).
@@ -310,7 +283,6 @@ func visitListeners(root dag.Vertex, lvc *ListenerVisitorConfig) map[string]*v2.
 			proxyProtocol(lvc.UseProxyProto),
 			cm,
 		)
-
 	}
 
 	// Remove the https listener if there are no vhosts bound to it.
@@ -366,6 +338,8 @@ func (v *listenerVisitor) visit(vertex dag.Vertex) {
 			// coded into monitoring dashboards.
 			filters = envoy.Filters(
 				envoy.HTTPConnectionManagerBuilder().
+					AddFilter(envoy.FilterMisdirectedRequests(vh.VirtualHost.Name)).
+					DefaultFilters().
 					RouteConfigName(path.Join("https", vh.VirtualHost.Name)).
 					MetricsPrefix(ENVOY_HTTPS_LISTENER).
 					AccessLoggers(v.ListenerVisitorConfig.newSecureAccessLog()).
@@ -402,6 +376,34 @@ func (v *listenerVisitor) visit(vertex dag.Vertex) {
 
 		v.listeners[ENVOY_HTTPS_LISTENER].FilterChains = append(v.listeners[ENVOY_HTTPS_LISTENER].FilterChains,
 			envoy.FilterChainTLS(vh.VirtualHost.Name, downstreamTLS, filters))
+
+		// If this VirtualHost has enabled the fallback certificate then set a default
+		// FilterChain which will allow routes with this vhost to accept non-SNI TLS requests.
+		// Note that we don't add the misdirected requests filter on this chain because at this
+		// point we don't actually know the full set of server names that will be bound to the
+		// filter chain through the ENVOY_FALLBACK_ROUTECONFIG route configuration.
+		if vh.FallbackCertificate != nil && !envoy.ContainsFallbackFilterChain(v.listeners[ENVOY_HTTPS_LISTENER].FilterChains) {
+			// Construct the downstreamTLSContext passing the configured fallbackCertificate. The TLS minProtocolVersion will use
+			// the value defined in the Contour Configuration file if defined.
+			downstreamTLS = envoy.DownstreamTLSContext(
+				vh.FallbackCertificate,
+				v.ListenerVisitorConfig.minProtoVersion(),
+				vh.DownstreamValidation,
+				alpnProtos...)
+
+			// Default filter chain
+			filters = envoy.Filters(
+				envoy.HTTPConnectionManagerBuilder().
+					RouteConfigName(ENVOY_FALLBACK_ROUTECONFIG).
+					MetricsPrefix(ENVOY_HTTPS_LISTENER).
+					AccessLoggers(v.ListenerVisitorConfig.newSecureAccessLog()).
+					RequestTimeout(v.ListenerVisitorConfig.requestTimeout()).
+					Get(),
+			)
+
+			v.listeners[ENVOY_HTTPS_LISTENER].FilterChains = append(v.listeners[ENVOY_HTTPS_LISTENER].FilterChains,
+				envoy.FilterChainTLSFallback(downstreamTLS, filters))
+		}
 
 	default:
 		// recurse

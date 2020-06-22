@@ -1,4 +1,4 @@
-// Copyright © 2019 VMware
+// Copyright © 2020 VMware
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 package envoy
 
 import (
+	"fmt"
 	"sort"
 	"time"
 
@@ -22,12 +23,10 @@ import (
 	envoy_api_v2_core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	envoy_api_v2_listener "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 	accesslog "github.com/envoyproxy/go-control-plane/envoy/config/filter/accesslog/v2"
+	lua "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/lua/v2"
 	http "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	tcp "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/tcp_proxy/v2"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/projectcontour/contour/internal/dag"
 	"github.com/projectcontour/contour/internal/protobuf"
 	"github.com/projectcontour/contour/internal/sorter"
@@ -70,6 +69,7 @@ type httpConnectionManagerBuilder struct {
 	metricsPrefix   string
 	accessLoggers   []*accesslog.AccessLog
 	requestTimeout  time.Duration
+	filters         []*http.HttpFilter
 }
 
 // RouteConfigName sets the name of the RDS element that contains
@@ -102,6 +102,27 @@ func (b *httpConnectionManagerBuilder) RequestTimeout(timeout time.Duration) *ht
 	return b
 }
 
+func (b *httpConnectionManagerBuilder) DefaultFilters() *httpConnectionManagerBuilder {
+	b.filters = append(b.filters,
+		&http.HttpFilter{
+			Name: wellknown.Gzip,
+		},
+		&http.HttpFilter{
+			Name: wellknown.GRPCWeb,
+		},
+		&http.HttpFilter{
+			Name: wellknown.Router,
+		},
+	)
+
+	return b
+}
+
+func (b *httpConnectionManagerBuilder) AddFilter(f *http.HttpFilter) *httpConnectionManagerBuilder {
+	b.filters = append(b.filters, f)
+	return b
+}
+
 // Get returns a new http.HttpConnectionManager filter, constructed
 // from the builder settings.
 //
@@ -111,29 +132,10 @@ func (b *httpConnectionManagerBuilder) Get() *envoy_api_v2_listener.Filter {
 		RouteSpecifier: &http.HttpConnectionManager_Rds{
 			Rds: &http.Rds{
 				RouteConfigName: b.routeConfigName,
-				ConfigSource: &envoy_api_v2_core.ConfigSource{
-					ConfigSourceSpecifier: &envoy_api_v2_core.ConfigSource_ApiConfigSource{
-						ApiConfigSource: &envoy_api_v2_core.ApiConfigSource{
-							ApiType: envoy_api_v2_core.ApiConfigSource_GRPC,
-							GrpcServices: []*envoy_api_v2_core.GrpcService{{
-								TargetSpecifier: &envoy_api_v2_core.GrpcService_EnvoyGrpc_{
-									EnvoyGrpc: &envoy_api_v2_core.GrpcService_EnvoyGrpc{
-										ClusterName: "contour",
-									},
-								},
-							}},
-						},
-					},
-				},
+				ConfigSource:    ConfigSource("contour"),
 			},
 		},
-		HttpFilters: []*http.HttpFilter{{
-			Name: wellknown.Gzip,
-		}, {
-			Name: wellknown.GRPCWeb,
-		}, {
-			Name: wellknown.Router,
-		}},
+		HttpFilters: b.filters,
 		CommonHttpProtocolOptions: &envoy_api_v2_core.HttpProtocolOptions{
 			// Sets the idle timeout for HTTP connections to 60 seconds.
 			// This is chosen as a rough default to stop idle connections wasting resources,
@@ -169,7 +171,7 @@ func (b *httpConnectionManagerBuilder) Get() *envoy_api_v2_listener.Filter {
 	return &envoy_api_v2_listener.Filter{
 		Name: wellknown.HTTPConnectionManager,
 		ConfigType: &envoy_api_v2_listener.Filter_TypedConfig{
-			TypedConfig: toAny(cm),
+			TypedConfig: protobuf.MustMarshalAny(cm),
 		},
 	}
 }
@@ -182,6 +184,7 @@ func HTTPConnectionManager(routename string, accesslogger []*accesslog.AccessLog
 		MetricsPrefix(routename).
 		AccessLoggers(accesslogger).
 		RequestTimeout(requestTimeout).
+		DefaultFilters().
 		Get()
 }
 
@@ -202,7 +205,7 @@ func TCPProxy(statPrefix string, proxy *dag.TCPProxy, accesslogger []*accesslog.
 		return &envoy_api_v2_listener.Filter{
 			Name: wellknown.TCPProxy,
 			ConfigType: &envoy_api_v2_listener.Filter_TypedConfig{
-				TypedConfig: toAny(&tcp.TcpProxy{
+				TypedConfig: protobuf.MustMarshalAny(&tcp.TcpProxy{
 					StatPrefix: statPrefix,
 					ClusterSpecifier: &tcp.TcpProxy_Cluster{
 						Cluster: Clustername(proxy.Clusters[0]),
@@ -228,7 +231,7 @@ func TCPProxy(statPrefix string, proxy *dag.TCPProxy, accesslogger []*accesslog.
 		return &envoy_api_v2_listener.Filter{
 			Name: wellknown.TCPProxy,
 			ConfigType: &envoy_api_v2_listener.Filter_TypedConfig{
-				TypedConfig: toAny(&tcp.TcpProxy{
+				TypedConfig: protobuf.MustMarshalAny(&tcp.TcpProxy{
 					StatPrefix: statPrefix,
 					ClusterSpecifier: &tcp.TcpProxy_WeightedClusters{
 						WeightedClusters: &tcp.TcpProxy_WeightedCluster{
@@ -297,7 +300,47 @@ func FilterChains(filters ...*envoy_api_v2_listener.Filter) []*envoy_api_v2_list
 	}
 }
 
-// FilterChainTLS returns a TLS enabled envoy_api_v2_listener.FilterChain,
+func FilterMisdirectedRequests(fqdn string) *http.HttpFilter {
+	// When Envoy matches on the virtual host domain, we configure
+	// it to match any port specifier (see envoy.VirtualHost),
+	// so the Host header (authority) may contain a port that
+	// should be ignored. This means that if we don't have a match,
+	// we should try again after stripping the port specifier.
+
+	code := `
+function envoy_on_request(request_handle)
+	local headers = request_handle:headers()
+	local host = headers:get(":authority")
+	local target = "%s"
+
+	if host ~= target then
+		s, e = string.find(host, ":", 1, true)
+		if s ~= nil then
+			host = string.sub(host, 1, s - 1)
+		end
+
+		if host ~= target then
+			request_handle:respond(
+				{[":status"] = "421"},
+				string.format("misdirected request to %%q", headers:get(":authority"))
+			)
+		end
+
+	end
+end
+	`
+
+	return &http.HttpFilter{
+		Name: "envoy.filters.http.lua",
+		ConfigType: &http.HttpFilter_TypedConfig{
+			TypedConfig: protobuf.MustMarshalAny(&lua.Lua{
+				InlineCode: fmt.Sprintf(code, fqdn),
+			}),
+		},
+	}
+}
+
+// FilterChainTLS returns a TLS enabled envoy_api_v2_listener.FilterChain.
 func FilterChainTLS(domain string, downstream *envoy_api_v2_auth.DownstreamTlsContext, filters []*envoy_api_v2_listener.Filter) *envoy_api_v2_listener.FilterChain {
 	fc := &envoy_api_v2_listener.FilterChain{
 		Filters: filters,
@@ -313,15 +356,32 @@ func FilterChainTLS(domain string, downstream *envoy_api_v2_auth.DownstreamTlsCo
 	return fc
 }
 
+// FilterChainTLSFallback returns a TLS enabled envoy_api_v2_listener.FilterChain conifgured for FallbackCertificate.
+func FilterChainTLSFallback(downstream *envoy_api_v2_auth.DownstreamTlsContext, filters []*envoy_api_v2_listener.Filter) *envoy_api_v2_listener.FilterChain {
+	fc := &envoy_api_v2_listener.FilterChain{
+		Name:    "fallback-certificate",
+		Filters: filters,
+		FilterChainMatch: &envoy_api_v2_listener.FilterChainMatch{
+			TransportProtocol: "tls",
+		},
+	}
+	// Attach TLS data to this listener if provided.
+	if downstream != nil {
+		fc.TransportSocket = DownstreamTLSTransportSocket(downstream)
+	}
+	return fc
+}
+
 // ListenerFilters returns a []*envoy_api_v2_listener.ListenerFilter for the supplied listener filters.
 func ListenerFilters(filters ...*envoy_api_v2_listener.ListenerFilter) []*envoy_api_v2_listener.ListenerFilter {
 	return filters
 }
 
-func toAny(pb proto.Message) *any.Any {
-	a, err := ptypes.MarshalAny(pb)
-	if err != nil {
-		panic(err.Error())
+func ContainsFallbackFilterChain(filterchains []*envoy_api_v2_listener.FilterChain) bool {
+	for _, fc := range filterchains {
+		if fc.Name == "fallback-certificate" {
+			return true
+		}
 	}
-	return a
+	return false
 }

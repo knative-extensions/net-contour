@@ -18,7 +18,11 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
+
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
@@ -48,17 +52,28 @@ func Bool(val bool) *wrappers.BoolValue {
 // AsMessages casts the given slice of values (that implement the proto.Message
 // interface) to a slice of proto.Message. If the length of the slice is 0, it
 // returns nil.
-func AsMessages(messages interface{}) []proto.Message {
+func AsMessages(messages interface{}) []types.Resource {
 	v := reflect.ValueOf(messages)
 	if v.Len() == 0 {
 		return nil
 	}
 
-	protos := make([]proto.Message, v.Len())
+	protos := make([]types.Resource, v.Len())
 
 	for i := range protos {
-		protos[i] = v.Index(i).Interface().(proto.Message)
+		protos[i] = v.Index(i).Interface().(types.Resource)
 	}
 
 	return protos
+}
+
+// MustMarshalAny marshals a protobug into an any.Any type, panicing
+// if that operation fails.
+func MustMarshalAny(pb proto.Message) *any.Any {
+	a, err := ptypes.MarshalAny(pb)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return a
 }

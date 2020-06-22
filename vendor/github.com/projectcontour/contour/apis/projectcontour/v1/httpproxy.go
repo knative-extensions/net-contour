@@ -14,6 +14,7 @@
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -122,12 +123,18 @@ type TLS struct {
 	Passthrough bool `json:"passthrough,omitempty"`
 	// ClientValidation defines how to verify the client certificate
 	// when an external client establishes a TLS connection to Envoy.
+	//
 	// This setting:
+	//
 	// 1. Enables TLS client certificate validation.
 	// 2. Requires clients to present a TLS certificate (i.e. not optional validation).
 	// 3. Specifies how the client certificate will be validated.
 	// +optional
 	ClientValidation *DownstreamValidation `json:"clientValidation,omitempty"`
+
+	// EnableFallbackCertificate defines if the vhost should allow a default certificate to
+	// be applied which handles all requests which don't match the SNI defined in this vhost.
+	EnableFallbackCertificate bool `json:"enableFallbackCertificate,omitempty"`
 }
 
 // Route contains the set of routes for a virtual host.
@@ -216,6 +223,12 @@ type Service struct {
 	// Names defined here will be used to look up corresponding endpoints which contain the ips to route.
 	Name string `json:"name"`
 	// Port (defined as Integer) to proxy traffic to since a service can have multiple defined.
+	//
+	// +required
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65536
+	// +kubebuilder:validation:ExclusiveMinimum=false
+	// +kubebuilder:validation:ExclusiveMaximum=true
 	Port int `json:"port"`
 	// Protocol may be used to specify (or override) the protocol used to reach this Service.
 	// Values may be tls, h2, h2c. If omitted, protocol-selection falls back on Service annotations.
@@ -279,19 +292,22 @@ type TCPHealthCheckPolicy struct {
 	HealthyThresholdCount uint32 `json:"healthyThresholdCount"`
 }
 
-// TimeoutPolicy defines the attributes associated with timeout.
+// TimeoutPolicy configures timeouts that are used for handling network requests.
+//
+// TimeoutPolicy durations are expressed in the Go [Duration format](https://godoc.org/time#ParseDuration).
+// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+// The string "infinity" is also a valid input and specifies no timeout.
+//
+// Example input values: "300ms", "5s", "1m".
 type TimeoutPolicy struct {
-	// TimeoutPolicy durations are expressed as per the format specified in the ParseDuration documentation: https://godoc.org/time#ParseDuration
-	// Example input values: "300ms", "5s", "1m". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
-	// The string 'infinity' is also a valid input and specifies no timeout.
-
 	// Timeout for receiving a response from the server after processing a request from client.
-	// If not supplied the timeout duration is undefined.
+	// If not supplied, the timeout duration is undefined.
 	// +optional
 	Response string `json:"response,omitempty"`
 
-	// Timeout after which if there are no active requests for this route, the connection between
-	// Envoy and the backend will be closed. If not specified, there is no per-route idle timeout.
+	// Timeout after which, if there are no active requests for this route, the connection between
+	// Envoy and the backend or Envoy and the external client will be closed.
+	// If not specified, there is no per-route idle timeout.
 	// +optional
 	Idle string `json:"idle,omitempty"`
 }
@@ -357,12 +373,16 @@ type LoadBalancerPolicy struct {
 	Strategy string `json:"strategy,omitempty"`
 }
 
-// HeadersPolicy defines how headers are managed during forwarding
+// HeadersPolicy defines how headers are managed during forwarding.
+// The `Host` header is treated specially and if set in a HTTP response
+// will be used as the SNI server name when forwarding over TLS. It is an
+// error to attempt to set the `Host` header in a HTTP response.
 type HeadersPolicy struct {
-	// Set specifies a list of HTTP header values that will be set in the HTTP header
+	// Set specifies a list of HTTP header values that will be set in the HTTP header.
+	// If the header does not exist it will be added, otherwise it will be overwritten with the new value.
 	// +optional
 	Set []HeaderValue `json:"set,omitempty"`
-	// Remove specifies a list of HTTP header names to remove
+	// Remove specifies a list of HTTP header names to remove.
 	// +optional
 	Remove []string `json:"remove,omitempty"`
 }
@@ -402,6 +422,9 @@ type Status struct {
 	CurrentStatus string `json:"currentStatus,omitempty"`
 	// +optional
 	Description string `json:"description,omitempty"`
+	// +optional
+	// LoadBalancer contains the current status of the load balancer.
+	LoadBalancer corev1.LoadBalancerStatus `json:"loadBalancer,omitempty"`
 }
 
 // +genclient
@@ -414,6 +437,7 @@ type Status struct {
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.currentStatus",description="The current status of the HTTPProxy"
 // +kubebuilder:printcolumn:name="Status Description",type="string",JSONPath=".status.description",description="Description of the current status"
 // +kubebuilder:resource:scope=Namespaced,path=httpproxies,shortName=proxy;proxies,singular=httpproxy
+// +kubebuilder:subresource:status
 type HTTPProxy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`

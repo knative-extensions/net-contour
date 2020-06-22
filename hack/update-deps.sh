@@ -103,63 +103,64 @@ function privatize_loadbalancer() {
     | sed "s@externalTrafficPolicy: Local@# externalTrafficPolicy: Local@g"
 }
 
-rm -rf config/contour/*
+# TODO(mattmoor): DO NOT SUBMIT
+# rm -rf config/contour/*
 
-# Apply patch to contour
-git apply ${ROOT_DIR}/hack/contour.patch
+# # Apply patch to contour
+# git apply ${ROOT_DIR}/hack/contour.patch
 
-# We do this manually because it's challenging to rewrite
-# the ClusterRoleBinding without collateral damage.
-cat > config/contour/internal.yaml <<EOF
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: contour-internal
-  labels:
-    networking.knative.dev/ingress-provider: contour
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: contour
-subjects:
-- kind: ServiceAccount
-  name: contour
-  namespace: contour-internal
----
-EOF
+# # We do this manually because it's challenging to rewrite
+# # the ClusterRoleBinding without collateral damage.
+# cat > config/contour/internal.yaml <<EOF
+# apiVersion: rbac.authorization.k8s.io/v1beta1
+# kind: ClusterRoleBinding
+# metadata:
+#   name: contour-internal
+#   labels:
+#     networking.knative.dev/ingress-provider: contour
+# roleRef:
+#   apiGroup: rbac.authorization.k8s.io
+#   kind: ClusterRole
+#   name: contour
+# subjects:
+# - kind: ServiceAccount
+#   name: contour
+#   namespace: contour-internal
+# ---
+# EOF
 
-KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour/examples/contour/ \
-  | delete_contour_cluster_role_bindings \
-  | rewrite_contour_namespace contour-internal \
-  | configure_leader_election contour-internal \
-  | rewrite_serve_args contour-internal \
-  | rewrite_image | rewrite_command | disable_hostport | privatize_loadbalancer \
-  | add_ingress_provider_labels  >> config/contour/internal.yaml
+# KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour/examples/contour/ \
+#   | delete_contour_cluster_role_bindings \
+#   | rewrite_contour_namespace contour-internal \
+#   | configure_leader_election contour-internal \
+#   | rewrite_serve_args contour-internal \
+#   | rewrite_image | rewrite_command | disable_hostport | privatize_loadbalancer \
+#   | add_ingress_provider_labels  >> config/contour/internal.yaml
 
-# We do this manually because it's challenging to rewrite
-# the ClusterRoleBinding without collateral damage.
-cat > config/contour/external.yaml <<EOF
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: contour-external
-  labels:
-    networking.knative.dev/ingress-provider: contour
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: contour
-subjects:
-- kind: ServiceAccount
-  name: contour
-  namespace: contour-external
----
-EOF
+# # We do this manually because it's challenging to rewrite
+# # the ClusterRoleBinding without collateral damage.
+# cat > config/contour/external.yaml <<EOF
+# apiVersion: rbac.authorization.k8s.io/v1beta1
+# kind: ClusterRoleBinding
+# metadata:
+#   name: contour-external
+#   labels:
+#     networking.knative.dev/ingress-provider: contour
+# roleRef:
+#   apiGroup: rbac.authorization.k8s.io
+#   kind: ClusterRole
+#   name: contour
+# subjects:
+# - kind: ServiceAccount
+#   name: contour
+#   namespace: contour-external
+# ---
+# EOF
 
-KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour/examples/contour/ \
-  | delete_contour_cluster_role_bindings \
-  | rewrite_contour_namespace contour-external \
-  | configure_leader_election contour-external \
-  | rewrite_serve_args contour-external \
-  | rewrite_image | rewrite_command | disable_hostport \
-  | add_ingress_provider_labels >> config/contour/external.yaml
+# KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour/examples/contour/ \
+#   | delete_contour_cluster_role_bindings \
+#   | rewrite_contour_namespace contour-external \
+#   | configure_leader_election contour-external \
+#   | rewrite_serve_args contour-external \
+#   | rewrite_image | rewrite_command | disable_hostport \
+#   | add_ingress_provider_labels >> config/contour/external.yaml
