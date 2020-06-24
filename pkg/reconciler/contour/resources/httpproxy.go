@@ -145,6 +145,14 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					Prefix: path.Path,
 				})
 			}
+			for header, match := range path.Headers {
+				conditions = append(conditions, v1.Condition{
+					Header: &v1.HeaderCondition{
+						Name:  header,
+						Exact: match.Exact,
+					},
+				})
+			}
 
 			routes = append(routes, v1.Route{
 				Conditions:           conditions,
