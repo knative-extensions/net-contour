@@ -32,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	clientgotesting "k8s.io/client-go/testing"
@@ -369,12 +370,17 @@ func TestReconcile(t *testing.T) {
 			},
 		}
 
-		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+		ingr := ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
 			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r,
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
 				}})
+		// The Reconciler won't do any work until it becomes the leader.
+		if la, ok := ingr.(reconciler.LeaderAware); ok {
+			la.Promote(reconciler.UniversalBucket(), func(reconciler.Bucket, types.NamespacedName) {})
+		}
+		return ingr
 	}))
 }
 
@@ -415,12 +421,17 @@ func TestReconcileProberNotReady(t *testing.T) {
 				},
 			},
 		}
-		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+		ingr := ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
 			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r,
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
 				}})
+		// The Reconciler won't do any work until it becomes the leader.
+		if la, ok := ingr.(reconciler.LeaderAware); ok {
+			la.Promote(reconciler.UniversalBucket(), func(reconciler.Bucket, types.NamespacedName) {})
+		}
+		return ingr
 	}))
 }
 
@@ -467,12 +478,18 @@ func TestReconcileProbeError(t *testing.T) {
 			},
 		}
 
-		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+		ingr := ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
 			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r,
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
 				}})
+
+		// The Reconciler won't do any work until it becomes the leader.
+		if la, ok := ingr.(reconciler.LeaderAware); ok {
+			la.Promote(reconciler.UniversalBucket(), func(reconciler.Bucket, types.NamespacedName) {})
+		}
+		return ingr
 	}))
 }
 
