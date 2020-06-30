@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	"knative.dev/pkg/logging"
 
 	fakecontourclient "knative.dev/net-contour/pkg/client/injection/client/fake"
@@ -32,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	clientgotesting "k8s.io/client-go/testing"
@@ -67,6 +69,13 @@ func TestReconcile(t *testing.T) {
 				networking.IngressClassAnnotationKey: "fake-controller",
 			})),
 		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withBasicSpec, withAnnotation(map[string]string{
+				networking.IngressClassAnnotationKey: "fake-controller",
+			}), func(i *v1alpha1.Ingress) {
+				i.Status.InitializeConditions()
+			}),
+		}},
 	}, {
 		Name: "skip ingress marked for deletion",
 		Key:  "ns/name",
@@ -81,7 +90,7 @@ func TestReconcile(t *testing.T) {
 		Objects: append([]runtime.Object{
 			ing("name", "ns", withBasicSpec, withContour),
 		}, servicesAndEndpoints...),
-		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour), withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508")),
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
@@ -129,6 +138,12 @@ func TestReconcile(t *testing.T) {
 				Fields: fields.Everything(),
 			},
 		}},
+		WantUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: mustMakeProxies(t,
+				ing("name", "ns", withContour, withGeneration(0), withBasicSpec),
+				withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508"),
+			)[0],
+		}},
 	}, {
 		Name: "basic ingress changed",
 		Key:  "ns/name",
@@ -138,6 +153,7 @@ func TestReconcile(t *testing.T) {
 		WantUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: mustMakeProxies(t,
 				ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
+				withNetworkHash("16cefb33efb02fe05914d99645817c5aa553ee9c7ad88506c42b82d8872e653d"),
 			)[0],
 		}},
 		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
@@ -172,7 +188,7 @@ func TestReconcile(t *testing.T) {
 		Objects: append([]runtime.Object{
 			ing("name", "ns", withMultiProxySpec, withContour),
 		}, servicesAndEndpoints...),
-		WantCreates: mustMakeProxies(t, ing("name", "ns", withMultiProxySpec, withContour)),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withMultiProxySpec, withContour), withNetworkHash("2db27fd0bfe5af7e8a457d371c0f179dd8af6819415546edad9772102df6403f")),
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ing("name", "ns", withMultiProxySpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
@@ -204,7 +220,7 @@ func TestReconcile(t *testing.T) {
 		Objects: append([]runtime.Object{
 			ing("name", "ns", withBasicSpec, withContour),
 		}, servicesAndEndpoints...),
-		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour), withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508")),
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
@@ -227,6 +243,7 @@ func TestReconcile(t *testing.T) {
 		WantUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: mustMakeProxies(t,
 				ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
+				withNetworkHash("16cefb33efb02fe05914d99645817c5aa553ee9c7ad88506c42b82d8872e653d"),
 			)[0],
 		}},
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
@@ -258,6 +275,9 @@ func TestReconcile(t *testing.T) {
 				Fields: fields.Everything(),
 			},
 		}},
+		WantUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour), withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508"))[0],
+		}},
 		WantEvents: []string{
 			Eventf(corev1.EventTypeWarning, "InternalError", "inducing failure for delete-collection httpproxies"),
 		},
@@ -271,7 +291,7 @@ func TestReconcile(t *testing.T) {
 		Objects: append([]runtime.Object{
 			ing("name", "ns", withBasicSpec, withContour),
 		}, servicesAndEndpoints...),
-		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour), withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508")),
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
@@ -369,12 +389,14 @@ func TestReconcile(t *testing.T) {
 			},
 		}
 
-		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+		ingr := ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
 			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r,
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
 				}})
+
+		return ingr
 	}))
 }
 
@@ -385,7 +407,7 @@ func TestReconcileProberNotReady(t *testing.T) {
 		Objects: append([]runtime.Object{
 			ing("name", "ns", withBasicSpec, withContour),
 		}, servicesAndEndpoints...),
-		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour), withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508")),
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
@@ -434,7 +456,7 @@ func TestReconcileProbeError(t *testing.T) {
 		Objects: append([]runtime.Object{
 			ing("name", "ns", withBasicSpec, withContour),
 		}, servicesAndEndpoints...),
-		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour), withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508")),
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
@@ -467,12 +489,18 @@ func TestReconcileProbeError(t *testing.T) {
 			},
 		}
 
-		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+		ingr := ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
 			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r,
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
 				}})
+
+		// The Reconciler won't do any work until it becomes the leader.
+		if la, ok := ingr.(reconciler.LeaderAware); ok {
+			la.Promote(reconciler.UniversalBucket(), func(reconciler.Bucket, types.NamespacedName) {})
+		}
+		return ingr
 	}))
 }
 
@@ -551,13 +579,28 @@ var (
 	servicesAndEndpoints = append(append([]runtime.Object{}, services...), endpoints...)
 )
 
-func mustMakeProxies(t *testing.T, i *v1alpha1.Ingress) (objs []runtime.Object) {
+type HTTPProxyOption func(*v1.HTTPProxy)
+
+func withNetworkHash(hash string) HTTPProxyOption {
+	return func(p *v1.HTTPProxy) {
+		for _, r := range p.Spec.Routes {
+			r.RequestHeadersPolicy.Set = []v1.HeaderValue{{
+				Name:  "K-Network-Hash",
+				Value: hash,
+			}}
+		}
+	}
+}
+func mustMakeProxies(t *testing.T, i *v1alpha1.Ingress, opts ...HTTPProxyOption) (objs []runtime.Object) {
 	t.Helper()
 	ctx := (&testConfigStore{config: defaultConfig}).ToContext(context.Background())
 	ps := resources.MakeHTTPProxies(ctx, i, map[string]string{
 		"doo": "h2c",
 	})
 	for _, p := range ps {
+		for _, opt := range opts {
+			opt(p)
+		}
 		objs = append(objs, p)
 	}
 	return
@@ -594,6 +637,7 @@ func withBasicSpec(i *v1alpha1.Ingress) {
 			Visibility: v1alpha1.IngressVisibilityExternalIP,
 			HTTP: &v1alpha1.HTTPIngressRuleValue{
 				Paths: []v1alpha1.HTTPIngressPath{{
+					Timeout: &metav1.Duration{Duration: time.Second},
 					Splits: []v1alpha1.IngressBackendSplit{{
 						IngressBackend: v1alpha1.IngressBackend{
 							ServiceName:      "goo",
@@ -615,6 +659,7 @@ func withBasicSpec2(i *v1alpha1.Ingress) {
 			Visibility: v1alpha1.IngressVisibilityExternalIP,
 			HTTP: &v1alpha1.HTTPIngressRuleValue{
 				Paths: []v1alpha1.HTTPIngressPath{{
+					Timeout: &metav1.Duration{Duration: time.Second},
 					Splits: []v1alpha1.IngressBackendSplit{{
 						IngressBackend: v1alpha1.IngressBackend{
 							ServiceName:      "doo",
@@ -636,6 +681,7 @@ func withMultiProxySpec(i *v1alpha1.Ingress) {
 			Visibility: v1alpha1.IngressVisibilityExternalIP,
 			HTTP: &v1alpha1.HTTPIngressRuleValue{
 				Paths: []v1alpha1.HTTPIngressPath{{
+					Timeout: &metav1.Duration{Duration: time.Second},
 					Splits: []v1alpha1.IngressBackendSplit{{
 						IngressBackend: v1alpha1.IngressBackend{
 							ServiceName:      "goo",
