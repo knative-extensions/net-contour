@@ -837,7 +837,7 @@ k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/strings
 k8s.io/utils/trace
-# knative.dev/networking v0.0.0-20200625171028-5efff1e07309
+# knative.dev/networking v0.0.0-20200630191330-5080f859c17d
 ## explicit
 knative.dev/networking/pkg/apis/config
 knative.dev/networking/pkg/apis/networking
@@ -859,7 +859,7 @@ knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingres
 knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake
 knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress
 knative.dev/networking/pkg/client/listers/networking/v1alpha1
-# knative.dev/pkg v0.0.0-20200627192328-fe0740d31f07
+# knative.dev/pkg v0.0.0-20200630170034-2c1a029eb97f
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -913,13 +913,14 @@ knative.dev/pkg/test/logging
 knative.dev/pkg/test/monitoring
 knative.dev/pkg/test/spoof
 knative.dev/pkg/test/zipkin
+knative.dev/pkg/tracing/config
 knative.dev/pkg/tracing/propagation
 knative.dev/pkg/tracing/propagation/tracecontextb3
 knative.dev/pkg/tracker
 knative.dev/pkg/version
 knative.dev/pkg/webhook
 knative.dev/pkg/webhook/certificates/resources
-# knative.dev/serving v0.15.1-0.20200629124629-e0c9a20d3cb1
+# knative.dev/serving v0.15.1-0.20200630173329-4066b8c74b37
 ## explicit
 knative.dev/serving/config/core/configmaps
 knative.dev/serving/pkg/apis/autoscaling
@@ -962,7 +963,7 @@ knative.dev/serving/test/test_images/timeout
 knative.dev/serving/test/test_images/wsserver
 knative.dev/serving/test/types
 knative.dev/serving/test/v1alpha1
-# knative.dev/test-infra v0.0.0-20200626234928-7fb82ece3d02
+# knative.dev/test-infra v0.0.0-20200630141629-15f40fe97047
 ## explicit
 knative.dev/test-infra/scripts
 # sigs.k8s.io/controller-runtime v0.5.0
