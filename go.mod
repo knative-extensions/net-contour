@@ -3,17 +3,17 @@ module knative.dev/net-contour
 go 1.14
 
 require (
-	github.com/google/go-cmp v0.4.0
+	github.com/google/go-cmp v0.5.0
 	github.com/mikefarah/yq/v3 v3.0.0-20200601230220-721dd57ed41b
 	github.com/projectcontour/contour v1.4.1-0.20200507033955-65d52b253570
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.18.1
-	k8s.io/apimachinery v0.18.1
+	k8s.io/apimachinery v0.18.5
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/networking v0.0.0-20200630191330-5080f859c17d
-	knative.dev/pkg v0.0.0-20200702222342-ea4d6e985ba0
-	knative.dev/serving v0.15.1-0.20200707011544-d74ecbeb1071
-	knative.dev/test-infra v0.0.0-20200630141629-15f40fe97047
+	knative.dev/networking v0.0.0-20200707203944-725ec013d8a2
+	knative.dev/pkg v0.0.0-20200707190344-0a8314b44495
+	knative.dev/serving v0.16.1-0.20200707204544-f025d519072b
+	knative.dev/test-infra v0.0.0-20200707220947-a05ea93e9076
 )
 
 replace (
