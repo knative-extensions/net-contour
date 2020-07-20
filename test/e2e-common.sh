@@ -46,9 +46,22 @@ function test_setup() {
   echo ">> Bringing up net-contour"
   ko apply -f config/ || return 1
 
+  scale_controlplane contour-ingress-controller
+
   # Wait for pods to be running.
   echo ">> Waiting for Serving components to be running..."
   wait_until_pods_running knative-serving || return 1
+}
+
+function scale_controlplane() {
+  for deployment in "$@"; do
+    # Make sure all pods run in leader-elected mode.
+    kubectl -n knative-serving scale deployment "$deployment" --replicas=0 || failed=1
+    # Give it time to kill the pods.
+    sleep 5
+    # Scale up components for HA tests
+    kubectl -n knative-serving scale deployment "$deployment" --replicas=2 || failed=1
+  done
 }
 
 # Add function call to trap
