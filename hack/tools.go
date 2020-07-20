@@ -32,6 +32,9 @@ import (
 	_ "knative.dev/serving/test/test_images/timeout"
 	_ "knative.dev/serving/test/test_images/wsserver"
 
+	// For chaos testing the leaderelection stuff.
+	_ "knative.dev/pkg/leaderelection/chaosduck"
+
 	_ "github.com/mikefarah/yq/v3"
 	_ "github.com/projectcontour/contour/cmd/contour"
 	_ "github.com/projectcontour/contour/examples/contour"
