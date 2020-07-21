@@ -118,6 +118,9 @@ func TestMakeProxies(t *testing.T) {
 				Routes: []v1.Route{{
 					EnableWebsockets: true,
 					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "Foo",
@@ -209,6 +212,9 @@ func TestMakeProxies(t *testing.T) {
 				Routes: []v1.Route{{
 					EnableWebsockets: true,
 					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
@@ -250,6 +256,9 @@ func TestMakeProxies(t *testing.T) {
 				Routes: []v1.Route{{
 					EnableWebsockets: true,
 					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
@@ -291,6 +300,9 @@ func TestMakeProxies(t *testing.T) {
 				Routes: []v1.Route{{
 					EnableWebsockets: true,
 					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
@@ -465,6 +477,9 @@ func TestMakeProxies(t *testing.T) {
 					}},
 					EnableWebsockets: true,
 					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
@@ -488,6 +503,9 @@ func TestMakeProxies(t *testing.T) {
 					}},
 					EnableWebsockets: true,
 					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
@@ -578,6 +596,9 @@ func TestMakeProxies(t *testing.T) {
 				Routes: []v1.Route{{
 					EnableWebsockets: true,
 					PermitInsecure:   false,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "Foo",
@@ -688,6 +709,9 @@ func TestMakeProxies(t *testing.T) {
 				Routes: []v1.Route{{
 					EnableWebsockets: true,
 					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "Foo",
