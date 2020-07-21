@@ -78,6 +78,10 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				top = &v1.TimeoutPolicy{
 					Response: path.Timeout.Duration.String(),
 				}
+			} else {
+				top = &v1.TimeoutPolicy{
+					Response: "infinity",
+				}
 			}
 
 			var retry *v1.RetryPolicy
