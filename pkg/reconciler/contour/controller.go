@@ -62,7 +62,7 @@ func NewController(
 		endpointsLister: endpointsInformer.Lister(),
 	}
 	myFilterFunc := reconciler.AnnotationFilterFunc(networking.IngressClassAnnotationKey, ContourIngressClassName, false)
-	impl := ingressreconciler.NewImpl(ctx, c,
+	impl := ingressreconciler.NewImpl(ctx, c, ContourIngressClassName,
 		func(impl *controller.Impl) controller.Options {
 			logger.Info("Setting up ConfigMap receivers")
 			configsToResync := []interface{}{

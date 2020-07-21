@@ -69,13 +69,6 @@ func TestReconcile(t *testing.T) {
 				networking.IngressClassAnnotationKey: "fake-controller",
 			})),
 		},
-		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: ing("name", "ns", withBasicSpec, withAnnotation(map[string]string{
-				networking.IngressClassAnnotationKey: "fake-controller",
-			}), func(i *v1alpha1.Ingress) {
-				i.Status.InitializeConditions()
-			}),
-		}},
 	}, {
 		Name: "skip ingress marked for deletion",
 		Key:  "ns/name",
@@ -390,7 +383,7 @@ func TestReconcile(t *testing.T) {
 		}
 
 		ingr := ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
-			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r,
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
@@ -438,7 +431,7 @@ func TestReconcileProberNotReady(t *testing.T) {
 			},
 		}
 		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
-			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r,
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
@@ -490,7 +483,7 @@ func TestReconcileProbeError(t *testing.T) {
 		}
 
 		ingr := ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
-			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r,
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
