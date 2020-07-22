@@ -64,20 +64,6 @@ var _ ingressreconciler.Interface = (*Reconciler)(nil)
 
 // ReconcileKind reconciles ingress resource.
 func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) reconciler.Event {
-	if ann := ing.Annotations[networking.IngressClassAnnotationKey]; ann != ContourIngressClassName {
-		return nil
-	}
-	ing.Status.InitializeConditions()
-
-	if err := r.reconcileProxies(ctx, ing); err != nil {
-		return err
-	}
-
-	ing.Status.ObservedGeneration = ing.Generation
-	return nil
-}
-
-func (r *Reconciler) reconcileProxies(ctx context.Context, ing *v1alpha1.Ingress) error {
 	serviceNames := resources.ServiceNames(ctx, ing)
 	serviceToProtocol := make(map[string]string, len(serviceNames))
 
