@@ -56,10 +56,9 @@ type Reconciler struct {
 	contourClient contourclientset.Interface
 
 	// Listers index properties about resources
-	contourLister   contourlisters.HTTPProxyLister
-	ingressLister   networkingv1alpha1.IngressLister
-	serviceLister   corev1listers.ServiceLister
-	endpointsLister corev1listers.EndpointsLister
+	contourLister contourlisters.HTTPProxyLister
+	ingressLister networkingv1alpha1.IngressLister
+	serviceLister corev1listers.ServiceLister
 
 	statusManager status.Manager
 	tracker       tracker.Interface
@@ -148,28 +147,6 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			if port.Name == networking.ServicePortNameH2C {
 				serviceToProtocol[name] = "h2c"
 				break
-			}
-		}
-
-		// TODO(mattmoor): Once the endpoint-probing changes land, we can
-		// very likely remove this logic.
-		if err := r.tracker.TrackReference(tracker.Reference{
-			APIVersion: "v1",
-			Kind:       "Endpoints",
-			Namespace:  ing.Namespace,
-			Name:       name,
-		}, ing); err != nil {
-			return err
-		}
-		ep, err := r.endpointsLister.Endpoints(ing.Namespace).Get(name)
-		if err != nil {
-			return err
-		}
-		for _, subset := range ep.Subsets {
-			if len(subset.Addresses) == 0 {
-				ing.Status.MarkIngressNotReady("EndpointsNotReady",
-					fmt.Sprintf("Waiting for Endpoints %q to have ready addresses.", name))
-				return nil
 			}
 		}
 	}

@@ -57,12 +57,11 @@ func NewController(
 	podInformer := podinformer.Get(ctx)
 
 	c := &Reconciler{
-		ingressClient:   ingressclient.Get(ctx),
-		contourClient:   contourclient.Get(ctx),
-		contourLister:   proxyInformer.Lister(),
-		ingressLister:   ingressInformer.Lister(),
-		serviceLister:   serviceInformer.Lister(),
-		endpointsLister: endpointsInformer.Lister(),
+		ingressClient: ingressclient.Get(ctx),
+		contourClient: contourclient.Get(ctx),
+		contourLister: proxyInformer.Lister(),
+		ingressLister: ingressInformer.Lister(),
+		serviceLister: serviceInformer.Lister(),
 	}
 	myFilterFunc := reconciler.AnnotationFilterFunc(networking.IngressClassAnnotationKey, ContourIngressClassName, false)
 	impl := ingressreconciler.NewImpl(ctx, c, ContourIngressClassName,
@@ -128,15 +127,6 @@ func NewController(
 		controller.EnsureTypeMeta(
 			c.tracker.OnChanged,
 			corev1.SchemeGroupVersion.WithKind("Service"),
-		),
-	))
-	endpointsInformer.Informer().AddEventHandler(controller.HandleAll(
-		// Call the tracker's OnChanged method, but we've seen the objects
-		// coming through this path missing TypeMeta, so ensure it is properly
-		// populated.
-		controller.EnsureTypeMeta(
-			c.tracker.OnChanged,
-			corev1.SchemeGroupVersion.WithKind("Endpoints"),
 		),
 	))
 
