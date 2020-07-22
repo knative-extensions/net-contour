@@ -21,14 +21,18 @@ import (
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/equality"
+	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 
 	contourclientset "knative.dev/net-contour/pkg/client/clientset/versioned"
 	contourlisters "knative.dev/net-contour/pkg/client/listers/projectcontour/v1"
+	ingressclientset "knative.dev/networking/pkg/client/clientset/versioned"
 	ingressreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
+	networkingv1alpha1 "knative.dev/networking/pkg/client/listers/networking/v1alpha1"
 
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
 	"knative.dev/net-contour/pkg/reconciler/contour/resources"
@@ -48,11 +52,12 @@ const (
 
 // Reconciler implements controller.Reconciler for Ingress resources.
 type Reconciler struct {
-	// Client is used to write back status updates.
+	ingressClient ingressclientset.Interface
 	contourClient contourclientset.Interface
 
 	// Listers index properties about resources
 	contourLister   contourlisters.HTTPProxyLister
+	ingressLister   networkingv1alpha1.IngressLister
 	serviceLister   corev1listers.ServiceLister
 	endpointsLister corev1listers.EndpointsLister
 
@@ -64,8 +69,65 @@ var _ ingressreconciler.Interface = (*Reconciler)(nil)
 
 // ReconcileKind reconciles ingress resource.
 func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) reconciler.Event {
-	serviceNames := resources.ServiceNames(ctx, ing)
-	serviceToProtocol := make(map[string]string, len(serviceNames))
+
+	// Track whether there is an endpoint probe kingress to clean up.
+	haveEndpointProbe := false
+
+	if _, ok := ing.Annotations[resources.EndpointsProbeKey]; ok {
+		// We only create an Endpoint probe kingress for top-level net-contour
+		// kingress. Stop recursing when we see our annotation and proceed to
+		// HTTP Proxy and probing.
+	} else
+	// See if we have any HTTPProxy resources for this generation.
+	// We only create HTTPProxy resources once we have successfully probed
+	// a generation's endpoints.
+	if elts, err := r.contourLister.HTTPProxies(ing.Namespace).List(labels.Set(map[string]string{
+		resources.ParentKey:     ing.Name,
+		resources.GenerationKey: fmt.Sprintf("%d", ing.Generation),
+	}).AsSelector()); err != nil {
+		return err
+	} else if len(elts) == 0 {
+		// There are no HTTPProxy resources with the current generation.
+		// Reconcile an endpoint probe child kingress to ensure the Contour
+		// gateways have the endpoints for our generation's services.
+
+		desiredChIng := resources.MakeEndpointProbeIngress(ctx, ing)
+		actualChIng, err := r.ingressLister.Ingresses(desiredChIng.Namespace).Get(desiredChIng.Name)
+		if apierrs.IsNotFound(err) { // Create it.
+			actualChIng, err = r.ingressClient.NetworkingV1alpha1().Ingresses(desiredChIng.Namespace).Create(desiredChIng)
+			if err != nil {
+				return err
+			}
+		} else if err != nil {
+			return err
+		} else if !equality.Semantic.DeepEqual(actualChIng.Spec, desiredChIng.Spec) { // Reconcile it.
+			actualChIng = actualChIng.DeepCopy()
+			actualChIng.Spec = desiredChIng.Spec
+			actualChIng, err = r.ingressClient.NetworkingV1alpha1().Ingresses(actualChIng.Namespace).Update(actualChIng)
+			if err != nil {
+				return err
+			}
+		}
+
+		if !actualChIng.IsReady() {
+			ing.Status.MarkIngressNotReady("EndpointsNotReady", "Waiting for Envoys to receive Endpoints data.")
+			return nil
+		}
+
+		// The endpoints ingress is ready, we are good to go!
+		haveEndpointProbe = true
+	} else {
+		desiredChIng := resources.MakeEndpointProbeIngress(ctx, ing)
+		_, err := r.ingressLister.Ingresses(desiredChIng.Namespace).Get(desiredChIng.Name)
+		haveEndpointProbe = !apierrs.IsNotFound(err)
+	}
+
+	info := resources.ServiceNames(ctx, ing)
+	serviceNames := make(sets.String, len(info))
+	serviceToProtocol := make(map[string]string, len(info))
+	for name := range info {
+		serviceNames.Insert(name)
+	}
 
 	// Establish the protocol for each Service, and ensure that their Endpoints are
 	// populated with Ready addresses before we reprogram Contour.
@@ -89,6 +151,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			}
 		}
 
+		// TODO(mattmoor): Once the endpoint-probing changes land, we can
+		// very likely remove this logic.
 		if err := r.tracker.TrackReference(tracker.Reference{
 			APIVersion: "v1",
 			Kind:       "Endpoints",
@@ -138,6 +202,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		}
 	}
 
+	// TODO(https://github.com/knative-sandbox/net-contour/issues/165): Use the Lister to determine whether this
+	// has work to do before making an API call.
 	if err := r.contourClient.ProjectcontourV1().HTTPProxies(ing.Namespace).DeleteCollection(
 		&metav1.DeleteOptions{},
 		metav1.ListOptions{
@@ -158,6 +224,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			[]v1alpha1.LoadBalancerIngressStatus{},
 			lbStatus(ctx, v1alpha1.IngressVisibilityExternalIP),
 			lbStatus(ctx, v1alpha1.IngressVisibilityClusterLocal))
+
+		if haveEndpointProbe {
+			// Delete the endpoints probe once we have reached a steady state.
+			// TODO(mattmoor): DO NOT SUBMIT
+		}
 	} else {
 		ing.Status.MarkLoadBalancerNotReady()
 	}
