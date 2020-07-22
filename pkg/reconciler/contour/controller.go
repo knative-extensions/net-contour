@@ -86,7 +86,10 @@ func NewController(
 	}
 	ingressInformer.Informer().AddEventHandler(ingressHandler)
 
-	proxyInformer.Informer().AddEventHandler(controller.HandleAll(impl.EnqueueControllerOf))
+	proxyInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("Ingress")),
+		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
+	})
 
 	statusProber := status.NewProber(
 		logger.Named("status-manager"),
