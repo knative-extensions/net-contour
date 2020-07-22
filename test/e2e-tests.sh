@@ -20,11 +20,8 @@ source $(dirname $0)/e2e-common.sh
 # Script entry point.
 initialize $@  --skip-istio-addon
 
-# TODO(#12): TestUpdate is consistently failing. So we skip it
-
 go_test_e2e -timeout=20m -parallel=12 \
 	    ./test/conformance \
-	     -run="/^[^u]" \
 	    --ingressClass=contour.ingress.networking.knative.dev || fail_test
 
 success

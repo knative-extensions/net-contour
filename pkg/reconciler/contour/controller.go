@@ -21,6 +21,7 @@ import (
 
 	contourclient "knative.dev/net-contour/pkg/client/injection/client"
 	proxyinformer "knative.dev/net-contour/pkg/client/injection/informers/projectcontour/v1/httpproxy"
+	ingressclient "knative.dev/networking/pkg/client/injection/client"
 	ingressinformer "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress"
 	ingressreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 	endpointsinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
@@ -56,8 +57,10 @@ func NewController(
 	podInformer := podinformer.Get(ctx)
 
 	c := &Reconciler{
+		ingressClient:   ingressclient.Get(ctx),
 		contourClient:   contourclient.Get(ctx),
 		contourLister:   proxyInformer.Lister(),
+		ingressLister:   ingressInformer.Lister(),
 		serviceLister:   serviceInformer.Lister(),
 		endpointsLister: endpointsInformer.Lister(),
 	}
@@ -85,6 +88,12 @@ func NewController(
 		Handler:    controller.HandleAll(impl.Enqueue),
 	}
 	ingressInformer.Informer().AddEventHandler(ingressHandler)
+
+	// Enqueue us if any of our children kingress resources change.
+	ingressInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("Ingress")),
+		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
+	})
 
 	proxyInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("Ingress")),

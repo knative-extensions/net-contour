@@ -60,7 +60,7 @@ function scale_controlplane() {
     # Give it time to kill the pods.
     sleep 5
     # Scale up components for HA tests
-    kubectl -n knative-serving scale deployment "$deployment" --replicas=2 || failed=1
+    kubectl -n knative-serving scale deployment "$deployment" --replicas=3 || failed=1
   done
 }
 

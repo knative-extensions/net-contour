@@ -829,7 +829,11 @@ func TestServiceNames(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := ServiceNames(context.Background(), test.ing)
+			sns := ServiceNames(context.Background(), test.ing)
+			got := make(sets.String, len(sns))
+			for key := range sns {
+				got.Insert(key)
+			}
 			if !cmp.Equal(test.want, got) {
 				t.Errorf("ServiceNames (-want, +got): %s", cmp.Diff(test.want, got))
 			}

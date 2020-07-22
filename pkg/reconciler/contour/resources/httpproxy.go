@@ -25,6 +25,7 @@ import (
 
 	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
@@ -35,16 +36,42 @@ import (
 	"knative.dev/serving/pkg/network/ingress"
 )
 
-func ServiceNames(ctx context.Context, ing *v1alpha1.Ingress) sets.String {
-	s := sets.NewString()
+type ServiceInfo struct {
+	Port         intstr.IntOrString
+	Visibilities []v1alpha1.IngressVisibility
+}
+
+func ServiceNames(ctx context.Context, ing *v1alpha1.Ingress) map[string]ServiceInfo {
+	// Build it up using string sets to deduplicate.
+	s := map[string]sets.String{}
+	p := map[string]intstr.IntOrString{}
 	for _, rule := range ing.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
 			for _, split := range path.Splits {
-				s.Insert(split.ServiceName)
+				set, ok := s[split.ServiceName]
+				if !ok {
+					set = sets.NewString()
+				}
+				set.Insert(string(rule.Visibility))
+				s[split.ServiceName] = set
+				p[split.ServiceName] = split.ServicePort
 			}
 		}
 	}
-	return s
+
+	// Then iterate over the map to give the return value the right type.
+	s2 := map[string]ServiceInfo{}
+	for name, vis := range s {
+		visibilities := make([]v1alpha1.IngressVisibility, 0, len(vis))
+		for _, v := range vis.List() {
+			visibilities = append(visibilities, v1alpha1.IngressVisibility(v))
+		}
+		s2[name] = ServiceInfo{
+			Port:         p[name],
+			Visibilities: visibilities,
+		}
+	}
+	return s2
 }
 
 func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtocol map[string]string) []*v1.HTTPProxy {
