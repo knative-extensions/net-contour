@@ -179,16 +179,18 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		}
 	}
 
-	// TODO(https://github.com/knative-sandbox/net-contour/issues/165): Use the Lister to determine whether this
-	// has work to do before making an API call.
-	if err := r.contourClient.ProjectcontourV1().HTTPProxies(ing.Namespace).DeleteCollection(
-		&metav1.DeleteOptions{},
-		metav1.ListOptions{
-			LabelSelector: fmt.Sprintf("%s=%s,%s!=%d",
-				resources.ParentKey, ing.Name,
-				resources.GenerationKey, ing.Generation),
-		}); err != nil {
+	// Before deleting old programming, check our cached to see whether there is anything to clean up.
+	if selector, err := labels.Parse(fmt.Sprintf("%s=%s,%s!=%d",
+		resources.ParentKey, ing.Name,
+		resources.GenerationKey, ing.Generation)); err != nil {
 		return err
+	} else if elts, err := r.contourLister.HTTPProxies(ing.Namespace).List(selector); err != nil {
+		return err
+	} else if len(elts) != 0 {
+		if err := r.contourClient.ProjectcontourV1().HTTPProxies(ing.Namespace).DeleteCollection(
+			&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: selector.String()}); err != nil {
+			return err
+		}
 	}
 	ing.Status.MarkNetworkConfigured()
 
