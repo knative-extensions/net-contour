@@ -480,58 +480,16 @@ func TestReconcile(t *testing.T) {
 		WantEvents: []string{
 			Eventf(corev1.EventTypeWarning, "InternalError", `service "goo" not found`),
 		},
-	}, {
-		Name: "first reconcile, missing endpoints",
-		Key:  "ns/name--ep",
-		Objects: append([]runtime.Object{
-			mustMakeProbe(t, ing("name", "ns", withBasicSpec, withContour)),
-		}, services...),
-		WantErr: true,
-		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: mustMakeProbe(t, ing("name", "ns", withBasicSpec, withContour), func(i *v1alpha1.Ingress) {
-				// These are the things we expect to change in status.
-				i.Status.InitializeConditions()
-			}),
-		}},
-		WantEvents: []string{
-			Eventf(corev1.EventTypeWarning, "InternalError", `endpoints "goo" not found`),
-		},
-	}, {
-		Name: "first reconcile, empty endpoints",
-		Key:  "ns/name--ep",
-		Objects: append([]runtime.Object{
-			mustMakeProbe(t, ing("name", "ns", withBasicSpec, withContour)),
-			// The Endpoints is present, but it has no ready addresses.
-			&corev1.Endpoints{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "ns",
-					Name:      "goo",
-				},
-				Subsets: []corev1.EndpointSubset{{
-					NotReadyAddresses: []corev1.EndpointAddress{{
-						IP: "10.0.0.1",
-					}},
-				}},
-			},
-		}, services...),
-		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: mustMakeProbe(t, ing("name", "ns", withBasicSpec, withContour), func(i *v1alpha1.Ingress) {
-				// These are the things we expect to change in status.
-				i.Status.InitializeConditions()
-				i.Status.MarkIngressNotReady("EndpointsNotReady", `Waiting for Endpoints "goo" to have ready addresses.`)
-			}),
-		}},
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		r := &Reconciler{
-			ingressClient:   fakeingressclient.Get(ctx),
-			contourClient:   fakecontourclient.Get(ctx),
-			ingressLister:   listers.GetIngressLister(),
-			contourLister:   listers.GetHTTPProxyLister(),
-			serviceLister:   listers.GetK8sServiceLister(),
-			endpointsLister: listers.GetEndpointsLister(),
-			tracker:         &NullTracker{},
+			ingressClient: fakeingressclient.Get(ctx),
+			contourClient: fakecontourclient.Get(ctx),
+			ingressLister: listers.GetIngressLister(),
+			contourLister: listers.GetHTTPProxyLister(),
+			serviceLister: listers.GetK8sServiceLister(),
+			tracker:       &NullTracker{},
 			statusManager: &fakeStatusManager{
 				FakeIsReady: func(context.Context, *v1alpha1.Ingress) (bool, error) {
 					return true, nil
@@ -577,13 +535,12 @@ func TestReconcileProberNotReady(t *testing.T) {
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		r := &Reconciler{
-			ingressClient:   fakeingressclient.Get(ctx),
-			contourClient:   fakecontourclient.Get(ctx),
-			ingressLister:   listers.GetIngressLister(),
-			contourLister:   listers.GetHTTPProxyLister(),
-			serviceLister:   listers.GetK8sServiceLister(),
-			endpointsLister: listers.GetEndpointsLister(),
-			tracker:         &NullTracker{},
+			ingressClient: fakeingressclient.Get(ctx),
+			contourClient: fakecontourclient.Get(ctx),
+			ingressLister: listers.GetIngressLister(),
+			contourLister: listers.GetHTTPProxyLister(),
+			serviceLister: listers.GetK8sServiceLister(),
+			tracker:       &NullTracker{},
 			statusManager: &fakeStatusManager{
 				FakeIsReady: func(context.Context, *v1alpha1.Ingress) (bool, error) {
 					return false, nil
@@ -631,13 +588,12 @@ func TestReconcileProbeError(t *testing.T) {
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		r := &Reconciler{
-			ingressClient:   fakeingressclient.Get(ctx),
-			contourClient:   fakecontourclient.Get(ctx),
-			ingressLister:   listers.GetIngressLister(),
-			contourLister:   listers.GetHTTPProxyLister(),
-			serviceLister:   listers.GetK8sServiceLister(),
-			endpointsLister: listers.GetEndpointsLister(),
-			tracker:         &NullTracker{},
+			ingressClient: fakeingressclient.Get(ctx),
+			contourClient: fakecontourclient.Get(ctx),
+			ingressLister: listers.GetIngressLister(),
+			contourLister: listers.GetHTTPProxyLister(),
+			serviceLister: listers.GetK8sServiceLister(),
+			tracker:       &NullTracker{},
 			statusManager: &fakeStatusManager{
 				FakeIsReady: func(context.Context, *v1alpha1.Ingress) (bool, error) {
 					return false, theError
