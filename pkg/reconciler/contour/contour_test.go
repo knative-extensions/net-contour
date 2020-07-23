@@ -138,12 +138,6 @@ func TestReconcile(t *testing.T) {
 		WantDeletes: []clientgotesting.DeleteActionImpl{{
 			Name: "name--ep",
 		}},
-		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
-			ListRestrictions: clientgotesting.ListRestrictions{
-				Labels: deleteSelector(t, 0),
-				Fields: fields.Everything(),
-			},
-		}},
 	}, {
 		Name:    "failure deleting endpoints probe",
 		Key:     "ns/name",
@@ -173,12 +167,6 @@ func TestReconcile(t *testing.T) {
 		}},
 		WantDeletes: []clientgotesting.DeleteActionImpl{{
 			Name: "name--ep",
-		}},
-		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
-			ListRestrictions: clientgotesting.ListRestrictions{
-				Labels: deleteSelector(t, 0),
-				Fields: fields.Everything(),
-			},
 		}},
 		WantEvents: []string{
 			Eventf(corev1.EventTypeWarning, "InternalError", "inducing failure for delete ingresses"),
@@ -241,14 +229,6 @@ func TestReconcile(t *testing.T) {
 			ing("name", "ns", withBasicSpec, withContour, makeItReady),
 			mustMakeProbe(t, ing("name", "ns", withBasicSpec, withContour), makeItReady),
 		}, mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour))...), servicesAndEndpoints...),
-		// We still issue a DeleteCollection each reconcile to make sure things not of the
-		// current generation are cleaned up.
-		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
-			ListRestrictions: clientgotesting.ListRestrictions{
-				Labels: deleteSelector(t, 0),
-				Fields: fields.Everything(),
-			},
-		}},
 		WantDeletes: []clientgotesting.DeleteActionImpl{{
 			Name: "name--ep",
 		}},
@@ -264,14 +244,6 @@ func TestReconcile(t *testing.T) {
 		Objects: append(append([]runtime.Object{
 			ing("name", "ns", withBasicSpec, withContour, makeItReady),
 		}, mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour))...), servicesAndEndpoints...),
-		// We still issue a DeleteCollection each reconcile to make sure things not of the
-		// current generation are cleaned up.
-		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
-			ListRestrictions: clientgotesting.ListRestrictions{
-				Labels: deleteSelector(t, 0),
-				Fields: fields.Everything(),
-			},
-		}},
 		WantUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: mustMakeProxies(t,
 				ing("name", "ns", withContour, withGeneration(0), withBasicSpec),
@@ -346,12 +318,6 @@ func TestReconcile(t *testing.T) {
 		WantDeletes: []clientgotesting.DeleteActionImpl{{
 			Name: "name--ep",
 		}},
-		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
-			ListRestrictions: clientgotesting.ListRestrictions{
-				Labels: deleteSelector(t, 0),
-				Fields: fields.Everything(),
-			},
-		}},
 	}, {
 		Name:    "error creating http proxy",
 		Key:     "ns/name",
@@ -409,18 +375,29 @@ func TestReconcile(t *testing.T) {
 			InduceFailure("delete-collection", "httpproxies"),
 		},
 		Objects: append(append([]runtime.Object{
-			ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
-				i.Status.InitializeConditions()
-			}),
+			ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
+			mustMakeProbe(t, ing("name", "ns", withBasicSpec2, withContour), makeItReady),
 		}, mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour))...), servicesAndEndpoints...),
+		WantUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: mustMakeProxies(t,
+				ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
+				withNetworkHash("16cefb33efb02fe05914d99645817c5aa553ee9c7ad88506c42b82d8872e653d"),
+			)[0],
+		}},
 		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
 			ListRestrictions: clientgotesting.ListRestrictions{
-				Labels: deleteSelector(t, 0),
+				// We delete the things that don't match the generation being reconciled.
+				Labels: deleteSelector(t, 1),
 				Fields: fields.Everything(),
 			},
 		}},
-		WantUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour), withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508"))[0],
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withContour, withGeneration(1), withBasicSpec2, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+				i.Status.ObservedGeneration = 1
+				i.Status.MarkIngressNotReady("NewObservedGenFailure", "unsuccessfully observed a new generation")
+			}),
 		}},
 		WantEvents: []string{
 			Eventf(corev1.EventTypeWarning, "InternalError", "inducing failure for delete-collection httpproxies"),
@@ -454,12 +431,6 @@ func TestReconcile(t *testing.T) {
 		}},
 		WantDeletes: []clientgotesting.DeleteActionImpl{{
 			Name: "name--ep",
-		}},
-		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
-			ListRestrictions: clientgotesting.ListRestrictions{
-				Labels: deleteSelector(t, 0),
-				Fields: fields.Everything(),
-			},
 		}},
 		WantEvents: []string{
 			Eventf(corev1.EventTypeWarning, "UpdateFailed", `Failed to update status for "name": inducing failure for update ingresses`),
@@ -525,12 +496,6 @@ func TestReconcileProberNotReady(t *testing.T) {
 				i.Status.MarkLoadBalancerNotReady()
 			}),
 		}},
-		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
-			ListRestrictions: clientgotesting.ListRestrictions{
-				Labels: deleteSelector(t, 0),
-				Fields: fields.Everything(),
-			},
-		}},
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
@@ -574,12 +539,6 @@ func TestReconcileProbeError(t *testing.T) {
 				i.Status.InitializeConditions()
 				i.Status.MarkNetworkConfigured()
 			}),
-		}},
-		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
-			ListRestrictions: clientgotesting.ListRestrictions{
-				Labels: deleteSelector(t, 0),
-				Fields: fields.Everything(),
-			},
 		}},
 		WantEvents: []string{
 			Eventf(corev1.EventTypeWarning, "InternalError", fmt.Sprintf("failed to probe Ingress ns/name: %v", theError)),
