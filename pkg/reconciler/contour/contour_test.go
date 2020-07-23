@@ -135,12 +135,54 @@ func TestReconcile(t *testing.T) {
 					}})
 			}),
 		}},
+		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			Name: "name--ep",
+		}},
 		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
 			ListRestrictions: clientgotesting.ListRestrictions{
 				Labels: deleteSelector(t, 0),
 				Fields: fields.Everything(),
 			},
 		}},
+	}, {
+		Name:    "failure deleting endpoints probe",
+		Key:     "ns/name",
+		WantErr: true,
+		WithReactors: []clientgotesting.ReactionFunc{
+			InduceFailure("delete", "ingresses"),
+		},
+		Objects: append([]runtime.Object{
+			ing("name", "ns", withBasicSpec, withContour),
+			mustMakeProbe(t, ing("name", "ns", withBasicSpec, withContour), makeItReady),
+		}, servicesAndEndpoints...),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour), withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508")),
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+				i.Status.MarkNetworkConfigured()
+				i.Status.MarkLoadBalancerReady(
+					[]v1alpha1.LoadBalancerIngressStatus{},
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: publicSvc,
+					}},
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: privateSvc,
+					}})
+			}),
+		}},
+		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			Name: "name--ep",
+		}},
+		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
+			ListRestrictions: clientgotesting.ListRestrictions{
+				Labels: deleteSelector(t, 0),
+				Fields: fields.Everything(),
+			},
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeWarning, "InternalError", "inducing failure for delete ingresses"),
+		},
 	}, {
 		Name: "first reconcile basic ingress (endpoints probe not ready)",
 		Key:  "ns/name",
@@ -207,6 +249,9 @@ func TestReconcile(t *testing.T) {
 				Fields: fields.Everything(),
 			},
 		}},
+		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			Name: "name--ep",
+		}},
 		WantUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: mustMakeProxies(t,
 				ing("name", "ns", withContour, withGeneration(0), withBasicSpec),
@@ -245,6 +290,9 @@ func TestReconcile(t *testing.T) {
 				ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
 				withNetworkHash("16cefb33efb02fe05914d99645817c5aa553ee9c7ad88506c42b82d8872e653d"),
 			)[0],
+		}},
+		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			Name: "name--ep",
 		}},
 		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
 			ListRestrictions: clientgotesting.ListRestrictions{
@@ -294,6 +342,9 @@ func TestReconcile(t *testing.T) {
 						DomainInternal: privateSvc,
 					}})
 			}),
+		}},
+		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			Name: "name--ep",
 		}},
 		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
 			ListRestrictions: clientgotesting.ListRestrictions{
@@ -400,6 +451,9 @@ func TestReconcile(t *testing.T) {
 						DomainInternal: privateSvc,
 					}})
 			}),
+		}},
+		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			Name: "name--ep",
 		}},
 		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
 			ListRestrictions: clientgotesting.ListRestrictions{

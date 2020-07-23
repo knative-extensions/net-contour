@@ -227,7 +227,10 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 
 		if haveEndpointProbe {
 			// Delete the endpoints probe once we have reached a steady state.
-			// TODO(mattmoor): DO NOT SUBMIT
+			desiredChIng := resources.MakeEndpointProbeIngress(ctx, ing)
+			if err := r.ingressClient.NetworkingV1alpha1().Ingresses(desiredChIng.Namespace).Delete(desiredChIng.Name, &metav1.DeleteOptions{}); err != nil {
+				return err
+			}
 		}
 	} else {
 		ing.Status.MarkLoadBalancerNotReady()
