@@ -1783,7 +1783,7 @@ spec:
         - -c
         - /config/envoy.json
         - --service-cluster $(CONTOUR_NAMESPACE)
-        - --service-node $(ENVOY_POD_NAME)
+        - --service-node contour
         - --log-level info
         command:
         - envoy
@@ -1796,11 +1796,6 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        - name: ENVOY_POD_NAME
-          valueFrom:
-            fieldRef:
-              apiVersion: v1
-              fieldPath: metadata.name
         ports:
         - containerPort: 80
           # hostPort: 80

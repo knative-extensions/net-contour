@@ -17,7 +17,6 @@ require (
 )
 
 replace (
-
 	// TODO(mattmoor): DO NOT SUBMIT
 	github.com/projectcontour/contour => github.com/stevesloka/contour v0.13.0-beta.2.0.20200622143240-715aab4e4b1a
 	k8s.io/api => k8s.io/api v0.17.6

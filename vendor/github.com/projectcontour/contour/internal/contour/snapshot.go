@@ -28,7 +28,6 @@ func (s *SnapshotHandler) UpdateSnapshot() {
 		s.CacheHandler.ClusterCache.Contents(),
 		s.CacheHandler.RouteCache.Contents(),
 		s.CacheHandler.ListenerCache.Contents(),
-		nil,
 		s.CacheHandler.SecretCache.Contents())
 	s.SnapshotCache.SetSnapshot("contour", snapshot)
 }

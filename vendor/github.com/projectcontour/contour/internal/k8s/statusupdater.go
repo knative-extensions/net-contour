@@ -14,7 +14,6 @@
 package k8s
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -83,7 +82,7 @@ func (suh *StatusUpdateHandler) Start(stop <-chan struct{}) error {
 				Debug("received a status update")
 			uObj, err := suh.Clients.DynamicClient().
 				Resource(upd.Resource).
-				Namespace(upd.FullName.Namespace).Get(context.TODO(), upd.FullName.Name, metav1.GetOptions{})
+				Namespace(upd.FullName.Namespace).Get(upd.FullName.Name, metav1.GetOptions{})
 			if err != nil {
 				suh.Log.WithError(err).
 					WithField("name", upd.FullName.Name).
@@ -120,7 +119,7 @@ func (suh *StatusUpdateHandler) Start(stop <-chan struct{}) error {
 				continue
 			}
 
-			_, err = suh.Clients.DynamicClient().Resource(upd.Resource).Namespace(upd.FullName.Namespace).UpdateStatus(context.TODO(), usNewObj, metav1.UpdateOptions{})
+			_, err = suh.Clients.DynamicClient().Resource(upd.Resource).Namespace(upd.FullName.Namespace).UpdateStatus(usNewObj, metav1.UpdateOptions{})
 			if err != nil {
 				suh.Log.WithError(err).
 					WithField("name", upd.FullName.Name).

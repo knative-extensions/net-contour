@@ -108,6 +108,7 @@ function privatize_loadbalancer() {
 
 # # Apply patch to contour
 # git apply ${ROOT_DIR}/hack/contour.patch
+git apply ${ROOT_DIR}/hack/contour-client.patch
 
 # # We do this manually because it's challenging to rewrite
 # # the ClusterRoleBinding without collateral damage.
