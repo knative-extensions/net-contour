@@ -705,7 +705,7 @@ func ing(name, namespace string, opts ...IngressOption) *v1alpha1.Ingress {
 func mustMakeProbe(t *testing.T, i *v1alpha1.Ingress, opts ...IngressOption) runtime.Object {
 	t.Helper()
 	ctx := (&testConfigStore{config: defaultConfig}).ToContext(context.Background())
-	chIng := resources.MakeEndpointProbeIngress(ctx, i)
+	chIng := resources.MakeEndpointProbeIngress(ctx, i, nil)
 	for _, opt := range opts {
 		opt(chIng)
 	}

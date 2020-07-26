@@ -19,6 +19,7 @@ limitations under the License.
 package conformance
 
 import (
+	"strconv"
 	"testing"
 
 	// This must come first for init ordering.
@@ -27,6 +28,13 @@ import (
 	"knative.dev/serving/test/conformance/ingress"
 )
 
+const iterations = 5
+
 func TestIngressConformance(t *testing.T) {
-	ingress.RunConformance(t)
+	for i := 0; i < iterations; i++ {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			t.Parallel()
+			ingress.RunConformance(t)
+		})
+	}
 }
