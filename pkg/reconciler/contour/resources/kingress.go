@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
+	"knative.dev/net-contour/pkg/reconciler/contour/resources/names"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/kmeta"
 )
@@ -32,7 +33,7 @@ import (
 func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previousState []*v1.HTTPProxy) *v1alpha1.Ingress {
 	childIng := &v1alpha1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      kmeta.ChildName(ing.Name+"--", "ep"),
+			Name:      names.EndpointProbeIngress(ing),
 			Namespace: ing.Namespace,
 			Labels:    ing.Labels,
 			Annotations: kmeta.UnionMaps(ing.Annotations, map[string]string{
