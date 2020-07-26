@@ -20,16 +20,20 @@ import (
 	"context"
 	"fmt"
 
+	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"knative.dev/net-contour/pkg/reconciler/contour/config"
+	"knative.dev/net-contour/pkg/reconciler/contour/resources/names"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/kmeta"
 )
 
-func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress) *v1alpha1.Ingress {
+func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previousState []*v1.HTTPProxy) *v1alpha1.Ingress {
 	childIng := &v1alpha1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      kmeta.ChildName(ing.Name+"--", "ep"),
+			Name:      names.EndpointProbeIngress(ing),
 			Namespace: ing.Namespace,
 			Labels:    ing.Labels,
 			Annotations: kmeta.UnionMaps(ing.Annotations, map[string]string{
@@ -40,6 +44,45 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress) *v1alp
 	}
 
 	sns := ServiceNames(ctx, ing)
+
+	// Reverse engineer our previous state from the prior generation's HTTP Proxy resources.
+	for _, proxy := range previousState {
+		// Establish the visibility based on the class annotation.
+		var vis v1alpha1.IngressVisibility
+		for v, class := range config.FromContext(ctx).Contour.VisibilityClasses {
+			if class == proxy.Annotations["projectcontour.io/ingress.class"] {
+				vis = v
+			}
+		}
+		if vis == "" {
+			continue
+		}
+
+		for _, route := range proxy.Spec.Routes {
+			for _, svc := range route.Services {
+				si, ok := sns[svc.Name]
+				if !ok {
+					si = ServiceInfo{
+						Port:         intstr.FromInt(svc.Port),
+						Visibilities: make([]v1alpha1.IngressVisibility, 0, 1),
+					}
+				}
+				has := false
+				for _, v := range si.Visibilities {
+					if v == vis {
+						has = true
+						break
+					}
+				}
+				if !has {
+					si.Visibilities = append(si.Visibilities, vis)
+				}
+				sns[svc.Name] = si
+			}
+		}
+	}
+
+	// Give the services a deterministic ordering.
 	order := make(sets.String, len(sns))
 	for key := range sns {
 		order.Insert(key)

@@ -36,6 +36,7 @@ import (
 
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
 	"knative.dev/net-contour/pkg/reconciler/contour/resources"
+	"knative.dev/net-contour/pkg/reconciler/contour/resources/names"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/network"
@@ -89,8 +90,23 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		// There are no HTTPProxy resources with the current generation.
 		// Reconcile an endpoint probe child kingress to ensure the Contour
 		// gateways have the endpoints for our generation's services.
+		//
+		// Fetch the HTTP Proxy resources from the PRIOR generation to include
+		// in the Endpoint Probe.  The Endpoint probe is used to warm new Envoy
+		// "clusters" (Endpoints), but also to keep the prior HTTP Proxy's "clusters"
+		// in existence until the new generation has been rolled out as fully ready.
+		selector, err := labels.Parse(fmt.Sprintf("%s=%s,%s!=%d",
+			resources.ParentKey, ing.Name,
+			resources.GenerationKey, ing.Generation))
+		if err != nil {
+			return err
+		}
+		elts, err := r.contourLister.HTTPProxies(ing.Namespace).List(selector)
+		if err != nil {
+			return err
+		}
 
-		desiredChIng := resources.MakeEndpointProbeIngress(ctx, ing)
+		desiredChIng := resources.MakeEndpointProbeIngress(ctx, ing, elts)
 		actualChIng, err := r.ingressLister.Ingresses(desiredChIng.Namespace).Get(desiredChIng.Name)
 		if apierrs.IsNotFound(err) { // Create it.
 			actualChIng, err = r.ingressClient.NetworkingV1alpha1().Ingresses(desiredChIng.Namespace).Create(desiredChIng)
@@ -116,8 +132,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		// The endpoints ingress is ready, we are good to go!
 		haveEndpointProbe = true
 	} else {
-		desiredChIng := resources.MakeEndpointProbeIngress(ctx, ing)
-		_, err := r.ingressLister.Ingresses(desiredChIng.Namespace).Get(desiredChIng.Name)
+		_, err := r.ingressLister.Ingresses(ing.Namespace).Get(names.EndpointProbeIngress(ing))
 		haveEndpointProbe = !apierrs.IsNotFound(err)
 	}
 
@@ -206,8 +221,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 
 		if haveEndpointProbe {
 			// Delete the endpoints probe once we have reached a steady state.
-			desiredChIng := resources.MakeEndpointProbeIngress(ctx, ing)
-			if err := r.ingressClient.NetworkingV1alpha1().Ingresses(desiredChIng.Namespace).Delete(desiredChIng.Name, &metav1.DeleteOptions{}); err != nil {
+			if err := r.ingressClient.NetworkingV1alpha1().Ingresses(ing.Namespace).Delete(
+				names.EndpointProbeIngress(ing), &metav1.DeleteOptions{}); err != nil {
 				return err
 			}
 		}

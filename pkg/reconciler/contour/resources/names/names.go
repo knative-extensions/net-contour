@@ -1,5 +1,3 @@
-// +build e2e
-
 /*
 Copyright 2020 The Knative Authors
 
@@ -16,25 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package conformance
+package names
 
-import (
-	"strconv"
-	"testing"
+import "knative.dev/pkg/kmeta"
 
-	// This must come first for init ordering.
-	_ "knative.dev/serving/test"
-
-	"knative.dev/serving/test/conformance/ingress"
-)
-
-const iterations = 5
-
-func TestIngressConformance(t *testing.T) {
-	for i := 0; i < iterations; i++ {
-		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			t.Parallel()
-			ingress.RunConformance(t)
-		})
-	}
+// EndpointProbeIngress returns the name for the child kingress used to probe endpoints.
+func EndpointProbeIngress(ing kmeta.Accessor) string {
+	return kmeta.ChildName(ing.GetName()+"--", "ep")
 }
