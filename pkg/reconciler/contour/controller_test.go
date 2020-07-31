@@ -28,9 +28,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
+	network "knative.dev/networking/pkg"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/system"
-	"knative.dev/serving/pkg/network"
 
 	. "knative.dev/pkg/reconciler/testing"
 )

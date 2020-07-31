@@ -26,10 +26,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
+	networkingpkg "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/ptr"
-	servingnetwork "knative.dev/serving/pkg/network"
 )
 
 func TestMakeEndpointProbeIngress(t *testing.T) {
@@ -41,8 +41,8 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 					v1alpha1.IngressVisibilityExternalIP:   publicClass,
 				},
 			},
-			Network: &servingnetwork.Config{
-				HTTPProtocol: servingnetwork.HTTPEnabled,
+			Network: &networkingpkg.Config{
+				HTTPProtocol: networkingpkg.HTTPEnabled,
 			},
 		},
 	}

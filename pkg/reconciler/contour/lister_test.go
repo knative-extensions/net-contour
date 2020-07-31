@@ -26,9 +26,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
+	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
-	"knative.dev/serving/pkg/network"
-	"knative.dev/serving/pkg/network/status"
+	"knative.dev/networking/pkg/status"
 
 	"github.com/google/go-cmp/cmp"
 	. "knative.dev/net-contour/pkg/reconciler/testing"

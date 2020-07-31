@@ -28,12 +28,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
+	networkingpkg "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	"knative.dev/networking/pkg/ingress"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/ptr"
-	servingnetwork "knative.dev/serving/pkg/network"
-	"knative.dev/serving/pkg/network/ingress"
 )
 
 type ServiceInfo struct {
@@ -88,9 +88,9 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 
 	var allowInsecure bool
 	switch config.FromContext(ctx).Network.HTTPProtocol {
-	case servingnetwork.HTTPDisabled, servingnetwork.HTTPRedirected:
+	case networkingpkg.HTTPDisabled, networkingpkg.HTTPRedirected:
 		allowInsecure = false
-	case servingnetwork.HTTPEnabled:
+	case networkingpkg.HTTPEnabled:
 		allowInsecure = true
 	}
 
