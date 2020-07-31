@@ -27,11 +27,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
+	networkingpkg "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/ptr"
 	"knative.dev/pkg/reconciler"
-	servingnetwork "knative.dev/serving/pkg/network"
 )
 
 const (
@@ -47,7 +47,7 @@ func TestMakeProxies(t *testing.T) {
 
 	tests := []struct {
 		name string
-		sec  servingnetwork.HTTPProtocol
+		sec  networkingpkg.HTTPProtocol
 		ing  *v1alpha1.Ingress
 		want []*v1.HTTPProxy
 	}{{
@@ -522,7 +522,7 @@ func TestMakeProxies(t *testing.T) {
 		}},
 	}, {
 		name: "single external domain with TLS, and only TLS",
-		sec:  servingnetwork.HTTPRedirected,
+		sec:  networkingpkg.HTTPRedirected,
 		ing: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
@@ -635,7 +635,7 @@ func TestMakeProxies(t *testing.T) {
 		}},
 	}, {
 		name: "single external domain with TLS, but allowing non-TLS",
-		sec:  servingnetwork.HTTPEnabled,
+		sec:  networkingpkg.HTTPEnabled,
 		ing: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
@@ -752,7 +752,7 @@ func TestMakeProxies(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			sec := test.sec
 			if sec == "" {
-				sec = servingnetwork.HTTPEnabled
+				sec = networkingpkg.HTTPEnabled
 			}
 
 			tcs := &testConfigStore{
@@ -763,7 +763,7 @@ func TestMakeProxies(t *testing.T) {
 							v1alpha1.IngressVisibilityExternalIP:   publicClass,
 						},
 					},
-					Network: &servingnetwork.Config{
+					Network: &networkingpkg.Config{
 						HTTPProtocol: sec,
 					},
 				},

@@ -40,6 +40,7 @@ import (
 	clientgotesting "k8s.io/client-go/testing"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
 	"knative.dev/net-contour/pkg/reconciler/contour/resources"
+	networkingpkg "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	servingclient "knative.dev/networking/pkg/client/injection/client/fake"
@@ -49,7 +50,6 @@ import (
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
-	servingnetwork "knative.dev/serving/pkg/network"
 
 	. "knative.dev/net-contour/pkg/reconciler/testing"
 	. "knative.dev/pkg/reconciler/testing"
@@ -591,9 +591,9 @@ var (
 				v1alpha1.IngressVisibilityExternalIP:   sets.NewString(publicKey),
 			},
 		},
-		Network: &servingnetwork.Config{
+		Network: &networkingpkg.Config{
 			AutoTLS:      false,
-			HTTPProtocol: servingnetwork.HTTPEnabled,
+			HTTPProtocol: networkingpkg.HTTPEnabled,
 		},
 	}
 )
