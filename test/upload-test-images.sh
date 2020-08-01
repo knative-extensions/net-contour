@@ -21,7 +21,7 @@ function upload_test_images() {
   (
     # Script needs to be executed from repo root
     cd "$( dirname "$0")/.."
-    local image_dir="vendor/knative.dev/serving/test/test_images"
+    local image_dir="vendor/knative.dev/networking/test/test_images"
     local docker_tag=$1
     local tag_option=""
     if [ -n "${docker_tag}" ]; then
