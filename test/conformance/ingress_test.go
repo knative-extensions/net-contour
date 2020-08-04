@@ -23,9 +23,9 @@ import (
 	"testing"
 
 	// This must come first for init ordering.
-	_ "knative.dev/serving/test"
+	_ "knative.dev/networking/test"
 
-	"knative.dev/serving/test/conformance/ingress"
+	"knative.dev/networking/test/conformance/ingress"
 )
 
 const iterations = 5
