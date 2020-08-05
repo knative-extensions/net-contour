@@ -28,6 +28,7 @@ import (
 	"knative.dev/net-contour/pkg/reconciler/contour/resources/names"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/logging"
 )
 
 func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previousState []*v1.HTTPProxy) *v1alpha1.Ingress {
@@ -88,7 +89,10 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 		order.Insert(key)
 	}
 
-	for _, name := range order.List() {
+	l := order.List()
+	logging.FromContext(ctx).Debugf("Endpoints probe will cover services: %v", l)
+
+	for _, name := range l {
 		si := sns[name]
 		for _, vis := range si.Visibilities {
 			childIng.Spec.Rules = append(childIng.Spec.Rules, v1alpha1.IngressRule{
