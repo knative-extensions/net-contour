@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -131,7 +132,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			if diff, err := kmp.SafeDiff(desiredChIng.Spec, actualChIng.Spec); err == nil {
 				logger.Debugf("Updated endpoint probe: %s", diff)
 			} else {
-				logger.Warnf("Error diffing endpoint probes: %v", err)
+				logger.Warnw("Error diffing endpoint probes", zap.Error(err))
 			}
 		}
 
@@ -214,7 +215,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		if diff, err := kmp.SafeDiff(update, elts[0]); err == nil {
 			logger.Debugf("Updated http proxy: %s", diff)
 		} else {
-			logger.Warnf("Error diffing http proxy: %v", err)
+			logger.Warnw("Error diffing http proxy", zap.Error(err))
 		}
 	}
 
