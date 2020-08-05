@@ -188,6 +188,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		selector := labels.Set(map[string]string{
 			resources.ParentKey:     proxy.Labels[resources.ParentKey],
 			resources.DomainHashKey: proxy.Labels[resources.DomainHashKey],
+			resources.ClassKey:      proxy.Labels[resources.ClassKey],
 		}).AsSelector()
 		elts, err := r.contourLister.HTTPProxies(ing.Namespace).List(selector)
 		if err != nil {

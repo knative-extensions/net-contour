@@ -94,14 +94,15 @@ func TestMakeProxies(t *testing.T) {
 		want: []*v1.HTTPProxy{{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
-				Name:      "bar-example.com",
+				Name:      "bar-" + publicClass + "-example.com",
 				Labels: map[string]string{
 					DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
 					GenerationKey: "0",
 					ParentKey:     "bar",
+					ClassKey:      publicClass,
 				},
 				Annotations: map[string]string{
-					"projectcontour.io/ingress.class": publicClass,
+					ClassKey: publicClass,
 				},
 				OwnerReferences: []metav1.OwnerReference{{
 					APIVersion:         "networking.internal.knative.dev/v1alpha1",
@@ -188,14 +189,15 @@ func TestMakeProxies(t *testing.T) {
 		want: []*v1.HTTPProxy{{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
-				Name:      "bar-foo.bar",
+				Name:      "bar-" + privateClass + "-foo.bar",
 				Labels: map[string]string{
 					DomainHashKey: "336d1b3d72e061b98b59d6c793f6a8da217a727a",
 					GenerationKey: "0",
 					ParentKey:     "bar",
+					ClassKey:      privateClass,
 				},
 				Annotations: map[string]string{
-					"projectcontour.io/ingress.class": privateClass,
+					ClassKey: privateClass,
 				},
 				OwnerReferences: []metav1.OwnerReference{{
 					APIVersion:         "networking.internal.knative.dev/v1alpha1",
@@ -232,14 +234,15 @@ func TestMakeProxies(t *testing.T) {
 		}, {
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
-				Name:      "bar-foo.bar.svc",
+				Name:      "bar-" + privateClass + "-foo.bar.svc",
 				Labels: map[string]string{
 					DomainHashKey: "c537bbef14c1570803e5c51c6ca824524c758496",
 					GenerationKey: "0",
 					ParentKey:     "bar",
+					ClassKey:      privateClass,
 				},
 				Annotations: map[string]string{
-					"projectcontour.io/ingress.class": privateClass,
+					ClassKey: privateClass,
 				},
 				OwnerReferences: []metav1.OwnerReference{{
 					APIVersion:         "networking.internal.knative.dev/v1alpha1",
@@ -276,14 +279,15 @@ func TestMakeProxies(t *testing.T) {
 		}, {
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
-				Name:      "bar-foo.bar.svc.cluster.local",
+				Name:      "bar-" + privateClass + "-foo.bar.svc.cluster.local",
 				Labels: map[string]string{
 					DomainHashKey: "6f498a962729705e1c12fdef2c3371c00f5094e9",
 					GenerationKey: "0",
 					ParentKey:     "bar",
+					ClassKey:      privateClass,
 				},
 				Annotations: map[string]string{
-					"projectcontour.io/ingress.class": privateClass,
+					ClassKey: privateClass,
 				},
 				OwnerReferences: []metav1.OwnerReference{{
 					APIVersion:         "networking.internal.knative.dev/v1alpha1",
@@ -351,14 +355,15 @@ func TestMakeProxies(t *testing.T) {
 		want: []*v1.HTTPProxy{{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
-				Name:      "bar-example.com",
+				Name:      "bar-" + privateClass + "-example.com",
 				Labels: map[string]string{
 					DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
 					GenerationKey: "0",
 					ParentKey:     "bar",
+					ClassKey:      privateClass,
 				},
 				Annotations: map[string]string{
-					"projectcontour.io/ingress.class": privateClass,
+					ClassKey: privateClass,
 				},
 				OwnerReferences: []metav1.OwnerReference{{
 					APIVersion:         "networking.internal.knative.dev/v1alpha1",
@@ -445,14 +450,15 @@ func TestMakeProxies(t *testing.T) {
 		want: []*v1.HTTPProxy{{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
-				Name:      "bar-example.com",
+				Name:      "bar-" + publicClass + "-example.com",
 				Labels: map[string]string{
 					DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
 					GenerationKey: "0",
 					ParentKey:     "bar",
+					ClassKey:      publicClass,
 				},
 				Annotations: map[string]string{
-					"projectcontour.io/ingress.class": publicClass,
+					ClassKey: publicClass,
 				},
 				OwnerReferences: []metav1.OwnerReference{{
 					APIVersion:         "networking.internal.knative.dev/v1alpha1",
@@ -569,14 +575,15 @@ func TestMakeProxies(t *testing.T) {
 		want: []*v1.HTTPProxy{{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
-				Name:      "bar-example.com",
+				Name:      "bar-" + publicClass + "-example.com",
 				Labels: map[string]string{
 					DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
 					GenerationKey: "0",
 					ParentKey:     "bar",
+					ClassKey:      publicClass,
 				},
 				Annotations: map[string]string{
-					"projectcontour.io/ingress.class": publicClass,
+					ClassKey: publicClass,
 				},
 				OwnerReferences: []metav1.OwnerReference{{
 					APIVersion:         "networking.internal.knative.dev/v1alpha1",
@@ -682,14 +689,15 @@ func TestMakeProxies(t *testing.T) {
 		want: []*v1.HTTPProxy{{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
-				Name:      "bar-example.com",
+				Name:      "bar-" + publicClass + "-example.com",
 				Labels: map[string]string{
 					DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
 					GenerationKey: "0",
 					ParentKey:     "bar",
+					ClassKey:      publicClass,
 				},
 				Annotations: map[string]string{
-					"projectcontour.io/ingress.class": publicClass,
+					ClassKey: publicClass,
 				},
 				OwnerReferences: []metav1.OwnerReference{{
 					APIVersion:         "networking.internal.knative.dev/v1alpha1",
