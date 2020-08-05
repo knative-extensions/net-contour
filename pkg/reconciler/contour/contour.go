@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,6 +41,8 @@ import (
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/status"
+	"knative.dev/pkg/kmp"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/tracker"
@@ -69,6 +72,7 @@ var _ ingressreconciler.Interface = (*Reconciler)(nil)
 
 // ReconcileKind reconciles ingress resource.
 func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) reconciler.Event {
+	logger := logging.FromContext(ctx)
 
 	// Track whether there is an endpoint probe kingress to clean up.
 	haveEndpointProbe := false
@@ -77,6 +81,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		// We only create an Endpoint probe kingress for top-level net-contour
 		// kingress. Stop recursing when we see our annotation and proceed to
 		// HTTP Proxy and probing.
+		logger.Debug("Avoiding endpoint probe recursion.")
 	} else
 	// See if we have any HTTPProxy resources for this generation.
 	// We only create HTTPProxy resources once we have successfully probed
@@ -105,6 +110,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		if err != nil {
 			return err
 		}
+		logger.Debugf("Found %d HTTP Proxies from older generations.", len(elts))
 
 		desiredChIng := resources.MakeEndpointProbeIngress(ctx, ing, elts)
 		actualChIng, err := r.ingressLister.Ingresses(desiredChIng.Namespace).Get(desiredChIng.Name)
@@ -113,6 +119,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			if err != nil {
 				return err
 			}
+			logger.Debugf("Created endpoint probe: %v", actualChIng)
 		} else if err != nil {
 			return err
 		} else if !equality.Semantic.DeepEqual(actualChIng.Spec, desiredChIng.Spec) { // Reconcile it.
@@ -121,6 +128,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			actualChIng, err = r.ingressClient.NetworkingV1alpha1().Ingresses(actualChIng.Namespace).Update(actualChIng)
 			if err != nil {
 				return err
+			}
+			if diff, err := kmp.SafeDiff(desiredChIng.Spec, actualChIng.Spec); err == nil {
+				logger.Debugf("Updated endpoint probe: %s", diff)
+			} else {
+				logger.Warnw("Error diffing endpoint probes", zap.Error(err))
 			}
 		}
 
@@ -131,9 +143,15 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 
 		// The endpoints ingress is ready, we are good to go!
 		haveEndpointProbe = true
+		logger.Debugf("We have an endpoint probe: %#v.", actualChIng)
 	} else {
-		_, err := r.ingressLister.Ingresses(ing.Namespace).Get(names.EndpointProbeIngress(ing))
+		ing, err := r.ingressLister.Ingresses(ing.Namespace).Get(names.EndpointProbeIngress(ing))
 		haveEndpointProbe = !apierrs.IsNotFound(err)
+		if haveEndpointProbe {
+			logger.Debugf("We have an endpoint probe: %#v.", ing)
+		} else {
+			logger.Debug("We do not have an endpoint probe.")
+		}
 	}
 
 	info := resources.ServiceNames(ctx, ing)
@@ -176,9 +194,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			return err
 		}
 		if len(elts) == 0 {
-			if _, err := r.contourClient.ProjectcontourV1().HTTPProxies(proxy.Namespace).Create(proxy); err != nil {
+			proxy, err := r.contourClient.ProjectcontourV1().HTTPProxies(proxy.Namespace).Create(proxy)
+			if err != nil {
 				return err
 			}
+			logger.Debugf("Created http proxy: %#v", proxy)
 			continue
 		}
 		update := elts[0].DeepCopy()
@@ -191,6 +211,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		}
 		if _, err = r.contourClient.ProjectcontourV1().HTTPProxies(proxy.Namespace).Update(update); err != nil {
 			return err
+		}
+		if diff, err := kmp.SafeDiff(update, elts[0]); err == nil {
+			logger.Debugf("Updated http proxy: %s", diff)
+		} else {
+			logger.Warnw("Error diffing http proxy", zap.Error(err))
 		}
 	}
 
@@ -206,6 +231,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: selector.String()}); err != nil {
 			return err
 		}
+		logger.Debugf("Deleted %d older http proxies.", len(elts))
 	}
 	ing.Status.MarkNetworkConfigured()
 
@@ -213,6 +239,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 	if err != nil {
 		return fmt.Errorf("failed to probe Ingress %s/%s: %w", ing.GetNamespace(), ing.GetName(), err)
 	}
+	logger.Debugf("Status prober returned %v.", ready)
 	if ready {
 		ing.Status.MarkLoadBalancerReady(
 			[]v1alpha1.LoadBalancerIngressStatus{},
@@ -225,6 +252,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 				names.EndpointProbeIngress(ing), &metav1.DeleteOptions{}); err != nil {
 				return err
 			}
+			logger.Debug("Deleted endpoint probe.")
 		}
 	} else {
 		ing.Status.MarkLoadBalancerNotReady()
