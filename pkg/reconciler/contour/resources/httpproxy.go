@@ -39,12 +39,16 @@ import (
 type ServiceInfo struct {
 	Port         intstr.IntOrString
 	Visibilities []v1alpha1.IngressVisibility
+
+	// TODO(https://github.com/knative-sandbox/net-certmanager/issues/44): Remove this.
+	HasPath bool
 }
 
 func ServiceNames(ctx context.Context, ing *v1alpha1.Ingress) map[string]ServiceInfo {
 	// Build it up using string sets to deduplicate.
 	s := map[string]sets.String{}
 	p := map[string]intstr.IntOrString{}
+	paths := sets.NewString()
 	for _, rule := range ing.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
 			for _, split := range path.Splits {
@@ -55,6 +59,9 @@ func ServiceNames(ctx context.Context, ing *v1alpha1.Ingress) map[string]Service
 				set.Insert(string(rule.Visibility))
 				s[split.ServiceName] = set
 				p[split.ServiceName] = split.ServicePort
+				if path.Path != "" {
+					paths.Insert(split.ServiceName)
+				}
 			}
 		}
 	}
@@ -69,6 +76,7 @@ func ServiceNames(ctx context.Context, ing *v1alpha1.Ingress) map[string]Service
 		s2[name] = ServiceInfo{
 			Port:         p[name],
 			Visibilities: visibilities,
+			HasPath:      paths.Has(name),
 		}
 	}
 	return s2
