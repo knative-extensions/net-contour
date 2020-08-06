@@ -202,9 +202,10 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				Labels: map[string]string{
 					GenerationKey: fmt.Sprintf("%d", ing.Generation),
 					ParentKey:     ing.Name,
+					ClassKey:      class,
 				},
 				Annotations: map[string]string{
-					"projectcontour.io/ingress.class": class,
+					ClassKey: class,
 				},
 				OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 			},
@@ -217,7 +218,17 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 		for _, originalHost := range rule.Hosts {
 			for _, host := range ingress.ExpandedHosts(sets.NewString(originalHost)).List() {
 				hostProxy := base.DeepCopy()
-				hostProxy.Name = kmeta.ChildName(ing.Name+"-", host)
+
+				class := class
+
+				// Ideally these would just be marked ClusterLocal :(
+				if strings.HasSuffix(originalHost, network.GetClusterDomainName()) {
+					class = config.FromContext(ctx).Contour.VisibilityClasses[v1alpha1.IngressVisibilityClusterLocal]
+					hostProxy.Annotations[ClassKey] = class
+					hostProxy.Labels[ClassKey] = class
+				}
+
+				hostProxy.Name = kmeta.ChildName(ing.Name+"-"+class+"-", host)
 				hostProxy.Spec.VirtualHost = &v1.VirtualHost{
 					Fqdn: host,
 				}
@@ -228,12 +239,6 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					hostProxy.Spec.VirtualHost.TLS = &v1.TLS{
 						SecretName: fmt.Sprintf("%s/%s", tls.SecretNamespace, tls.SecretName),
 					}
-				}
-
-				// Ideally these would just be marked ClusterLocal :(
-				if strings.HasSuffix(originalHost, network.GetClusterDomainName()) {
-					privateClass := config.FromContext(ctx).Contour.VisibilityClasses[v1alpha1.IngressVisibilityClusterLocal]
-					hostProxy.Annotations["projectcontour.io/ingress.class"] = privateClass
 				}
 
 				proxies = append(proxies, hostProxy)
