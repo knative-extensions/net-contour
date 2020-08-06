@@ -60,12 +60,19 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 		}
 
 		for _, route := range proxy.Spec.Routes {
+			hasPath := false
+			for _, cond := range route.Conditions {
+				if cond.Prefix != "" {
+					hasPath = true
+				}
+			}
 			for _, svc := range route.Services {
 				si, ok := sns[svc.Name]
 				if !ok {
 					si = ServiceInfo{
 						Port:         intstr.FromInt(svc.Port),
 						Visibilities: make([]v1alpha1.IngressVisibility, 0, 1),
+						HasPath:      hasPath,
 					}
 				}
 				has := false
@@ -94,6 +101,10 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 
 	for _, name := range l {
 		si := sns[name]
+		if si.HasPath {
+			// TODO(https://github.com/knative-sandbox/net-certmanager/issues/44): Remove this.
+			continue
+		}
 		for _, vis := range si.Visibilities {
 			childIng.Spec.Rules = append(childIng.Spec.Rules, v1alpha1.IngressRule{
 				Hosts:      []string{fmt.Sprintf("%s.%s.%s.net-contour.invalid", name, ing.Name, ing.Namespace)},

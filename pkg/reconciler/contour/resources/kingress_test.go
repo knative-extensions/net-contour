@@ -277,7 +277,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
-							Path: "/goo",
 							Headers: map[string]v1alpha1.HeaderMatch{
 								"tag": {
 									Exact: "goo",
@@ -326,20 +325,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			},
 			Spec: v1alpha1.IngressSpec{
 				Rules: []v1alpha1.IngressRule{{
-					Hosts:      []string{"doo.bar.foo.net-contour.invalid"},
-					Visibility: v1alpha1.IngressVisibilityExternalIP,
-					HTTP: &v1alpha1.HTTPIngressRuleValue{
-						Paths: []v1alpha1.HTTPIngressPath{{
-							Splits: []v1alpha1.IngressBackendSplit{{
-								IngressBackend: v1alpha1.IngressBackend{
-									ServiceNamespace: "foo",
-									ServiceName:      "doo",
-									ServicePort:      intstr.FromInt(124),
-								},
-							}},
-						}},
-					},
-				}, {
 					Hosts:      []string{"goo.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
@@ -613,6 +598,15 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 								Value: "blurg",
 							}},
 						},
+					}},
+				}, {
+					// TODO(https://github.com/knative-sandbox/net-certmanager/issues/44): Probe this once fixed.
+					Conditions: []v1.Condition{{
+						Prefix: "/blah",
+					}},
+					Services: []v1.Service{{
+						Name: "blah",
+						Port: 123,
 					}},
 				}},
 			},
