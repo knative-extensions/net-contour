@@ -875,10 +875,9 @@ k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/strings
 k8s.io/utils/trace
-# knative.dev/networking v0.0.0-20200806164029-46f635168304
+# knative.dev/networking v0.0.0-20200806231028-6309580426f4
 ## explicit
 knative.dev/networking/pkg
-knative.dev/networking/pkg/apis/config
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
 knative.dev/networking/pkg/client/clientset/versioned
@@ -913,7 +912,7 @@ knative.dev/networking/test/test_images/runtime/handlers
 knative.dev/networking/test/test_images/timeout
 knative.dev/networking/test/test_images/wsserver
 knative.dev/networking/test/types
-# knative.dev/pkg v0.0.0-20200806190129-b009e03f9ca0
+# knative.dev/pkg v0.0.0-20200806230728-62f2560aa795
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck/ducktypes
@@ -976,7 +975,7 @@ knative.dev/pkg/tracker
 knative.dev/pkg/version
 knative.dev/pkg/webhook
 knative.dev/pkg/webhook/certificates/resources
-# knative.dev/test-infra v0.0.0-20200806180129-099a98731c48
+# knative.dev/test-infra v0.0.0-20200806191129-68b7defbd189
 ## explicit
 knative.dev/test-infra/scripts
 # sigs.k8s.io/controller-runtime v0.6.1
