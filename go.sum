@@ -500,6 +500,8 @@ github.com/gobuffalo/envy v1.7.0/go.mod h1:n7DRkBerg/aorDM8kbduw5dN3oXGswK5liaSC
 github.com/gobuffalo/envy v1.7.1/go.mod h1:FurDp9+EDPE4aIUS3ZLyD+7/9fpx7YRt/ukY6jIHf0w=
 github.com/gobuffalo/flect v0.1.5 h1:xpKq9ap8MbYfhuPCF0dBH854Gp9CxZjr/IocxELFflo=
 github.com/gobuffalo/flect v0.1.5/go.mod h1:W3K3X9ksuZfir8f/LrfVtWmCDQFfayuylOJ7sz/Fj80=
+github.com/gobuffalo/flect v0.2.0 h1:EWCvMGGxOjsgwlWaP+f4+Hh6yrrte7JeFL2S6b+0hdM=
+github.com/gobuffalo/flect v0.2.0/go.mod h1:W3K3X9ksuZfir8f/LrfVtWmCDQFfayuylOJ7sz/Fj80=
 github.com/gobwas/glob v0.2.3/go.mod h1:d3Ez4x06l9bZtSvzIay5+Yzi0fmZzPgnTbPcKjJAkT8=
 github.com/goccy/go-yaml v1.4.3 h1:+1jK1ost1TBEfWjciIMU8rciBq0poxurgS7XvLgQInM=
 github.com/goccy/go-yaml v1.4.3/go.mod h1:PsEEJ29nIFZL07P/c8dv4P6rQkVFFXafQee85U+ERHA=
@@ -1006,8 +1008,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=
 github.com/pquerna/cachecontrol v0.0.0-20171018203845-0dec1b30a021/go.mod h1:prYjPmNq4d1NPVmpShWobRqXY3q7Vp+80DqgxxUrUIA=
-github.com/projectcontour/contour v1.4.1-0.20200507033955-65d52b253570 h1:C+MBq8rjN/pTyYdbtzUKHlHFJeFk3VxBbtGQ/sokvCU=
-github.com/projectcontour/contour v1.4.1-0.20200507033955-65d52b253570/go.mod h1:XBfsFUhiGCVFWNUF4g0O0eBWY+EI97iEEj6FB7584EE=
+github.com/projectcontour/contour v1.7.0 h1:pB5Ve8rBXjCC9JcaRMGl/BWQjz6mOAZkAWNjKfJHkko=
+github.com/projectcontour/contour v1.7.0/go.mod h1:A7qDa7n0CaDPNAwHA5jgz3A6MBgvj1eP9kruqX4ingo=
 github.com/prometheus/client_golang v0.0.0-20180209125602-c332b6f63c06/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v0.8.0/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v0.9.0/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
@@ -1851,6 +1853,7 @@ k8s.io/api v0.17.6/go.mod h1:1jKVwkj0UZ4huak/yRt3MFfU5wc32+B41SkNN5HhyFg=
 k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783/go.mod h1:xvae1SZB3E17UpV59AWc271W/Ph25N+bjPyR63X6tPY=
 k8s.io/apiextensions-apiserver v0.0.0-20190918201827-3de75813f604/go.mod h1:7H8sjDlWQu89yWB3FhZfsLyRCRLuoXoCoY5qtwW1q6I=
 k8s.io/apiextensions-apiserver v0.16.4/go.mod h1:HYQwjujEkXmQNhap2C9YDdIVOSskGZ3et0Mvjcyjbto=
+k8s.io/apiextensions-apiserver v0.17.0/go.mod h1:XiIFUakZywkUl54fVXa7QTEHcqQz9HG55nHd1DCoHj8=
 k8s.io/apiextensions-apiserver v0.17.2 h1:cP579D2hSZNuO/rZj9XFRzwJNYb41DbNANJb6Kolpss=
 k8s.io/apiextensions-apiserver v0.17.2/go.mod h1:4KdMpjkEjjDI2pPfBA15OscyNldHWdBCfsWMDWAmSTs=
 k8s.io/apiextensions-apiserver v0.17.6 h1:o5JWDya65ApIVez+RfR40PGrqjPUZHhlSmwAHCvL20E=
@@ -1990,6 +1993,8 @@ sigs.k8s.io/controller-runtime v0.6.1 h1:LcK2+nk0kmaOnKGN+vBcWHqY5WDJNJNB/c5pW+s
 sigs.k8s.io/controller-runtime v0.6.1/go.mod h1:XRYBPdbf5XJu9kpS84VJiZ7h/u1hF3gEORz0efEja7A=
 sigs.k8s.io/controller-tools v0.2.4 h1:la1h46EzElvWefWLqfsXrnsO3lZjpkI0asTpX6h8PLA=
 sigs.k8s.io/controller-tools v0.2.4/go.mod h1:m/ztfQNocGYBgTTCmFdnK94uVvgxeZeE3LtJvd/jIzA=
+sigs.k8s.io/controller-tools v0.2.9 h1:DEZuCFWANX2zlZVMlf/XmhSq0HzmGCZ/GTdPJig62ig=
+sigs.k8s.io/controller-tools v0.2.9/go.mod h1:ArP7w60JQKkZf7UU2oWTVnEhoNGA+sOMyuSuS+JFNDQ=
 sigs.k8s.io/kustomize v2.0.3+incompatible h1:JUufWFNlI44MdtnjUqVnvh29rR37PQFzPbLXqhyOyX0=
 sigs.k8s.io/kustomize v2.0.3+incompatible/go.mod h1:MkjgH3RdOWrievjo6c9T245dYlB5QeXV4WCbnt/PEpU=
 sigs.k8s.io/kustomize/kyaml v0.1.1 h1:nGUNYINljZNmlAS8uoobUv/wx/s3Pg8dNxYo+W7uYh0=

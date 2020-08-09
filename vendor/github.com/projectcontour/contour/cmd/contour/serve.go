@@ -1,4 +1,4 @@
-// Copyright © 2019 VMware
+// Copyright Project Contour Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,6 +23,7 @@ import (
 	"syscall"
 	"time"
 
+	projectcontourv1alpha1 "github.com/projectcontour/contour/apis/projectcontour/v1alpha1"
 	"github.com/projectcontour/contour/internal/annotation"
 	"github.com/projectcontour/contour/internal/contour"
 	"github.com/projectcontour/contour/internal/dag"
@@ -32,14 +33,17 @@ import (
 	"github.com/projectcontour/contour/internal/httpsvc"
 	"github.com/projectcontour/contour/internal/k8s"
 	"github.com/projectcontour/contour/internal/metrics"
+	"github.com/projectcontour/contour/internal/timeout"
 	"github.com/projectcontour/contour/internal/workgroup"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/yaml.v2"
-	v1 "k8s.io/api/core/v1"
-	coreinformers "k8s.io/client-go/informers"
+	corev1 "k8s.io/api/core/v1"
 )
+
+// Add RBAC policy to support leader election.
+// +kubebuilder:rbac:groups="",resources=configmaps,verbs=create;get;update
 
 // registerServe registers the serve subcommand and flags
 // with the Application provided.
@@ -98,8 +102,6 @@ func registerServe(app *kingpin.Application) (*kingpin.CmdClause, *serveContext)
 	serve.Flag("contour-cert-file", "Contour certificate file name for serving gRPC over TLS.").Envar("CONTOUR_CERT_FILE").StringVar(&ctx.contourCert)
 	serve.Flag("contour-key-file", "Contour key file name for serving gRPC over TLS.").Envar("CONTOUR_KEY_FILE").StringVar(&ctx.contourKey)
 	serve.Flag("insecure", "Allow serving without TLS secured gRPC.").BoolVar(&ctx.PermitInsecureGRPC)
-	// TODO(sas) Deprecate `ingressroute-root-namespaces` in v1.0
-	serve.Flag("ingressroute-root-namespaces", "DEPRECATED (Use 'root-namespaces'): Restrict contour to searching these namespaces for root ingress routes.").StringVar(&ctx.rootNamespaces)
 	serve.Flag("root-namespaces", "Restrict contour to searching these namespaces for root ingress routes.").StringVar(&ctx.rootNamespaces)
 
 	serve.Flag("ingress-class-name", "Contour IngressClass name.").StringVar(&ctx.ingressClass)
@@ -132,15 +134,30 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 	}
 
 	// step 2. create informer factories
-	informerFactory := clients.NewInformerFactory()
-	dynamicInformerFactory := clients.NewDynamicInformerFactory()
 
-	// Create a set of SharedInformerFactories for each root-ingressroute namespace (if defined)
-	namespacedInformerFactories := map[string]coreinformers.SharedInformerFactory{}
+	// Factory for cluster-wide informers.
+	clusterInformerFactory := clients.NewInformerFactory()
 
-	for _, namespace := range ctx.ingressRouteRootNamespaces() {
-		if _, ok := namespacedInformerFactories[namespace]; !ok {
-			namespacedInformerFactories[namespace] = clients.NewInformerFactoryForNamespace(namespace)
+	// Factories for per-namespace informers.
+	namespacedInformerFactories := map[string]k8s.InformerFactory{}
+
+	// Validate fallback certificate parameters
+	fallbackCert, err := ctx.fallbackCertificate()
+	if err != nil {
+		log.WithField("context", "fallback-certificate").Fatalf("invalid fallback certificate configuration: %q", err)
+	}
+
+	if rootNamespaces := ctx.proxyRootNamespaces(); len(rootNamespaces) > 0 {
+		// Add the FallbackCertificateNamespace to the root-namespaces if not already
+		if !contains(rootNamespaces, ctx.TLSConfig.FallbackCertificate.Namespace) && fallbackCert != nil {
+			rootNamespaces = append(rootNamespaces, ctx.FallbackCertificate.Namespace)
+			log.WithField("context", "fallback-certificate").Infof("fallback certificate namespace %q not defined in 'root-namespaces', adding namespace to watch", ctx.FallbackCertificate.Namespace)
+		}
+
+		for _, ns := range rootNamespaces {
+			if _, ok := namespacedInformerFactories[ns]; !ok {
+				namespacedInformerFactories[ns] = clients.NewInformerFactoryForNamespace(ns)
+			}
 		}
 	}
 
@@ -157,40 +174,56 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 		return err
 	}
 
+	listenerConfig := contour.ListenerVisitorConfig{
+		UseProxyProto:                 ctx.useProxyProto,
+		HTTPAddress:                   ctx.httpAddr,
+		HTTPPort:                      ctx.httpPort,
+		HTTPAccessLog:                 ctx.httpAccessLog,
+		HTTPSAddress:                  ctx.httpsAddr,
+		HTTPSPort:                     ctx.httpsPort,
+		HTTPSAccessLog:                ctx.httpsAccessLog,
+		AccessLogType:                 ctx.AccessLogFormat,
+		AccessLogFields:               ctx.AccessLogFields,
+		MinimumTLSVersion:             annotation.MinTLSVersion(ctx.TLSConfig.MinimumProtocolVersion),
+		RequestTimeout:                getRequestTimeout(log, ctx),
+		ConnectionIdleTimeout:         timeout.Parse(ctx.ConnectionIdleTimeout),
+		StreamIdleTimeout:             timeout.Parse(ctx.StreamIdleTimeout),
+		MaxConnectionDuration:         timeout.Parse(ctx.MaxConnectionDuration),
+		ConnectionShutdownGracePeriod: timeout.Parse(ctx.ConnectionShutdownGracePeriod),
+	}
+
+	defaultHTTPVersions, err := parseDefaultHTTPVersions(ctx.DefaultHTTPVersions)
+	if err != nil {
+		return fmt.Errorf("failed to configure default HTTP versions: %w", err)
+	}
+
+	listenerConfig.DefaultHTTPVersions = defaultHTTPVersions
+
 	// step 3. build our mammoth Kubernetes event handler.
 	eventHandler := &contour.EventHandler{
 		CacheHandler: &contour.CacheHandler{
-			ListenerVisitorConfig: contour.ListenerVisitorConfig{
-				UseProxyProto:          ctx.useProxyProto,
-				HTTPAddress:            ctx.httpAddr,
-				HTTPPort:               ctx.httpPort,
-				HTTPAccessLog:          ctx.httpAccessLog,
-				HTTPSAddress:           ctx.httpsAddr,
-				HTTPSPort:              ctx.httpsPort,
-				HTTPSAccessLog:         ctx.httpsAccessLog,
-				AccessLogType:          ctx.AccessLogFormat,
-				AccessLogFields:        ctx.AccessLogFields,
-				MinimumProtocolVersion: annotation.MinProtoVersion(ctx.TLSConfig.MinimumProtocolVersion),
-				RequestTimeout:         ctx.RequestTimeout,
-			},
-			ListenerCache: contour.NewListenerCache(ctx.statsAddr, ctx.statsPort),
-			FieldLogger:   log.WithField("context", "CacheHandler"),
-			Metrics:       metrics.NewMetrics(registry),
+			ListenerVisitorConfig: listenerConfig,
+			ListenerCache:         contour.NewListenerCache(ctx.statsAddr, ctx.statsPort),
+			FieldLogger:           log.WithField("context", "CacheHandler"),
+			Metrics:               metrics.NewMetrics(registry),
 		},
 		HoldoffDelay:    100 * time.Millisecond,
 		HoldoffMaxDelay: 500 * time.Millisecond,
-		StatusClient: &k8s.StatusWriter{
-			Client: clients.DynamicClient(),
-		},
 		Builder: dag.Builder{
 			Source: dag.KubernetesCache{
-				RootNamespaces: ctx.ingressRouteRootNamespaces(),
+				RootNamespaces: ctx.proxyRootNamespaces(),
 				IngressClass:   ctx.ingressClass,
 				FieldLogger:    log.WithField("context", "KubernetesCache"),
 			},
 			DisablePermitInsecure: ctx.DisablePermitInsecure,
 		},
 		FieldLogger: log.WithField("context", "contourEventHandler"),
+	}
+
+	// Set the fallback certificate if configured.
+	if fallbackCert != nil {
+		log.WithField("context", "fallback-certificate").Infof("enabled fallback certificate with secret: %q", fallbackCert)
+		eventHandler.FallbackCertificate = fallbackCert
 	}
 
 	// wrap eventHandler in a converter for objects from the dynamic client.
@@ -208,23 +241,32 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 	// using the SyncList to keep track of what to sync later.
 	var informerSyncList k8s.InformerSyncList
 
-	iset := k8s.DefaultInformerSet(dynamicInformerFactory, ctx.UseExperimentalServiceAPITypes)
+	informerSyncList.InformOnResources(clusterInformerFactory, dynamicHandler, k8s.DefaultResources()...)
 
-	// TODO(youngnick): Add in filtering the iset map by enabled apiserver types (#2219) using the discovery library.
+	// Inform on ExtensionService resources if they are installed
+	// in the cluster. TODO(jpeach) remove the resource check as part of #2711.
+	if gvr := projectcontourv1alpha1.GroupVersion.WithResource("extensionservices"); clients.ResourceExists(gvr) {
+		informerSyncList.InformOnResources(clusterInformerFactory, dynamicHandler, gvr)
+	}
 
-	for _, inf := range iset.Informers {
-		informerSyncList.RegisterInformer(inf, dynamicHandler)
+	if ctx.UseExperimentalServiceAPITypes {
+		// Check if the resource exists in the API server before setting up the informer.
+		if !clients.ResourceExists(k8s.ServiceAPIResources()...) {
+			log.WithField("InformOnResources", "ExperimentalServiceAPITypes").Warnf("resources %v not found in api server", k8s.ServiceAPIResources())
+		} else {
+			informerSyncList.InformOnResources(clusterInformerFactory, dynamicHandler, k8s.ServiceAPIResources()...)
+		}
 	}
 
 	// TODO(youngnick): Move this logic out to internal/k8s/informers.go somehow.
-	// Add informers for each root-ingressroute namespaces
+	// Add informers for each root namespace
 	for _, factory := range namespacedInformerFactories {
-		informerSyncList.RegisterInformer(factory.Core().V1().Secrets().Informer(), dynamicHandler)
+		informerSyncList.InformOnResources(factory, dynamicHandler, k8s.SecretsResources()...)
 	}
 
-	// If root-ingressroutes are not defined, then add the informer for all namespaces
+	// If root namespaces are not defined, then add the informer for all namespaces
 	if len(namespacedInformerFactories) == 0 {
-		informerSyncList.RegisterInformer(informerFactory.Core().V1().Secrets().Informer(), dynamicHandler)
+		informerSyncList.InformOnResources(clusterInformerFactory, dynamicHandler, k8s.SecretsResources()...)
 	}
 
 	// step 5. endpoints updates are handled directly by the EndpointsTranslator
@@ -233,12 +275,19 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 		FieldLogger: log.WithField("context", "endpointstranslator"),
 	}
 
-	informerSyncList.RegisterInformer(informerFactory.Core().V1().Endpoints().Informer(), et)
+	informerSyncList.InformOnResources(clusterInformerFactory,
+		&k8s.DynamicClientHandler{
+			Next: &contour.EventRecorder{
+				Next:    et,
+				Counter: eventHandler.Metrics.EventHandlerOperations,
+			},
+			Converter: converter,
+			Logger:    log.WithField("context", "endpointstranslator"),
+		}, k8s.EndpointsResources()...)
 
 	// step 6. setup workgroup runner and register informers.
 	var g workgroup.Group
-	g.Add(startInformer(dynamicInformerFactory, log.WithField("context", "contourinformers")))
-	g.Add(startInformer(informerFactory, log.WithField("context", "coreinformers")))
+	g.Add(startInformer(clusterInformerFactory, log.WithField("context", "contourinformers")))
 
 	for ns, factory := range namespacedInformerFactories {
 		g.Add(startInformer(factory, log.WithField("context", "corenamespacedinformers").WithField("namespace", ns)))
@@ -294,26 +343,50 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 	// step 11. register leadership election.
 	eventHandler.IsLeader = setupLeadershipElection(&g, log, ctx, clients, eventHandler.UpdateNow)
 
+	sh := k8s.StatusUpdateHandler{
+		Log:           log.WithField("context", "StatusUpdateWriter"),
+		Clients:       clients,
+		LeaderElected: eventHandler.IsLeader,
+		Converter:     converter,
+	}
+	g.Add(sh.Start)
+
+	// Now we have the statusUpdateWriter, we can create the StatusWriter, which will take the
+	// status updates from the DAG, and send them to the status update handler.
+	eventHandler.StatusClient = &k8s.StatusWriter{
+		Updater: sh.Writer(),
+	}
+
 	// step 11. set up ingress load balancer status writer
 	lbsw := loadBalancerStatusWriter{
-		log:      log.WithField("context", "loadBalancerStatusWriter"),
-		clients:  clients,
-		isLeader: eventHandler.IsLeader,
-		lbStatus: make(chan v1.LoadBalancerStatus, 1),
+		log:           log.WithField("context", "loadBalancerStatusWriter"),
+		clients:       clients,
+		isLeader:      eventHandler.IsLeader,
+		lbStatus:      make(chan corev1.LoadBalancerStatus, 1),
+		ingressClass:  ctx.ingressClass,
+		statusUpdater: sh.Writer(),
+		Converter:     converter,
 	}
 	g.Add(lbsw.Start)
 
 	// step 12. register an informer to watch envoy's service if we haven't been given static details.
 	if ctx.IngressStatusAddress == "" {
-		ssw := &k8s.ServiceStatusLoadBalancerWatcher{
-			ServiceName: ctx.EnvoyServiceName,
-			LBStatus:    lbsw.lbStatus,
+		dynamicServiceHandler := &k8s.DynamicClientHandler{
+			Next: &k8s.ServiceStatusLoadBalancerWatcher{
+				ServiceName: ctx.EnvoyServiceName,
+				LBStatus:    lbsw.lbStatus,
+				Log:         log.WithField("context", "serviceStatusLoadBalancerWatcher"),
+			},
+			Converter: converter,
+			Logger:    log.WithField("context", "serviceStatusLoadBalancerWatcher"),
 		}
 		factory := clients.NewInformerFactoryForNamespace(ctx.EnvoyServiceNamespace)
-		factory.Core().V1().Services().Informer().AddEventHandler(ssw)
-		g.Add(startInformer(factory, log.WithField("context", "serviceStatusLoadBalancerWatcher")))
-		log.WithField("envoy-service-name", ctx.EnvoyServiceName).WithField("envoy-service-namespace", ctx.EnvoyServiceNamespace).Info("Watching Service for Ingress status")
+		informerSyncList.InformOnResources(factory, dynamicServiceHandler, k8s.ServicesResources()...)
 
+		g.Add(startInformer(factory, log.WithField("context", "serviceStatusLoadBalancerWatcher")))
+		log.WithField("envoy-service-name", ctx.EnvoyServiceName).
+			WithField("envoy-service-namespace", ctx.EnvoyServiceNamespace).
+			Info("Watching Service for Ingress status")
 	} else {
 		log.WithField("loadbalancer-address", ctx.IngressStatusAddress).Info("Using supplied information for Ingress status")
 		lbsw.lbStatus <- parseStatusFlag(ctx.IngressStatusAddress)
@@ -376,11 +449,16 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 	return g.Run()
 }
 
-type informer interface {
-	Start(stopCh <-chan struct{})
+func contains(namespaces []string, ns string) bool {
+	for _, namespace := range namespaces {
+		if ns == namespace {
+			return true
+		}
+	}
+	return false
 }
 
-func startInformer(inf informer, log logrus.FieldLogger) func(stop <-chan struct{}) error {
+func startInformer(inf k8s.InformerFactory, log logrus.FieldLogger) func(stop <-chan struct{}) error {
 	return func(stop <-chan struct{}) error {
 		log.Println("started informer")
 		defer log.Println("stopped informer")
@@ -388,4 +466,18 @@ func startInformer(inf informer, log logrus.FieldLogger) func(stop <-chan struct
 		<-stop
 		return nil
 	}
+}
+
+// getRequestTimeout gets the request timeout setting from ctx.TimeoutConfig.RequestTimeout
+// if it's set, or else ctx.RequestTimeoutDeprecated if it's set, or else a default setting.
+func getRequestTimeout(log logrus.FieldLogger, ctx *serveContext) timeout.Setting {
+	if ctx.RequestTimeout != "" {
+		return timeout.Parse(ctx.RequestTimeout)
+	}
+	if ctx.RequestTimeoutDeprecated > 0 {
+		log.Warn("The request-timeout field in the Contour config file is deprecated and will be removed in a future release. Use timeout-config.request-timeout instead.")
+		return timeout.DurationSetting(ctx.RequestTimeoutDeprecated)
+	}
+
+	return timeout.DefaultSetting()
 }

@@ -25,7 +25,7 @@ cd ${ROOT_DIR}
 
 # This controls the knative release version we track.
 KN_VERSION="master" # This is for controlling the knative related release version.
-CONTOUR_VERSION="release-1.4" # This is for controlling which version of contour we want to use.
+CONTOUR_VERSION="v1.7.0" # This is for controlling which version of contour we want to use.
 
 # The list of dependencies that we track at HEAD and periodically
 # float forward in this repository.
@@ -86,7 +86,8 @@ function rewrite_serve_args() {
 }
 
 function rewrite_image() {
-  sed -E $'s@docker.io/projectcontour/contour:.+@ko://github.com/projectcontour/contour/cmd/contour@g'
+  # sed -E $'s@docker.io/projectcontour/contour:.+@ko://github.com/projectcontour/contour/cmd/contour@g'
+  cat
 }
 
 function rewrite_command() {
@@ -102,10 +103,12 @@ function privatize_loadbalancer() {
     | sed "s@externalTrafficPolicy: Local@# externalTrafficPolicy: Local@g"
 }
 
-rm -rf config/contour/*
+function contour_yaml() {
+  # Used to be: KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour/examples/contour/
+  curl "https://raw.githubusercontent.com/projectcontour/contour/${CONTOUR_VERSION}/examples/render/contour.yaml"
+}
 
-# Apply patch to contour
-git apply ${ROOT_DIR}/hack/contour.patch
+rm -rf config/contour/*
 
 # We do this manually because it's challenging to rewrite
 # the ClusterRoleBinding without collateral damage.
@@ -127,7 +130,7 @@ subjects:
 ---
 EOF
 
-KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour/examples/contour/ \
+contour_yaml \
   | delete_contour_cluster_role_bindings \
   | rewrite_contour_namespace contour-internal \
   | configure_leader_election contour-internal \
@@ -155,7 +158,7 @@ subjects:
 ---
 EOF
 
-KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour/examples/contour/ \
+contour_yaml \
   | delete_contour_cluster_role_bindings \
   | rewrite_contour_namespace contour-external \
   | configure_leader_election contour-external \
