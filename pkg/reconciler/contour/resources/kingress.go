@@ -42,6 +42,9 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 			}),
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 		},
+		Spec: v1alpha1.IngressSpec{
+			Visibility: ing.Spec.Visibility, // Copy the top-level visibility.
+		},
 	}
 
 	sns := ServiceNames(ctx, ing)
@@ -117,6 +120,7 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 								ServiceNamespace: ing.Namespace,
 								ServicePort:      si.Port,
 							},
+							Percent: 100,
 						}},
 					}},
 				},
