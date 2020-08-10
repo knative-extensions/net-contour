@@ -38,6 +38,38 @@ func TestContour(t *testing.T) {
 	}
 }
 
+func TestDefaultTLSSecret(t *testing.T) {
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: system.Namespace(),
+			Name:      ContourConfigName,
+		},
+		Data: map[string]string{
+			"default-tls-secret-name": "some-namespace/some-secret",
+		},
+	}
+
+	cfg, err := NewContourFromConfigMap(cm)
+	if err != nil {
+		t.Errorf("NewContourFromConfigMap(enable-fallback-certificate:true) = %v", err)
+	}
+
+	if got, want := cfg.DefaultTLSSecretName, "some-namespace/some-secret"; got != want {
+		t.Errorf("TLSDefaultSecretName got %q want %q", got, want)
+	}
+
+	delete(cm.Data, "default-tls-secret-name")
+
+	cfg, err = NewContourFromConfigMap(cm)
+	if err != nil {
+		t.Errorf("NewContourFromConfigMap(enable-fallback-certificate:false) = %v", err)
+	}
+
+	if cfg.DefaultTLSSecretName != "" {
+		t.Errorf("TLSDefaultSecretName got %q - want empty", cfg.DefaultTLSSecretName)
+	}
+}
+
 func TestConfigurationErrors(t *testing.T) {
 	tests := []struct {
 		name    string
