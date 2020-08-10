@@ -232,24 +232,12 @@ func TestReconcile(t *testing.T) {
 		WantDeletes: []clientgotesting.DeleteActionImpl{{
 			Name: "name--ep",
 		}},
-		WantUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: mustMakeProxies(t,
-				ing("name", "ns", withContour, withGeneration(0), withBasicSpec),
-				withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508"),
-			)[0],
-		}},
 	}, {
 		Name: "steady state basic ingress (no probe)",
 		Key:  "ns/name",
 		Objects: append(append([]runtime.Object{
 			ing("name", "ns", withBasicSpec, withContour, makeItReady),
 		}, mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour))...), servicesAndEndpoints...),
-		WantUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: mustMakeProxies(t,
-				ing("name", "ns", withContour, withGeneration(0), withBasicSpec),
-				withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508"),
-			)[0],
-		}},
 	}, {
 		Name: "basic ingress changed",
 		Key:  "ns/name",
@@ -744,6 +732,7 @@ func withBasicSpec(i *v1alpha1.Ingress) {
 				}},
 			},
 		}},
+		Visibility: "ExternalIP",
 	}
 }
 
@@ -766,6 +755,7 @@ func withBasicSpec2(i *v1alpha1.Ingress) {
 				}},
 			},
 		}},
+		Visibility: "ExternalIP",
 	}
 }
 
@@ -788,6 +778,7 @@ func withMultiProxySpec(i *v1alpha1.Ingress) {
 				}},
 			},
 		}},
+		Visibility: "ExternalIP",
 	}
 }
 

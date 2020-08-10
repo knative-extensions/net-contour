@@ -61,6 +61,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -110,6 +111,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"doo.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -121,6 +123,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 									ServiceName:      "doo",
 									ServicePort:      intstr.FromInt(124),
 								},
+								Percent: 100,
 							}},
 						}},
 					},
@@ -135,6 +138,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 									ServiceName:      "goo",
 									ServicePort:      intstr.FromInt(123),
 								},
+								Percent: 100,
 							}},
 						}},
 					},
@@ -151,6 +155,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{network.GetServiceHostname("foo", "bar")},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -184,6 +189,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"goo.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -195,6 +201,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 									ServiceName:      "goo",
 									ServicePort:      intstr.FromInt(123),
 								},
+								Percent: 100,
 							}},
 						}},
 					},
@@ -209,6 +216,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityClusterLocal,
@@ -247,6 +255,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"goo.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityClusterLocal,
@@ -258,6 +267,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 									ServiceName:      "goo",
 									ServicePort:      intstr.FromInt(123),
 								},
+								Percent: 100,
 							}},
 						}},
 					},
@@ -272,6 +282,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -324,6 +335,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"goo.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -335,6 +347,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 									ServiceName:      "goo",
 									ServicePort:      intstr.FromInt(123),
 								},
+								Percent: 100,
 							}},
 						}},
 					},
@@ -349,6 +362,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -464,6 +478,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"doo.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -475,6 +490,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 									ServiceName:      "doo",
 									ServicePort:      intstr.FromInt(124),
 								},
+								Percent: 100,
 							}},
 						}},
 					},
@@ -489,6 +505,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 									ServiceName:      "goo",
 									ServicePort:      intstr.FromInt(123),
 								},
+								Percent: 100,
 							}},
 						}},
 					},
@@ -503,6 +520,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -627,6 +645,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"doo.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -638,6 +657,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 									ServiceName:      "doo",
 									ServicePort:      intstr.FromInt(124),
 								},
+								Percent: 100,
 							}},
 						}},
 					},
@@ -652,6 +672,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 									ServiceName:      "fu",
 									ServicePort:      intstr.FromInt(124),
 								},
+								Percent: 100,
 							}},
 						}},
 					},
@@ -666,6 +687,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 									ServiceName:      "goo",
 									ServicePort:      intstr.FromInt(123),
 								},
+								Percent: 100,
 							}},
 						}},
 					},
@@ -680,6 +702,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 									ServiceName:      "kung",
 									ServicePort:      intstr.FromInt(123),
 								},
+								Percent: 100,
 							}},
 						}},
 					},
