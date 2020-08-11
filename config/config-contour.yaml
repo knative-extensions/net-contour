@@ -28,6 +28,12 @@ data:
     #                              #
     ################################
 
+    # If auto-TLS is disabled fallback to the following certificate
+    #
+    # An operator is required to setup a TLSCertificateDelegation
+    # for this secret to be used
+    default-tls-secret: "some-namespace/some-secret"
+
     # visibility contains the configuration for how to expose services
     # of assorted visibilities.  Each entry is keyed by the visibility
     # and contains two keys:

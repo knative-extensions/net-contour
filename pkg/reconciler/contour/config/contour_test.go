@@ -21,8 +21,10 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	. "knative.dev/pkg/configmap/testing"
+	"k8s.io/apimachinery/pkg/types"
 	"knative.dev/pkg/system"
+
+	. "knative.dev/pkg/configmap/testing"
 	_ "knative.dev/pkg/system/testing"
 )
 
@@ -35,6 +37,39 @@ func TestContour(t *testing.T) {
 
 	if _, err := NewContourFromConfigMap(example); err != nil {
 		t.Errorf("NewContourFromConfigMap(example) = %v", err)
+	}
+}
+
+func TestDefaultTLSSecret(t *testing.T) {
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: system.Namespace(),
+			Name:      ContourConfigName,
+		},
+		Data: map[string]string{
+			"default-tls-secret-name": "some-namespace/some-secret",
+		},
+	}
+
+	cfg, err := NewContourFromConfigMap(cm)
+	if err != nil {
+		t.Errorf("NewContourFromConfigMap(enable-fallback-certificate:true) = %v", err)
+	}
+
+	want := types.NamespacedName{Namespace: "some-namespace", Name: "some-secret"}
+	if got := cfg.DefaultTLSSecret; got != nil && *got != want {
+		t.Errorf("TLSDefaultSecretName got %q want %q", got, want)
+	}
+
+	delete(cm.Data, "default-tls-secret-name")
+
+	cfg, err = NewContourFromConfigMap(cm)
+	if err != nil {
+		t.Errorf("NewContourFromConfigMap(enable-fallback-certificate:false) = %v", err)
+	}
+
+	if cfg.DefaultTLSSecret != nil {
+		t.Errorf("TLSDefaultSecretName got %q - want empty", cfg.DefaultTLSSecret)
 	}
 }
 

@@ -21,6 +21,7 @@ limitations under the License.
 package config
 
 import (
+	types "k8s.io/apimachinery/pkg/types"
 	sets "k8s.io/apimachinery/pkg/util/sets"
 	pkg "knative.dev/networking/pkg"
 	v1alpha1 "knative.dev/networking/pkg/apis/networking/v1alpha1"
@@ -78,6 +79,11 @@ func (in *Contour) DeepCopyInto(out *Contour) {
 		for key, val := range *in {
 			(*out)[key] = val
 		}
+	}
+	if in.DefaultTLSSecret != nil {
+		in, out := &in.DefaultTLSSecret, &out.DefaultTLSSecret
+		*out = new(types.NamespacedName)
+		**out = **in
 	}
 	return
 }

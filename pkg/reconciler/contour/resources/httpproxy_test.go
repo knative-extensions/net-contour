@@ -24,6 +24,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
@@ -46,10 +47,11 @@ func TestMakeProxies(t *testing.T) {
 	}
 
 	tests := []struct {
-		name string
-		sec  networkingpkg.HTTPProtocol
-		ing  *v1alpha1.Ingress
-		want []*v1.HTTPProxy
+		name         string
+		sec          networkingpkg.HTTPProtocol
+		ing          *v1alpha1.Ingress
+		want         []*v1.HTTPProxy
+		modifyConfig func(*config.Config)
 	}{{
 		name: "single external domain with split",
 		ing: &v1alpha1.Ingress{
@@ -754,6 +756,95 @@ func TestMakeProxies(t *testing.T) {
 				}},
 			},
 		}},
+	}, {
+		name: "single external domain with default tls secret set by operator",
+		modifyConfig: func(c *config.Config) {
+			c.Contour.DefaultTLSSecret = &types.NamespacedName{
+				Namespace: "some-admin-namespace",
+				Name:      "some-secret",
+			}
+		},
+		ing: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar",
+			},
+			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{{
+					Hosts:      []string{"example.com"},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceName: "goo",
+									ServicePort: intstr.FromInt(123),
+								},
+								Percent: 100,
+								AppendHeaders: map[string]string{
+									"Baz": "blah",
+								},
+							}},
+						}},
+					},
+				}},
+			},
+		},
+		want: []*v1.HTTPProxy{{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar-" + publicClass + "-example.com",
+				Labels: map[string]string{
+					DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
+					GenerationKey: "0",
+					ParentKey:     "bar",
+					ClassKey:      publicClass,
+				},
+				Annotations: map[string]string{
+					ClassKey: publicClass,
+				},
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion:         "networking.internal.knative.dev/v1alpha1",
+					Kind:               "Ingress",
+					Name:               "bar",
+					Controller:         ptr.Bool(true),
+					BlockOwnerDeletion: ptr.Bool(true),
+				}},
+			},
+			Spec: v1.HTTPProxySpec{
+				VirtualHost: &v1.VirtualHost{
+					Fqdn: "example.com",
+					TLS: &v1.TLS{
+						SecretName: "some-admin-namespace/some-secret",
+					},
+				},
+				Routes: []v1.Route{{
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "K-Network-Hash",
+							Value: "f87d6dc22c28a3558c40fc7c774c8656f79011ca70d21103d469c310ac5c0bc7",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blah",
+							}},
+						},
+					}},
+				}},
+			},
+		}},
 	}}
 
 	for _, test := range tests {
@@ -763,19 +854,23 @@ func TestMakeProxies(t *testing.T) {
 				sec = networkingpkg.HTTPEnabled
 			}
 
-			tcs := &testConfigStore{
-				config: &config.Config{
-					Contour: &config.Contour{
-						VisibilityClasses: map[v1alpha1.IngressVisibility]string{
-							v1alpha1.IngressVisibilityClusterLocal: privateClass,
-							v1alpha1.IngressVisibilityExternalIP:   publicClass,
-						},
-					},
-					Network: &networkingpkg.Config{
-						HTTPProtocol: sec,
+			config := &config.Config{
+				Contour: &config.Contour{
+					VisibilityClasses: map[v1alpha1.IngressVisibility]string{
+						v1alpha1.IngressVisibilityClusterLocal: privateClass,
+						v1alpha1.IngressVisibilityExternalIP:   publicClass,
 					},
 				},
+				Network: &networkingpkg.Config{
+					HTTPProtocol: sec,
+				},
 			}
+
+			if test.modifyConfig != nil {
+				test.modifyConfig(config)
+			}
+
+			tcs := &testConfigStore{config: config}
 			ctx := tcs.ToContext(context.Background())
 
 			got := MakeHTTPProxies(ctx, test.ing, serviceToProtocol)
