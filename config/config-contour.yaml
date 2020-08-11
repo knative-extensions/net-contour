@@ -32,7 +32,7 @@ data:
     #
     # An operator is required to setup a TLSCertificateDelegation
     # for this secret to be used
-    default-tls-secret-name: "some-namespace/some-secret"
+    default-tls-secret: "some-namespace/some-secret"
 
     # visibility contains the configuration for how to expose services
     # of assorted visibilities.  Each entry is keyed by the visibility
