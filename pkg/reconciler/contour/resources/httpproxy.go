@@ -247,8 +247,8 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					hostProxy.Spec.VirtualHost.TLS = &v1.TLS{
 						SecretName: fmt.Sprintf("%s/%s", tls.SecretNamespace, tls.SecretName),
 					}
-				} else if s := config.FromContext(ctx).Contour.DefaultTLSSecretName; s != "" {
-					hostProxy.Spec.VirtualHost.TLS = &v1.TLS{SecretName: s}
+				} else if s := config.FromContext(ctx).Contour.DefaultTLSSecret; s != nil {
+					hostProxy.Spec.VirtualHost.TLS = &v1.TLS{SecretName: s.String()}
 				}
 
 				proxies = append(proxies, hostProxy)

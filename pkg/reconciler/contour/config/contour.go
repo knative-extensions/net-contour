@@ -21,9 +21,11 @@ import (
 
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	"knative.dev/pkg/configmap"
 )
 
 const (
@@ -32,15 +34,15 @@ const (
 	ContourConfigName = "config-contour"
 
 	visibilityConfigKey       = "visibility"
-	defaultTLSSecretConfigKey = "default-tls-secret-name"
+	defaultTLSSecretConfigKey = "default-tls-secret"
 )
 
 // Contour contains contour related configuration defined in the
 // contour config map.
 type Contour struct {
-	VisibilityKeys       map[v1alpha1.IngressVisibility]sets.String
-	VisibilityClasses    map[v1alpha1.IngressVisibility]string
-	DefaultTLSSecretName string
+	VisibilityKeys    map[v1alpha1.IngressVisibility]sets.String
+	VisibilityClasses map[v1alpha1.IngressVisibility]string
+	DefaultTLSSecret  *types.NamespacedName
 }
 
 type visibilityValue struct {
@@ -50,13 +52,15 @@ type visibilityValue struct {
 
 // NewContourFromConfigMap creates an Contour config from the supplied ConfigMap
 func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
-	defaultSecret := configMap.Data[defaultTLSSecretConfigKey]
+	var tlsSecret *types.NamespacedName
+
+	configmap.AsOptionalNamespacedName(defaultTLSSecretConfigKey, &tlsSecret)
 
 	v, ok := configMap.Data[visibilityConfigKey]
 	if !ok {
 		// These are the defaults.
 		return &Contour{
-			DefaultTLSSecretName: defaultSecret,
+			DefaultTLSSecret: tlsSecret,
 			VisibilityKeys: map[v1alpha1.IngressVisibility]sets.String{
 				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("contour-internal/envoy"),
 				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("contour-external/envoy"),
@@ -82,9 +86,9 @@ func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 	}
 
 	contour := &Contour{
-		DefaultTLSSecretName: defaultSecret,
-		VisibilityKeys:       make(map[v1alpha1.IngressVisibility]sets.String, 2),
-		VisibilityClasses:    make(map[v1alpha1.IngressVisibility]string, 2),
+		DefaultTLSSecret:  tlsSecret,
+		VisibilityKeys:    make(map[v1alpha1.IngressVisibility]sets.String, 2),
+		VisibilityClasses: make(map[v1alpha1.IngressVisibility]string, 2),
 	}
 	for key, value := range entry {
 		// Check that the visibility makes sense.

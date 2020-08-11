@@ -21,8 +21,10 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	. "knative.dev/pkg/configmap/testing"
+	"k8s.io/apimachinery/pkg/types"
 	"knative.dev/pkg/system"
+
+	. "knative.dev/pkg/configmap/testing"
 	_ "knative.dev/pkg/system/testing"
 )
 
@@ -54,7 +56,8 @@ func TestDefaultTLSSecret(t *testing.T) {
 		t.Errorf("NewContourFromConfigMap(enable-fallback-certificate:true) = %v", err)
 	}
 
-	if got, want := cfg.DefaultTLSSecretName, "some-namespace/some-secret"; got != want {
+	want := types.NamespacedName{Namespace: "some-namespace", Name: "some-secret"}
+	if got := cfg.DefaultTLSSecret; got != nil && *got != want {
 		t.Errorf("TLSDefaultSecretName got %q want %q", got, want)
 	}
 
@@ -65,8 +68,8 @@ func TestDefaultTLSSecret(t *testing.T) {
 		t.Errorf("NewContourFromConfigMap(enable-fallback-certificate:false) = %v", err)
 	}
 
-	if cfg.DefaultTLSSecretName != "" {
-		t.Errorf("TLSDefaultSecretName got %q - want empty", cfg.DefaultTLSSecretName)
+	if cfg.DefaultTLSSecret != nil {
+		t.Errorf("TLSDefaultSecretName got %q - want empty", cfg.DefaultTLSSecret)
 	}
 }
 

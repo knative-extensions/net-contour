@@ -24,6 +24,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
@@ -758,7 +759,10 @@ func TestMakeProxies(t *testing.T) {
 	}, {
 		name: "single external domain with default tls secret set by operator",
 		modifyConfig: func(c *config.Config) {
-			c.Contour.DefaultTLSSecretName = "some-admin-namespace/some-secret"
+			c.Contour.DefaultTLSSecret = &types.NamespacedName{
+				Namespace: "some-admin-namespace",
+				Name:      "some-secret",
+			}
 		},
 		ing: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
