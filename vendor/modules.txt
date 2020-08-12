@@ -930,7 +930,7 @@ k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/strings
 k8s.io/utils/trace
-# knative.dev/networking v0.0.0-20200812021205-2ae98bdab774
+# knative.dev/networking v0.0.0-20200812200006-4d518e76538a
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
