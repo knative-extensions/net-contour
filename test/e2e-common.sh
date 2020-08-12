@@ -39,9 +39,10 @@ function test_setup() {
   # Bringing up controllers.
   echo ">> Bringing up Contour"
   # Switch Envoy to emit debug-level logging.
-  ko resolve -f config/contour | \
+  cat config/contour/*.yaml |
     sed 's/--log-level info/--log-level debug/g' | \
-    kubectl apply -f - || return 1
+    go run knative.dev/net-contour/test/cmd/patch-envoy-debug-sidecar |
+    ko apply -f - || return 1
   wait_until_batch_job_complete contour-external || return 1
   wait_until_batch_job_complete contour-internal || return 1
   wait_until_service_has_external_ip contour-external envoy

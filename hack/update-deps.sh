@@ -111,6 +111,7 @@ git apply ${ROOT_DIR}/hack/contour.patch
 # We do this manually because it's challenging to rewrite
 # the ClusterRoleBinding without collateral damage.
 cat > config/contour/internal.yaml <<EOF
+---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
@@ -139,6 +140,7 @@ KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour
 # We do this manually because it's challenging to rewrite
 # the ClusterRoleBinding without collateral damage.
 cat > config/contour/external.yaml <<EOF
+---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:

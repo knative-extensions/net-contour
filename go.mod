@@ -3,11 +3,13 @@ module knative.dev/net-contour
 go 1.14
 
 require (
+	github.com/dprotaso/go-yit v0.0.0-20191028211022-135eb7262960
 	github.com/google/go-cmp v0.5.1
 	github.com/mikefarah/yq/v3 v3.0.0-20200601230220-721dd57ed41b
 	github.com/projectcontour/contour v1.4.1-0.20200507033955-65d52b253570
 	go.uber.org/zap v1.15.0
 	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	k8s.io/api v0.18.7-rc.0
 	k8s.io/apimachinery v0.18.7-rc.0
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
