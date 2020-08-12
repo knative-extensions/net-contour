@@ -21,20 +21,27 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"knative.dev/pkg/signals"
 )
 
-const defaultTarget = "127.0.0.1:9001"
-const intervalMS time.Duration = 500
+const (
+	defaultTarget               = "127.0.0.1:9001"
+	intervalMS    time.Duration = 500
+)
 
-var currentConfig string
-var lastUpdate time.Time = time.Now()
+var (
+	currentConfig           string
+	currentConfigNormalized string
+	lastUpdate              time.Time = time.Now()
+)
 
 func main() {
 	target := os.Getenv("TARGET")
@@ -72,15 +79,22 @@ func doDump(ctx context.Context, target string) {
 
 	defer res.Body.Close()
 
-	config, err := normalizeJSON(res.Body)
+	config, normal, err := normalizeJSON(res.Body)
 	if err != nil {
 		log.Printf("error reading & normalizing json: %s", err)
 		return
 	}
 
-	if currentConfig != config {
-		log.Printf("updated config: %s", config)
+	if currentConfigNormalized != normal {
+		log.Printf("updated config: %s", normal)
+
+		if currentConfig != "" {
+			log.Printf("diff: %s", cmp.Diff(currentConfig, config))
+		}
+
 		currentConfig = config
+		currentConfigNormalized = normal
+
 		lastUpdate = time.Now()
 	} else {
 		now := time.Now()
@@ -92,18 +106,27 @@ func doDump(ctx context.Context, target string) {
 	}
 }
 
-func normalizeJSON(res io.Reader) (string, error) {
-	dec := json.NewDecoder(res)
+func normalizeJSON(r io.Reader) (string, string, error) {
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		return "", "", err
+	}
 
 	var raw map[string]interface{}
-	if err := dec.Decode(&raw); err != nil {
-		return "", err
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return "", "", err
 	}
 
-	bytes, err := json.Marshal(raw)
+	norm, err := json.Marshal(raw)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return string(bytes), nil
+	// normalize the indent
+	indent, err := json.MarshalIndent(raw, " ", " ")
+	if err != nil {
+		return "", "", err
+	}
+
+	return string(indent), string(norm), nil
 }
