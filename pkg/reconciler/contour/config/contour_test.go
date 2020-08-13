@@ -47,7 +47,7 @@ func TestDefaultTLSSecret(t *testing.T) {
 			Name:      ContourConfigName,
 		},
 		Data: map[string]string{
-			"default-tls-secret-name": "some-namespace/some-secret",
+			"default-tls-secret": "some-namespace/some-secret",
 		},
 	}
 
@@ -57,11 +57,11 @@ func TestDefaultTLSSecret(t *testing.T) {
 	}
 
 	want := types.NamespacedName{Namespace: "some-namespace", Name: "some-secret"}
-	if got := cfg.DefaultTLSSecret; got != nil && *got != want {
+	if got := cfg.DefaultTLSSecret; got == nil || *got != want {
 		t.Errorf("TLSDefaultSecretName got %q want %q", got, want)
 	}
 
-	delete(cm.Data, "default-tls-secret-name")
+	delete(cm.Data, "default-tls-secret")
 
 	cfg, err = NewContourFromConfigMap(cm)
 	if err != nil {
@@ -70,6 +70,14 @@ func TestDefaultTLSSecret(t *testing.T) {
 
 	if cfg.DefaultTLSSecret != nil {
 		t.Errorf("TLSDefaultSecretName got %q - want empty", cfg.DefaultTLSSecret)
+	}
+
+	// this always requires a namespace
+	cm.Data["default-tls-secret"] = "error-name"
+
+	cfg, err = NewContourFromConfigMap(cm)
+	if err == nil {
+		t.Errorf("expected an error parsing erroneous 'default-tls-secret'")
 	}
 }
 
