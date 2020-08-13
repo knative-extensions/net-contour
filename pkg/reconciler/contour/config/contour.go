@@ -54,7 +54,11 @@ type visibilityValue struct {
 func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 	var tlsSecret *types.NamespacedName
 
-	configmap.AsOptionalNamespacedName(defaultTLSSecretConfigKey, &tlsSecret)
+	if err := configmap.Parse(configMap.Data,
+		configmap.AsOptionalNamespacedName(defaultTLSSecretConfigKey, &tlsSecret),
+	); err != nil {
+		return nil, err
+	}
 
 	v, ok := configMap.Data[visibilityConfigKey]
 	if !ok {
