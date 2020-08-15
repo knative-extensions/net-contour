@@ -22,6 +22,7 @@ initialize $@  --skip-istio-addon
 
 go_test_e2e -timeout=40m -parallel=12 \
 	    ./test/conformance \
+	    --enable-beta \
 	    --ingressClass=contour.ingress.networking.knative.dev || fail_test
 
 success
