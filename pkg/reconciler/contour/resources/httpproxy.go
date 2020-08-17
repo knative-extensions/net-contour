@@ -139,6 +139,14 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					Value: value,
 				})
 			}
+
+			if path.RewriteHost != "" {
+				preSplitHeaders.Set = append(preSplitHeaders.Set, v1.HeaderValue{
+					Name:  "Host",
+					Value: path.RewriteHost,
+				})
+			}
+
 			// This should never be empty due to the InsertProbe
 			sort.Slice(preSplitHeaders.Set, func(i, j int) bool {
 				return preSplitHeaders.Set[i].Name < preSplitHeaders.Set[j].Name
