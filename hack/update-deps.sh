@@ -34,7 +34,6 @@ FLOATING_DEPS=(
   "knative.dev/pkg@${KN_VERSION}"
   "knative.dev/test-infra@${KN_VERSION}"
   "github.com/projectcontour/contour@${CONTOUR_VERSION}"
-  "knative.dev/serving@master"
 )
 
 # Parse flags to determine if we need to update our floating deps.

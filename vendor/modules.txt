@@ -930,7 +930,7 @@ k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/strings
 k8s.io/utils/trace
-# knative.dev/networking v0.0.0-20200812200006-4d518e76538a
+# knative.dev/networking v0.0.0-20200817055406-2b6d120d60b8
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
@@ -1030,7 +1030,7 @@ knative.dev/pkg/tracker
 knative.dev/pkg/version
 knative.dev/pkg/webhook
 knative.dev/pkg/webhook/certificates/resources
-# knative.dev/test-infra v0.0.0-20200813190506-094a2b6eb665
+# knative.dev/test-infra v0.0.0-20200813220834-388e55a496cf
 ## explicit
 knative.dev/test-infra/scripts
 # sigs.k8s.io/controller-runtime v0.6.1
