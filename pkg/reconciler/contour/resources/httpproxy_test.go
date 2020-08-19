@@ -475,10 +475,10 @@ func TestMakeProxies(t *testing.T) {
 					Fqdn: "example.com",
 				},
 				Routes: []v1.Route{{
-					Conditions: []v1.Condition{{
+					Conditions: []v1.MatchCondition{{
 						Prefix: "/goo",
 					}, {
-						Header: &v1.HeaderCondition{
+						Header: &v1.HeaderMatchCondition{
 							Name:  "tag",
 							Exact: "goo",
 						},
@@ -501,10 +501,10 @@ func TestMakeProxies(t *testing.T) {
 						Weight:   100,
 					}},
 				}, {
-					Conditions: []v1.Condition{{
+					Conditions: []v1.MatchCondition{{
 						Prefix: "/doo",
 					}, {
-						Header: &v1.HeaderCondition{
+						Header: &v1.HeaderMatchCondition{
 							Name:  "tag",
 							Exact: "doo",
 						},

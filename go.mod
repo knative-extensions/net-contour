@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/google/go-cmp v0.5.1
 	github.com/mikefarah/yq/v3 v3.0.0-20200601230220-721dd57ed41b
-	github.com/projectcontour/contour v1.4.1-0.20200507033955-65d52b253570
+	github.com/projectcontour/contour v1.7.0
 	go.uber.org/zap v1.15.0
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.18.7-rc.0
