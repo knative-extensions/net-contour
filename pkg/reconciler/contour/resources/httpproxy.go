@@ -201,6 +201,20 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				})
 			}
 
+			if len(conditions) > 1 {
+				sort.Slice(conditions, func(i, j int) bool {
+					hasPrefixLHS := conditions[i].Prefix != ""
+					hasPrefixRHS := conditions[j].Prefix != ""
+					if hasPrefixLHS && !hasPrefixRHS {
+						return true
+					}
+					if !hasPrefixLHS && hasPrefixRHS {
+						return false
+					}
+					return conditions[i].Header.Name > conditions[j].Header.Name
+				})
+			}
+
 			routes = append(routes, v1.Route{
 				Conditions:           conditions,
 				TimeoutPolicy:        top,

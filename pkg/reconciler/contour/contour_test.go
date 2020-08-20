@@ -119,7 +119,7 @@ func TestReconcile(t *testing.T) {
 			ing("name", "ns", withBasicSpec, withContour),
 			mustMakeProbe(t, ing("name", "ns", withBasicSpec, withContour), makeItReady),
 		}, servicesAndEndpoints...),
-		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour), withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508")),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
@@ -149,7 +149,7 @@ func TestReconcile(t *testing.T) {
 			ing("name", "ns", withBasicSpec, withContour),
 			mustMakeProbe(t, ing("name", "ns", withBasicSpec, withContour), makeItReady),
 		}, servicesAndEndpoints...),
-		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour), withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508")),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
@@ -248,7 +248,6 @@ func TestReconcile(t *testing.T) {
 		WantUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: mustMakeProxies(t,
 				ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
-				withNetworkHash("16cefb33efb02fe05914d99645817c5aa553ee9c7ad88506c42b82d8872e653d"),
 			)[0],
 		}},
 		WantDeletes: []clientgotesting.DeleteActionImpl{{
@@ -287,7 +286,7 @@ func TestReconcile(t *testing.T) {
 			ing("name", "ns", withMultiProxySpec, withContour),
 			mustMakeProbe(t, ing("name", "ns", withMultiProxySpec, withContour), makeItReady),
 		}, servicesAndEndpoints...),
-		WantCreates: mustMakeProxies(t, ing("name", "ns", withMultiProxySpec, withContour), withNetworkHash("2db27fd0bfe5af7e8a457d371c0f179dd8af6819415546edad9772102df6403f")),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withMultiProxySpec, withContour)),
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ing("name", "ns", withMultiProxySpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
@@ -317,7 +316,7 @@ func TestReconcile(t *testing.T) {
 			ing("name", "ns", withBasicSpec, withContour),
 			mustMakeProbe(t, ing("name", "ns", withBasicSpec, withContour), makeItReady),
 		}, servicesAndEndpoints...),
-		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour), withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508")),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
@@ -341,7 +340,6 @@ func TestReconcile(t *testing.T) {
 		WantUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: mustMakeProxies(t,
 				ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
-				withNetworkHash("16cefb33efb02fe05914d99645817c5aa553ee9c7ad88506c42b82d8872e653d"),
 			)[0],
 		}},
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
@@ -369,7 +367,6 @@ func TestReconcile(t *testing.T) {
 		WantUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: mustMakeProxies(t,
 				ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
-				withNetworkHash("16cefb33efb02fe05914d99645817c5aa553ee9c7ad88506c42b82d8872e653d"),
 			)[0],
 		}},
 		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
@@ -401,7 +398,7 @@ func TestReconcile(t *testing.T) {
 			ing("name", "ns", withBasicSpec, withContour),
 			mustMakeProbe(t, ing("name", "ns", withBasicSpec, withContour), makeItReady),
 		}, servicesAndEndpoints...),
-		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour), withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508")),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
@@ -475,7 +472,7 @@ func TestReconcileProberNotReady(t *testing.T) {
 			ing("name", "ns", withBasicSpec, withContour),
 			mustMakeProbe(t, ing("name", "ns", withBasicSpec, withContour), makeItReady),
 		}, servicesAndEndpoints...),
-		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour), withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508")),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
@@ -520,7 +517,7 @@ func TestReconcileProbeError(t *testing.T) {
 			ing("name", "ns", withBasicSpec, withContour),
 			mustMakeProbe(t, ing("name", "ns", withBasicSpec, withContour), makeItReady),
 		}, servicesAndEndpoints...),
-		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour), withNetworkHash("3e4b90d361f17fcf23b3b6b9678f68801c4def32a42446db62fe01301dee7508")),
+		WantCreates: mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour)),
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
@@ -639,17 +636,6 @@ var (
 )
 
 type HTTPProxyOption func(*v1.HTTPProxy)
-
-func withNetworkHash(hash string) HTTPProxyOption {
-	return func(p *v1.HTTPProxy) {
-		for _, r := range p.Spec.Routes {
-			r.RequestHeadersPolicy.Set = []v1.HeaderValue{{
-				Name:  "K-Network-Hash",
-				Value: hash,
-			}}
-		}
-	}
-}
 
 func mustMakeProxies(t *testing.T, i *v1alpha1.Ingress, opts ...HTTPProxyOption) (objs []runtime.Object) {
 	t.Helper()

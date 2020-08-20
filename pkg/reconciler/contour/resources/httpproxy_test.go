@@ -124,6 +124,12 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "Foo",
@@ -131,6 +137,43 @@ func TestMakeProxies(t *testing.T) {
 						}, {
 							Name:  "K-Network-Hash",
 							Value: "99dbaae65d712842149f0be3a930d0e229226f86fadddd36bb7b87b0a38ffd3e",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Port:     123,
+						Protocol: &protocol,
+						Weight:   12,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blah",
+							}, {
+								Name:  "Bleep",
+								Value: "bloop",
+							}},
+						},
+					}, {
+						Name:   "doo",
+						Port:   124,
+						Weight: 88,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blurg",
+							}},
+						},
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "Foo",
+							Value: "bar",
 						}},
 					},
 					Services: []v1.Service{{
@@ -219,11 +262,32 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
 							Value: "fb6afb0467a7a36edf6d1144ed747e9942a57b82f425e6571113bef5081978b5",
 						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
 					},
 					Services: []v1.Service{{
 						Name:     "goo",
@@ -264,11 +328,32 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
 							Value: "fb6afb0467a7a36edf6d1144ed747e9942a57b82f425e6571113bef5081978b5",
 						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
 					},
 					Services: []v1.Service{{
 						Name:     "goo",
@@ -309,11 +394,32 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
 							Value: "fb6afb0467a7a36edf6d1144ed747e9942a57b82f425e6571113bef5081978b5",
 						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
 					},
 					Services: []v1.Service{{
 						Name:     "goo",
@@ -389,11 +495,36 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "46m0s",
 					},
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
 							Value: "b53cd0662ebbe11c2eebbcab7728ae3992b7e9b7167bed423b2aa10646dc3e8e",
 						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries:    34,
+						PerTryTimeout: "14m0s",
+					},
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "46m0s",
+					},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
 					},
 					Services: []v1.Service{{
 						Name:     "goo",
@@ -482,6 +613,11 @@ func TestMakeProxies(t *testing.T) {
 							Name:  "tag",
 							Exact: "goo",
 						},
+					}, {
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
 					}},
 					EnableWebsockets: true,
 					PermitInsecure:   true,
@@ -508,6 +644,11 @@ func TestMakeProxies(t *testing.T) {
 							Name:  "tag",
 							Exact: "doo",
 						},
+					}, {
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
 					}},
 					EnableWebsockets: true,
 					PermitInsecure:   true,
@@ -519,6 +660,51 @@ func TestMakeProxies(t *testing.T) {
 							Name:  "K-Network-Hash",
 							Value: "c464aab77f2a40e9bf60890d0b57471049d2cd5377f99e36d3a0e3906a84ff70",
 						}},
+					},
+					Services: []v1.Service{{
+						Name:   "doo",
+						Port:   124,
+						Weight: 100,
+					}},
+				}, {
+					Conditions: []v1.MatchCondition{{
+						Prefix: "/goo",
+					}, {
+						Header: &v1.HeaderMatchCondition{
+							Name:  "tag",
+							Exact: "goo",
+						},
+					}},
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+					}},
+				}, {
+					Conditions: []v1.MatchCondition{{
+						Prefix: "/doo",
+					}, {
+						Header: &v1.HeaderMatchCondition{
+							Name:  "tag",
+							Exact: "doo",
+						},
+					}},
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
 					},
 					Services: []v1.Service{{
 						Name:   "doo",
@@ -608,6 +794,12 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "Foo",
@@ -615,6 +807,40 @@ func TestMakeProxies(t *testing.T) {
 						}, {
 							Name:  "K-Network-Hash",
 							Value: "7b03a20b9872f4e43fb6ab07c484ba4f6701d838bccfea40e49c02ac074ecf33",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   12,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blah",
+							}},
+						},
+					}, {
+						Name:   "doo",
+						Port:   124,
+						Weight: 88,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blurg",
+							}},
+						},
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   false,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "Foo",
+							Value: "bar",
 						}},
 					},
 					Services: []v1.Service{{
@@ -722,6 +948,12 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "Foo",
@@ -729,6 +961,40 @@ func TestMakeProxies(t *testing.T) {
 						}, {
 							Name:  "K-Network-Hash",
 							Value: "7b03a20b9872f4e43fb6ab07c484ba4f6701d838bccfea40e49c02ac074ecf33",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   12,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blah",
+							}},
+						},
+					}, {
+						Name:   "doo",
+						Port:   124,
+						Weight: 88,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blurg",
+							}},
+						},
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "Foo",
+							Value: "bar",
 						}},
 					},
 					Services: []v1.Service{{
@@ -824,11 +1090,38 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
 							Value: "f87d6dc22c28a3558c40fc7c774c8656f79011ca70d21103d469c310ac5c0bc7",
 						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blah",
+							}},
+						},
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
 					},
 					Services: []v1.Service{{
 						Name:     "goo",
@@ -905,6 +1198,12 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "Host",
@@ -912,6 +1211,30 @@ func TestMakeProxies(t *testing.T) {
 						}, {
 							Name:  "K-Network-Hash",
 							Value: "87932ef9e248f82b2d0dadaa5060d7d900429461ac54ad1823780f94cbd9db9e",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blah",
+							}},
+						},
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "Host",
+							Value: "www.example.com",
 						}},
 					},
 					Services: []v1.Service{{
