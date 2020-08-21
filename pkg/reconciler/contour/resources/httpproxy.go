@@ -37,49 +37,43 @@ import (
 )
 
 type ServiceInfo struct {
-	Port         intstr.IntOrString
-	Visibilities []v1alpha1.IngressVisibility
+	Port            intstr.IntOrString
+	RawVisibilities sets.String
+	// If the Host header sent to this service needs to be rewritten,
+	// then track that so we can send it for probing.
+	RewriteHost string
 
 	// TODO(https://github.com/knative-sandbox/net-certmanager/issues/44): Remove this.
 	HasPath bool
 }
 
+func (si *ServiceInfo) Visibilities() (vis []v1alpha1.IngressVisibility) {
+	for _, v := range si.RawVisibilities.List() {
+		vis = append(vis, v1alpha1.IngressVisibility(v))
+	}
+	return
+}
+
 func ServiceNames(ctx context.Context, ing *v1alpha1.Ingress) map[string]ServiceInfo {
-	// Build it up using string sets to deduplicate.
-	s := map[string]sets.String{}
-	p := map[string]intstr.IntOrString{}
-	paths := sets.NewString()
+	s := map[string]ServiceInfo{}
 	for _, rule := range ing.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
 			for _, split := range path.Splits {
-				set, ok := s[split.ServiceName]
+				si, ok := s[split.ServiceName]
 				if !ok {
-					set = sets.NewString()
+					si = ServiceInfo{
+						Port:            split.ServicePort,
+						RawVisibilities: sets.NewString(),
+						HasPath:         path.Path != "",
+						RewriteHost:     path.RewriteHost,
+					}
 				}
-				set.Insert(string(rule.Visibility))
-				s[split.ServiceName] = set
-				p[split.ServiceName] = split.ServicePort
-				if path.Path != "" {
-					paths.Insert(split.ServiceName)
-				}
+				si.RawVisibilities.Insert(string(rule.Visibility))
+				s[split.ServiceName] = si
 			}
 		}
 	}
-
-	// Then iterate over the map to give the return value the right type.
-	s2 := map[string]ServiceInfo{}
-	for name, vis := range s {
-		visibilities := make([]v1alpha1.IngressVisibility, 0, len(vis))
-		for _, v := range vis.List() {
-			visibilities = append(visibilities, v1alpha1.IngressVisibility(v))
-		}
-		s2[name] = ServiceInfo{
-			Port:         p[name],
-			Visibilities: visibilities,
-			HasPath:      paths.Has(name),
-		}
-	}
-	return s2
+	return s
 }
 
 func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtocol map[string]string) []*v1.HTTPProxy {
