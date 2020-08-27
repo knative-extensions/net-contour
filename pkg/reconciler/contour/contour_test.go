@@ -75,7 +75,7 @@ func TestReconcile(t *testing.T) {
 		Key:  "ns/name",
 		Objects: []runtime.Object{
 			ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
-				i.SetDeletionTimestamp(&metav1.Time{time.Now()})
+				i.SetDeletionTimestamp(&metav1.Time{Time: time.Now()})
 			}),
 		},
 	}, {
