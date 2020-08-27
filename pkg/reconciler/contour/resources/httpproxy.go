@@ -113,27 +113,15 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				}
 			}
 
-			// By default retry on connection problems twice.
-			// This matches the default behavior of Istio:
-			// https://istio.io/latest/docs/concepts/traffic-management/#retries
-			retry := &v1.RetryPolicy{
-				NumRetries: 2,
-				RetryOn: []v1.RetryOn{
-					"connect-failure",
-					"refused-stream",
-					"cancelled",
-					"resource-exhausted",
-				},
-			}
+			var retry *v1.RetryPolicy
 			if path.Retries != nil && path.Retries.Attempts > 0 {
-				retry.NumRetries = int64(path.Retries.Attempts)
-
-				// When retries is specified explicitly, then we retry some http-level failures as well.
-				retry.RetryOn = append(retry.RetryOn, "retriable-status-codes", "5xx")
-
+				retry = &v1.RetryPolicy{
+					NumRetries: int64(path.Retries.Attempts),
+				}
 				if path.Retries.PerTryTimeout != nil {
 					retry.PerTryTimeout = path.Retries.PerTryTimeout.Duration.String()
 				}
+
 			}
 
 			preSplitHeaders := &v1.HeadersPolicy{
