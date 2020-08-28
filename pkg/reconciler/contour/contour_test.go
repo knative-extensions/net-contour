@@ -89,6 +89,7 @@ func TestReconcile(t *testing.T) {
 			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
 				i.Status.InitializeConditions()
+				i.Status.MarkLoadBalancerNotReady()
 				i.Status.MarkIngressNotReady("EndpointsNotReady", "Waiting for Envoys to receive Endpoints data.")
 			}),
 		}},
@@ -178,6 +179,7 @@ func TestReconcile(t *testing.T) {
 			ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
 				i.Status.InitializeConditions()
+				i.Status.MarkLoadBalancerNotReady()
 				i.Status.MarkIngressNotReady("EndpointsNotReady", "Waiting for Envoys to receive Endpoints data.")
 			}),
 			mustMakeProbe(t, ing("name", "ns", withBasicSpec, withContour)),
@@ -196,6 +198,7 @@ func TestReconcile(t *testing.T) {
 			Object: ing("name", "ns", withBasicSpec, withContour, func(i *v1alpha1.Ingress) {
 				// These are the things we expect to change in status.
 				i.Status.InitializeConditions()
+				i.Status.MarkLoadBalancerNotReady()
 				i.Status.MarkIngressNotReady("EndpointsNotReady", "Waiting for Envoys to receive Endpoints data.")
 			}),
 		}},
