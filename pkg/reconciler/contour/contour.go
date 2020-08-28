@@ -142,6 +142,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		}
 
 		if !actualChIng.IsReady() {
+			// This won't be toggled back until probing has completed.
+			ing.Status.MarkLoadBalancerNotReady()
 			ing.Status.MarkIngressNotReady("EndpointsNotReady", "Waiting for Envoys to receive Endpoints data.")
 			return nil
 		}
