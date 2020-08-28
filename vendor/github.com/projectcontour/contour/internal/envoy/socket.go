@@ -1,4 +1,4 @@
-// Copyright Project Contour Authors
+// Copyright © 2019 VMware
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,7 +16,6 @@ package envoy
 import (
 	envoy_api_v2_auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	envoy_api_v2_core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	"github.com/projectcontour/contour/internal/protobuf"
 )
 
 // UpstreamTLSTransportSocket returns a custom transport socket using the UpstreamTlsContext provided.
@@ -24,7 +23,7 @@ func UpstreamTLSTransportSocket(tls *envoy_api_v2_auth.UpstreamTlsContext) *envo
 	return &envoy_api_v2_core.TransportSocket{
 		Name: "envoy.transport_sockets.tls",
 		ConfigType: &envoy_api_v2_core.TransportSocket_TypedConfig{
-			TypedConfig: protobuf.MustMarshalAny(tls),
+			TypedConfig: toAny(tls),
 		},
 	}
 }
@@ -34,7 +33,7 @@ func DownstreamTLSTransportSocket(tls *envoy_api_v2_auth.DownstreamTlsContext) *
 	return &envoy_api_v2_core.TransportSocket{
 		Name: "envoy.transport_sockets.tls",
 		ConfigType: &envoy_api_v2_core.TransportSocket_TypedConfig{
-			TypedConfig: protobuf.MustMarshalAny(tls),
+			TypedConfig: toAny(tls),
 		},
 	}
 }

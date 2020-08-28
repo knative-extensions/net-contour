@@ -1,4 +1,4 @@
-// Copyright Project Contour Authors
+// Copyright © 2019 VMware
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,14 +17,12 @@ package dag
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
 	envoy_api_v2_auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
-	"github.com/projectcontour/contour/internal/timeout"
+	"github.com/projectcontour/contour/internal/k8s"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 // A DAG represents a directed acylic graph of objects representing the relationship
@@ -35,7 +33,7 @@ type DAG struct {
 	roots []Vertex
 
 	// status computed while building this dag.
-	statuses map[types.NamespacedName]Status
+	statuses map[k8s.FullName]Status
 }
 
 // Visit calls fn on each root of this DAG.
@@ -47,61 +45,53 @@ func (d *DAG) Visit(fn func(Vertex)) {
 
 // Statuses returns a slice of Status objects associated with
 // the computation of this DAG.
-func (d *DAG) Statuses() map[types.NamespacedName]Status {
+func (d *DAG) Statuses() map[k8s.FullName]Status {
 	return d.statuses
 }
 
-type MatchCondition interface {
+type Condition interface {
 	fmt.Stringer
 }
 
-// PrefixMatchCondition matches the start of a URL.
-type PrefixMatchCondition struct {
+// PrefixCondition matches the start of a URL.
+type PrefixCondition struct {
 	Prefix string
 }
 
-func (pc *PrefixMatchCondition) String() string {
+func (pc *PrefixCondition) String() string {
 	return "prefix: " + pc.Prefix
 }
 
-// RegexMatchCondition matches the URL by regular expression.
-type RegexMatchCondition struct {
+// RegexCondition matches the URL by regular expression.
+type RegexCondition struct {
 	Regex string
 }
 
-func (rc *RegexMatchCondition) String() string {
+func (rc *RegexCondition) String() string {
 	return "regex: " + rc.Regex
 }
 
-// HeaderMatchCondition matches request headers by MatchType
-type HeaderMatchCondition struct {
+type HeaderCondition struct {
 	Name      string
 	Value     string
 	MatchType string
 	Invert    bool
 }
 
-func (hc *HeaderMatchCondition) String() string {
-	details := strings.Join([]string{
-		"name=" + hc.Name,
-		"value=" + hc.Value,
-		"matchtype=", hc.MatchType,
-		"invert=", strconv.FormatBool(hc.Invert),
-	}, "&")
-
-	return "header: " + details
+func (hc *HeaderCondition) String() string {
+	return "header: " + hc.Name
 }
 
 // Route defines the properties of a route to a Cluster.
 type Route struct {
 
-	// PathMatchCondition specifies a MatchCondition to match on the request path.
+	// PathCondition specifies a Condition to match on the request path.
 	// Must not be nil.
-	PathMatchCondition MatchCondition
+	PathCondition Condition
 
-	// HeaderMatchConditions specifies a set of additional Conditions to
+	// HeaderConditions specifies a set of additional Conditions to
 	// match on the request headers.
-	HeaderMatchConditions []HeaderMatchCondition
+	HeaderConditions []HeaderCondition
 
 	Clusters []*Cluster
 
@@ -114,7 +104,7 @@ type Route struct {
 	Websocket bool
 
 	// TimeoutPolicy defines the timeout request/idle
-	TimeoutPolicy TimeoutPolicy
+	TimeoutPolicy *TimeoutPolicy
 
 	// RetryPolicy defines the retry / number / timeout options for a route
 	RetryPolicy *RetryPolicy
@@ -134,13 +124,13 @@ type Route struct {
 
 // HasPathPrefix returns whether this route has a PrefixPathCondition.
 func (r *Route) HasPathPrefix() bool {
-	_, ok := r.PathMatchCondition.(*PrefixMatchCondition)
+	_, ok := r.PathCondition.(*PrefixCondition)
 	return ok
 }
 
 // HasPathRegex returns whether this route has a RegexPathCondition.
 func (r *Route) HasPathRegex() bool {
-	_, ok := r.PathMatchCondition.(*RegexMatchCondition)
+	_, ok := r.PathCondition.(*RegexCondition)
 	return ok
 }
 
@@ -148,10 +138,12 @@ func (r *Route) HasPathRegex() bool {
 type TimeoutPolicy struct {
 	// ResponseTimeout is the timeout applied to the response
 	// from the backend server.
-	ResponseTimeout timeout.Setting
+	// A timeout of zero implies "use envoy's default"
+	// A timeout of -1 represents "infinity"
+	ResponseTimeout time.Duration
 
 	// IdleTimeout is the timeout applied to idle connections.
-	IdleTimeout timeout.Setting
+	IdleTimeout time.Duration
 }
 
 // RetryPolicy defines the retry / number / timeout options
@@ -160,16 +152,13 @@ type RetryPolicy struct {
 	// If empty, retries will not be performed.
 	RetryOn string
 
-	// RetriableStatusCodes specifies the HTTP status codes under which retry takes place.
-	RetriableStatusCodes []uint32
-
 	// NumRetries specifies the allowed number of retries.
 	// Ignored if RetryOn is blank, or defaults to 1 if RetryOn is set.
 	NumRetries uint32
 
 	// PerTryTimeout specifies the timeout per retry attempt.
 	// Ignored if RetryOn is blank.
-	PerTryTimeout timeout.Setting
+	PerTryTimeout time.Duration
 }
 
 // MirrorPolicy defines the mirroring policy for a route.
@@ -225,11 +214,6 @@ func (r *Route) Visit(f func(Vertex)) {
 	for _, c := range r.Clusters {
 		f(c)
 	}
-	// Allow any mirror clusters to also be visited so that
-	// they are also added to CDS.
-	if r.MirrorPolicy != nil && r.MirrorPolicy.Cluster != nil {
-		f(r.MirrorPolicy.Cluster)
-	}
 }
 
 // A VirtualHost represents a named L4/L7 service.
@@ -249,8 +233,8 @@ func (v *VirtualHost) addRoute(route *Route) {
 }
 
 func conditionsToString(r *Route) string {
-	s := []string{r.PathMatchCondition.String()}
-	for _, cond := range r.HeaderMatchConditions {
+	s := []string{r.PathCondition.String()}
+	for _, cond := range r.HeaderConditions {
 		s = append(s, cond.String())
 	}
 	return strings.Join(s, ",")
@@ -272,13 +256,10 @@ type SecureVirtualHost struct {
 	VirtualHost
 
 	// TLS minimum protocol version. Defaults to envoy_api_v2_auth.TlsParameters_TLS_AUTO
-	MinTLSVersion envoy_api_v2_auth.TlsParameters_TlsProtocol
+	MinProtoVersion envoy_api_v2_auth.TlsParameters_TlsProtocol
 
 	// The cert and key for this host.
 	Secret *Secret
-
-	// FallbackCertificate
-	FallbackCertificate *Secret
 
 	// Service to TCP proxy all incoming connections.
 	*TCPProxy

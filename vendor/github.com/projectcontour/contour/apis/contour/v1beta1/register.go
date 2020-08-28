@@ -10,7 +10,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package v1
+
+package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,12 +21,12 @@ import (
 
 const (
 	// GroupName is the group name for the Contour API
-	GroupName = "projectcontour.io"
+	GroupName = "contour.heptio.com"
 )
 
 // SchemeGroupVersion is the GroupVersion for the Contour API
-var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1"}
-var HTTPProxyGVR = SchemeGroupVersion.WithResource("httpproxies")
+var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1beta1"}
+var IngressRouteGVR = SchemeGroupVersion.WithResource("ingressroutes")
 var TLSCertificateDelegationGVR = SchemeGroupVersion.WithResource("tlscertificatedelegations")
 
 // Resource gets an Contour GroupResource for a specified resource
@@ -35,8 +36,8 @@ func Resource(resource string) schema.GroupResource {
 
 func AddKnownTypes(scheme *runtime.Scheme) {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&HTTPProxy{},
-		&HTTPProxyList{},
+		&IngressRoute{},
+		&IngressRouteList{},
 		&TLSCertificateDelegation{},
 		&TLSCertificateDelegationList{},
 	)

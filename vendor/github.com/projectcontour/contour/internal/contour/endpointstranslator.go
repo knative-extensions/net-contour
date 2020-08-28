@@ -1,4 +1,4 @@
-// Copyright Project Contour Authors
+// Copyright © 2019 VMware
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,6 +15,7 @@ package contour
 
 import (
 	"sort"
+	"strings"
 	"sync"
 
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
@@ -22,11 +23,11 @@ import (
 	resource "github.com/envoyproxy/go-control-plane/pkg/resource/v2"
 	"github.com/golang/protobuf/proto"
 	"github.com/projectcontour/contour/internal/envoy"
-	"github.com/projectcontour/contour/internal/k8s"
 	"github.com/projectcontour/contour/internal/protobuf"
 	"github.com/projectcontour/contour/internal/sorter"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8scache "k8s.io/client-go/tools/cache"
 )
 
@@ -157,7 +158,7 @@ func (e *EndpointsTranslator) recomputeClusterLoadAssignment(oldep, newep *v1.En
 			}
 
 			cla := &v2.ClusterLoadAssignment{
-				ClusterName: envoy.ClusterLoadAssignmentName(k8s.NamespacedNameOf(newep), p.Name),
+				ClusterName: servicename(newep.ObjectMeta, p.Name),
 				Endpoints: []*envoy_api_v2_endpoint.LocalityLbEndpoints{{
 					LbEndpoints: lbendpoints,
 				}},
@@ -173,7 +174,7 @@ func (e *EndpointsTranslator) recomputeClusterLoadAssignment(oldep, newep *v1.En
 			continue
 		}
 		for _, p := range s.Ports {
-			name := envoy.ClusterLoadAssignmentName(k8s.NamespacedNameOf(newep), p.Name)
+			name := servicename(oldep.ObjectMeta, p.Name)
 			if _, ok := seen[name]; !ok {
 				// port is no longer present, remove it.
 				e.Remove(name)
@@ -219,4 +220,19 @@ func (c *clusterLoadAssignmentCache) Contents() []*v2.ClusterLoadAssignment {
 		values = append(values, v)
 	}
 	return values
+}
+
+// servicename returns the name of the cluster this meta and port
+// refers to. The CDS name of the cluster may include additional suffixes
+// but these are not known to EDS.
+func servicename(meta metav1.ObjectMeta, portname string) string {
+	name := []string{
+		meta.Namespace,
+		meta.Name,
+		portname,
+	}
+	if portname == "" {
+		name = name[:2]
+	}
+	return strings.Join(name, "/")
 }

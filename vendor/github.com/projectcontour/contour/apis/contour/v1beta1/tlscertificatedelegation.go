@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1
+package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,7 +43,7 @@ type CertificateDelegation struct {
 // TLSCertificateDelegation is an TLS Certificate Delegation CRD specificiation.
 // See design/tls-certificate-delegation.md for details.
 // +k8s:openapi-gen=true
-// +kubebuilder:resource:scope=Namespaced,path=tlscertificatedelegations,shortName=tlscerts,singular=tlscertificatedelegation
+// +kubebuilder:resource:scope=Namespaced,path=tlscertificatedelegations,singular=tlscertificatedelegation
 type TLSCertificateDelegation struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`

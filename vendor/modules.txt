@@ -91,7 +91,6 @@ github.com/envoyproxy/go-control-plane/envoy/api/v2/route
 github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v2
 github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2
 github.com/envoyproxy/go-control-plane/envoy/config/filter/accesslog/v2
-github.com/envoyproxy/go-control-plane/envoy/config/filter/http/lua/v2
 github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2
 github.com/envoyproxy/go-control-plane/envoy/config/filter/network/tcp_proxy/v2
 github.com/envoyproxy/go-control-plane/envoy/config/listener/v2
@@ -214,10 +213,10 @@ github.com/modern-go/reflect2
 github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
-# github.com/projectcontour/contour v1.7.0
+# github.com/projectcontour/contour v1.4.0
 ## explicit
+github.com/projectcontour/contour/apis/contour/v1beta1
 github.com/projectcontour/contour/apis/projectcontour/v1
-github.com/projectcontour/contour/apis/projectcontour/v1alpha1
 github.com/projectcontour/contour/cmd/contour
 github.com/projectcontour/contour/internal/annotation
 github.com/projectcontour/contour/internal/build
@@ -233,7 +232,6 @@ github.com/projectcontour/contour/internal/k8s
 github.com/projectcontour/contour/internal/metrics
 github.com/projectcontour/contour/internal/protobuf
 github.com/projectcontour/contour/internal/sorter
-github.com/projectcontour/contour/internal/timeout
 github.com/projectcontour/contour/internal/workgroup
 # github.com/prometheus/client_golang v1.6.0
 github.com/prometheus/client_golang/prometheus
@@ -932,8 +930,9 @@ k8s.io/kube-openapi/pkg/util/sets
 k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
+k8s.io/utils/strings
 k8s.io/utils/trace
-# knative.dev/networking v0.0.0-20200827153808-4288d7fce0a3
+# knative.dev/networking v0.0.0-20200828035206-7f8093fa206d
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
@@ -970,7 +969,7 @@ knative.dev/networking/test/test_images/runtime/handlers
 knative.dev/networking/test/test_images/timeout
 knative.dev/networking/test/test_images/wsserver
 knative.dev/networking/test/types
-# knative.dev/pkg v0.0.0-20200827211506-a79802cd7814
+# knative.dev/pkg v0.0.0-20200827231407-8d478d55c0e6
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck/ducktypes
@@ -1033,7 +1032,7 @@ knative.dev/pkg/tracker
 knative.dev/pkg/version
 knative.dev/pkg/webhook
 knative.dev/pkg/webhook/certificates/resources
-# knative.dev/test-infra v0.0.0-20200827170407-35652aebc9dd
+# knative.dev/test-infra v0.0.0-20200828024406-bf34ea55d769
 ## explicit
 knative.dev/test-infra/scripts
 # sigs.k8s.io/controller-runtime v0.6.1

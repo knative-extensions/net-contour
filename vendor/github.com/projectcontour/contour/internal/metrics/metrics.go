@@ -1,4 +1,4 @@
-// Copyright Project Contour Authors
+// Copyright © 2019 VMware
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -25,7 +25,12 @@ import (
 
 // Metrics provide Prometheus metrics for the app
 type Metrics struct {
-	buildInfoGauge *prometheus.GaugeVec
+	buildInfoGauge             *prometheus.GaugeVec
+	ingressRouteTotalGauge     *prometheus.GaugeVec
+	ingressRouteRootTotalGauge *prometheus.GaugeVec
+	ingressRouteInvalidGauge   *prometheus.GaugeVec
+	ingressRouteValidGauge     *prometheus.GaugeVec
+	ingressRouteOrphanedGauge  *prometheus.GaugeVec
 
 	proxyTotalGauge     *prometheus.GaugeVec
 	proxyRootTotalGauge *prometheus.GaugeVec
@@ -38,10 +43,11 @@ type Metrics struct {
 	EventHandlerOperations      *prometheus.CounterVec
 
 	// Keep a local cache of metrics for comparison on updates
-	proxyMetricCache *RouteMetric
+	ingressRouteMetricCache *RouteMetric
+	proxyMetricCache        *RouteMetric
 }
 
-// RouteMetric stores various metrics for HTTPProxy objects
+// RouteMetric stores various metrics for IngressRoute objects
 type RouteMetric struct {
 	Total    map[Meta]int
 	Valid    map[Meta]int
@@ -56,7 +62,12 @@ type Meta struct {
 }
 
 const (
-	BuildInfoGauge = "contour_build_info"
+	BuildInfoGauge             = "contour_build_info"
+	IngressRouteTotalGauge     = "contour_ingressroute_total"
+	IngressRouteRootTotalGauge = "contour_ingressroute_root_total"
+	IngressRouteInvalidGauge   = "contour_ingressroute_invalid_total"
+	IngressRouteValidGauge     = "contour_ingressroute_valid_total"
+	IngressRouteOrphanedGauge  = "contour_ingressroute_orphaned_total"
 
 	HTTPProxyTotalGauge     = "contour_httpproxy_total"
 	HTTPProxyRootTotalGauge = "contour_httpproxy_root_total"
@@ -84,7 +95,43 @@ func NewMetrics(registry *prometheus.Registry) *Metrics {
 			},
 			[]string{"branch", "revision", "version"},
 		),
-		proxyMetricCache: &RouteMetric{},
+		ingressRouteMetricCache: &RouteMetric{},
+		proxyMetricCache:        &RouteMetric{},
+		ingressRouteTotalGauge: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: IngressRouteTotalGauge,
+				Help: "Total number of IngressRoutes that exist regardless of status",
+			},
+			[]string{"namespace"},
+		),
+		ingressRouteRootTotalGauge: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: IngressRouteRootTotalGauge,
+				Help: "Total number of root IngressRoutes. Note there will only be a single root IngressRoute per vhost.",
+			},
+			[]string{"namespace"},
+		),
+		ingressRouteInvalidGauge: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: IngressRouteInvalidGauge,
+				Help: "Total number of invalid IngressRoutes.",
+			},
+			[]string{"namespace", "vhost"},
+		),
+		ingressRouteValidGauge: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: IngressRouteValidGauge,
+				Help: "Total number of valid IngressRoutes.",
+			},
+			[]string{"namespace", "vhost"},
+		),
+		ingressRouteOrphanedGauge: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: IngressRouteOrphanedGauge,
+				Help: "Total number of orphaned IngressRoutes which have no root delegating to them.",
+			},
+			[]string{"namespace"},
+		),
 		proxyTotalGauge: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: HTTPProxyTotalGauge,
@@ -149,6 +196,11 @@ func NewMetrics(registry *prometheus.Registry) *Metrics {
 func (m *Metrics) register(registry *prometheus.Registry) {
 	registry.MustRegister(
 		m.buildInfoGauge,
+		m.ingressRouteTotalGauge,
+		m.ingressRouteRootTotalGauge,
+		m.ingressRouteInvalidGauge,
+		m.ingressRouteValidGauge,
+		m.ingressRouteOrphanedGauge,
 		m.proxyTotalGauge,
 		m.proxyRootTotalGauge,
 		m.proxyInvalidGauge,
@@ -178,6 +230,7 @@ func (m *Metrics) Zero() {
 	}
 
 	m.SetDAGLastRebuilt(time.Now())
+	m.SetIngressRouteMetric(zeroes)
 	m.SetHTTPProxyMetric(zeroes)
 
 	m.EventHandlerOperations.WithLabelValues("add", "Secret").Inc()
@@ -188,6 +241,56 @@ func (m *Metrics) Zero() {
 // SetDAGLastRebuilt records the last time the DAG was rebuilt.
 func (m *Metrics) SetDAGLastRebuilt(ts time.Time) {
 	m.dagRebuildGauge.WithLabelValues().Set(float64(ts.Unix()))
+}
+
+// SetIngressRouteMetric sets metric values for a set of IngressRoutes
+func (m *Metrics) SetIngressRouteMetric(metrics RouteMetric) {
+	// Process metrics
+	for meta, value := range metrics.Total {
+		m.ingressRouteTotalGauge.WithLabelValues(meta.Namespace).Set(float64(value))
+		delete(m.ingressRouteMetricCache.Total, meta)
+	}
+	for meta, value := range metrics.Invalid {
+		m.ingressRouteInvalidGauge.WithLabelValues(meta.Namespace, meta.VHost).Set(float64(value))
+		delete(m.ingressRouteMetricCache.Invalid, meta)
+	}
+	for meta, value := range metrics.Orphaned {
+		m.ingressRouteOrphanedGauge.WithLabelValues(meta.Namespace).Set(float64(value))
+		delete(m.ingressRouteMetricCache.Orphaned, meta)
+	}
+	for meta, value := range metrics.Valid {
+		m.ingressRouteValidGauge.WithLabelValues(meta.Namespace, meta.VHost).Set(float64(value))
+		delete(m.ingressRouteMetricCache.Valid, meta)
+	}
+	for meta, value := range metrics.Root {
+		m.ingressRouteRootTotalGauge.WithLabelValues(meta.Namespace).Set(float64(value))
+		delete(m.ingressRouteMetricCache.Root, meta)
+	}
+
+	// All metrics processed, now remove what's left as they are not needed
+	for meta := range m.ingressRouteMetricCache.Total {
+		m.ingressRouteTotalGauge.DeleteLabelValues(meta.Namespace)
+	}
+	for meta := range m.ingressRouteMetricCache.Invalid {
+		m.ingressRouteInvalidGauge.DeleteLabelValues(meta.Namespace, meta.VHost)
+	}
+	for meta := range m.ingressRouteMetricCache.Orphaned {
+		m.ingressRouteOrphanedGauge.DeleteLabelValues(meta.Namespace)
+	}
+	for meta := range m.ingressRouteMetricCache.Valid {
+		m.ingressRouteValidGauge.DeleteLabelValues(meta.Namespace, meta.VHost)
+	}
+	for meta := range m.ingressRouteMetricCache.Root {
+		m.ingressRouteRootTotalGauge.DeleteLabelValues(meta.Namespace)
+	}
+
+	m.ingressRouteMetricCache = &RouteMetric{
+		Total:    metrics.Total,
+		Invalid:  metrics.Invalid,
+		Valid:    metrics.Valid,
+		Orphaned: metrics.Orphaned,
+		Root:     metrics.Root,
+	}
 }
 
 // SetHTTPProxyMetric sets metric values for a set of HTTPProxies

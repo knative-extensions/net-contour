@@ -1,4 +1,4 @@
-// Copyright Project Contour Authors
+// Copyright © 2019 VMware
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,6 +17,7 @@ import (
 	"path"
 	"sort"
 	"sync"
+	"time"
 
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	envoy_api_v2_auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
@@ -28,12 +29,10 @@ import (
 	"github.com/projectcontour/contour/internal/envoy"
 	"github.com/projectcontour/contour/internal/protobuf"
 	"github.com/projectcontour/contour/internal/sorter"
-	"github.com/projectcontour/contour/internal/timeout"
 )
 
 const (
 	ENVOY_HTTP_LISTENER            = "ingress_http"
-	ENVOY_FALLBACK_ROUTECONFIG     = "ingress_fallbackcert"
 	ENVOY_HTTPS_LISTENER           = "ingress_https"
 	DEFAULT_HTTP_ACCESS_LOG        = "/dev/stdout"
 	DEFAULT_HTTP_LISTENER_ADDRESS  = "0.0.0.0"
@@ -75,15 +74,8 @@ type ListenerVisitorConfig struct {
 	// If not set, defaults to false.
 	UseProxyProto bool
 
-	// MinimumTLSVersion defines the minimum TLS protocol version the proxy should accept.
-	MinimumTLSVersion envoy_api_v2_auth.TlsParameters_TlsProtocol
-
-	// DefaultHTTPVersions defines the default set of HTTP
-	// versions the proxy should accept. If not specified, all
-	// supported versions are accepted. This is applied to both
-	// HTTP and HTTPS listeners but has practical effect only for
-	// HTTPS, because we don't support h2c.
-	DefaultHTTPVersions []envoy.HTTPVersionType
+	// MinimumProtocolVersion defines the min tls protocol version to be used
+	MinimumProtocolVersion envoy_api_v2_auth.TlsParameters_TlsProtocol
 
 	// AccessLogType defines if Envoy logs should be output as Envoy's default or JSON.
 	// Valid values: 'envoy', 'json'
@@ -96,21 +88,7 @@ type ListenerVisitorConfig struct {
 	AccessLogFields []string
 
 	// RequestTimeout configures the request_timeout for all Connection Managers.
-	RequestTimeout timeout.Setting
-
-	// ConnectionIdleTimeout configures the common_http_protocol_options.idle_timeout for all
-	// Connection Managers.
-	ConnectionIdleTimeout timeout.Setting
-
-	// StreamIdleTimeout configures the stream_idle_timeout for all Connection Managers.
-	StreamIdleTimeout timeout.Setting
-
-	// MaxConnectionDuration configures the common_http_protocol_options.max_connection_duration for all
-	// Connection Managers.
-	MaxConnectionDuration timeout.Setting
-
-	// ConnectionShutdownGracePeriod configures the drain_timeout for all Connection Managers.
-	ConnectionShutdownGracePeriod timeout.Setting
+	RequestTimeout time.Duration
 }
 
 // httpAddress returns the port for the HTTP (non TLS)
@@ -203,11 +181,24 @@ func (lvc *ListenerVisitorConfig) newSecureAccessLog() []*envoy_api_v2_accesslog
 	}
 }
 
-// minTLSVersion returns the requested minimum TLS protocol
-// version or envoy_api_v2_auth.TlsParameters_TLSv1_1 if not configured.
-func (lvc *ListenerVisitorConfig) minTLSVersion() envoy_api_v2_auth.TlsParameters_TlsProtocol {
-	if lvc.MinimumTLSVersion > envoy_api_v2_auth.TlsParameters_TLSv1_1 {
-		return lvc.MinimumTLSVersion
+// requestTimeout sets any durations in lvc.RequestTimeout <0 to 0 so that Envoy ends up with a positive duration.
+// for the request_timeout value we are passing, there are only two valid values:
+// 0 - disabled
+// >0 duration - the timeout.
+// The value may be unset, but we always set it to 0.
+func (lvc *ListenerVisitorConfig) requestTimeout() time.Duration {
+
+	if lvc.RequestTimeout < 0 {
+		return 0
+	}
+	return lvc.RequestTimeout
+}
+
+// minProtocolVersion returns the requested minimum TLS protocol
+// version or envoy_api_v2_auth.TlsParameters_TLSv1_1 if not configured {
+func (lvc *ListenerVisitorConfig) minProtoVersion() envoy_api_v2_auth.TlsParameters_TlsProtocol {
+	if lvc.MinimumProtocolVersion > envoy_api_v2_auth.TlsParameters_TLSv1_1 {
+		return lvc.MinimumProtocolVersion
 	}
 	return envoy_api_v2_auth.TlsParameters_TLSv1_1
 }
@@ -303,19 +294,13 @@ func visitListeners(root dag.Vertex, lvc *ListenerVisitorConfig) map[string]*v2.
 
 	lv.visit(root)
 
+	// Add a listener if there are vhosts bound to http.
 	if lv.http {
-		// Add a listener if there are vhosts bound to http.
 		cm := envoy.HTTPConnectionManagerBuilder().
-			Codec(envoy.CodecForVersions(lv.DefaultHTTPVersions...)).
-			DefaultFilters().
 			RouteConfigName(ENVOY_HTTP_LISTENER).
 			MetricsPrefix(ENVOY_HTTP_LISTENER).
 			AccessLoggers(lvc.newInsecureAccessLog()).
-			RequestTimeout(lvc.RequestTimeout).
-			ConnectionIdleTimeout(lvc.ConnectionIdleTimeout).
-			StreamIdleTimeout(lvc.StreamIdleTimeout).
-			MaxConnectionDuration(lvc.MaxConnectionDuration).
-			ConnectionShutdownGracePeriod(lvc.ConnectionShutdownGracePeriod).
+			RequestTimeout(lvc.requestTimeout()).
 			Get()
 
 		lv.listeners[ENVOY_HTTP_LISTENER] = envoy.Listener(
@@ -325,6 +310,7 @@ func visitListeners(root dag.Vertex, lvc *ListenerVisitorConfig) map[string]*v2.
 			proxyProtocol(lvc.UseProxyProto),
 			cm,
 		)
+
 	}
 
 	// Remove the https listener if there are no vhosts bound to it.
@@ -380,21 +366,14 @@ func (v *listenerVisitor) visit(vertex dag.Vertex) {
 			// coded into monitoring dashboards.
 			filters = envoy.Filters(
 				envoy.HTTPConnectionManagerBuilder().
-					Codec(envoy.CodecForVersions(v.DefaultHTTPVersions...)).
-					AddFilter(envoy.FilterMisdirectedRequests(vh.VirtualHost.Name)).
-					DefaultFilters().
 					RouteConfigName(path.Join("https", vh.VirtualHost.Name)).
 					MetricsPrefix(ENVOY_HTTPS_LISTENER).
 					AccessLoggers(v.ListenerVisitorConfig.newSecureAccessLog()).
-					RequestTimeout(v.ListenerVisitorConfig.RequestTimeout).
-					ConnectionIdleTimeout(v.ListenerVisitorConfig.ConnectionIdleTimeout).
-					StreamIdleTimeout(v.ListenerVisitorConfig.StreamIdleTimeout).
-					MaxConnectionDuration(v.ListenerVisitorConfig.MaxConnectionDuration).
-					ConnectionShutdownGracePeriod(v.ListenerVisitorConfig.ConnectionShutdownGracePeriod).
+					RequestTimeout(v.ListenerVisitorConfig.requestTimeout()).
 					Get(),
 			)
 
-			alpnProtos = envoy.ProtoNamesForVersions(v.DefaultHTTPVersions...)
+			alpnProtos = []string{"h2", "http/1.1"}
 		} else {
 			filters = envoy.Filters(
 				envoy.TCPProxy(ENVOY_HTTPS_LISTENER,
@@ -412,7 +391,7 @@ func (v *listenerVisitor) visit(vertex dag.Vertex) {
 		// Secret is provided when TLS is terminated and nil when TLS passthrough is used.
 		if vh.Secret != nil {
 			// Choose the higher of the configured or requested TLS version.
-			vers := max(v.ListenerVisitorConfig.minTLSVersion(), vh.MinTLSVersion)
+			vers := max(v.ListenerVisitorConfig.minProtoVersion(), vh.MinProtoVersion)
 
 			downstreamTLS = envoy.DownstreamTLSContext(
 				vh.Secret,
@@ -423,39 +402,6 @@ func (v *listenerVisitor) visit(vertex dag.Vertex) {
 
 		v.listeners[ENVOY_HTTPS_LISTENER].FilterChains = append(v.listeners[ENVOY_HTTPS_LISTENER].FilterChains,
 			envoy.FilterChainTLS(vh.VirtualHost.Name, downstreamTLS, filters))
-
-		// If this VirtualHost has enabled the fallback certificate then set a default
-		// FilterChain which will allow routes with this vhost to accept non-SNI TLS requests.
-		// Note that we don't add the misdirected requests filter on this chain because at this
-		// point we don't actually know the full set of server names that will be bound to the
-		// filter chain through the ENVOY_FALLBACK_ROUTECONFIG route configuration.
-		if vh.FallbackCertificate != nil && !envoy.ContainsFallbackFilterChain(v.listeners[ENVOY_HTTPS_LISTENER].FilterChains) {
-			// Construct the downstreamTLSContext passing the configured fallbackCertificate. The TLS minProtocolVersion will use
-			// the value defined in the Contour Configuration file if defined.
-			downstreamTLS = envoy.DownstreamTLSContext(
-				vh.FallbackCertificate,
-				v.ListenerVisitorConfig.minTLSVersion(),
-				vh.DownstreamValidation,
-				alpnProtos...)
-
-			// Default filter chain
-			filters = envoy.Filters(
-				envoy.HTTPConnectionManagerBuilder().
-					DefaultFilters().
-					RouteConfigName(ENVOY_FALLBACK_ROUTECONFIG).
-					MetricsPrefix(ENVOY_HTTPS_LISTENER).
-					AccessLoggers(v.ListenerVisitorConfig.newSecureAccessLog()).
-					RequestTimeout(v.ListenerVisitorConfig.RequestTimeout).
-					ConnectionIdleTimeout(v.ListenerVisitorConfig.ConnectionIdleTimeout).
-					StreamIdleTimeout(v.ListenerVisitorConfig.StreamIdleTimeout).
-					MaxConnectionDuration(v.ListenerVisitorConfig.MaxConnectionDuration).
-					ConnectionShutdownGracePeriod(v.ListenerVisitorConfig.ConnectionShutdownGracePeriod).
-					Get(),
-			)
-
-			v.listeners[ENVOY_HTTPS_LISTENER].FilterChains = append(v.listeners[ENVOY_HTTPS_LISTENER].FilterChains,
-				envoy.FilterChainTLSFallback(downstreamTLS, filters))
-		}
 
 	default:
 		// recurse
