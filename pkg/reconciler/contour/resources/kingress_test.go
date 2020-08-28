@@ -619,7 +619,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 					}},
 				}, {
 					// TODO(https://github.com/knative-sandbox/net-certmanager/issues/44): Probe this once fixed.
-					Conditions: []v1.Condition{{
+					Conditions: []v1.MatchCondition{{
 						Prefix: "/blah",
 					}},
 					Services: []v1.Service{{

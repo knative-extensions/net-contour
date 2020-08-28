@@ -177,9 +177,9 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				})
 			}
 
-			var conditions []v1.Condition
+			var conditions []v1.MatchCondition
 			if path.Path != "" {
-				conditions = append(conditions, v1.Condition{
+				conditions = append(conditions, v1.MatchCondition{
 					// This is technically not accurate since it's not a prefix,
 					// but a regular expression, however, all usage is either empty
 					// or absolute paths.
@@ -187,8 +187,8 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				})
 			}
 			for header, match := range path.Headers {
-				conditions = append(conditions, v1.Condition{
-					Header: &v1.HeaderCondition{
+				conditions = append(conditions, v1.MatchCondition{
+					Header: &v1.HeaderMatchCondition{
 						Name:  header,
 						Exact: match.Exact,
 					},

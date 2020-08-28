@@ -25,7 +25,7 @@ cd ${ROOT_DIR}
 
 # This controls the knative release version we track.
 KN_VERSION="master" # This is for controlling the knative related release version.
-CONTOUR_VERSION="v1.4.0" # This is for controlling which version of contour we want to use.
+CONTOUR_VERSION="v1.8.0" # This is for controlling which version of contour we want to use.
 
 # The list of dependencies that we track at HEAD and periodically
 # float forward in this repository.
@@ -109,9 +109,6 @@ function contour_yaml() {
 }
 
 rm -rf config/contour/*
-
-# Apply patch to contour
-git apply ${ROOT_DIR}/hack/contour.patch
 
 # We do this manually because it's challenging to rewrite
 # the ClusterRoleBinding without collateral damage.
