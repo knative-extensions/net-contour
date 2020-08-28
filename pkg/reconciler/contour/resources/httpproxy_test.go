@@ -124,6 +124,15 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
+					},
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -169,6 +178,15 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
 					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
@@ -262,6 +280,15 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
+					},
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -285,6 +312,15 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
 					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},
@@ -328,6 +364,15 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
+					},
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -351,6 +396,15 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
 					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},
@@ -394,6 +448,15 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
+					},
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -417,6 +480,15 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
 					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},
@@ -491,6 +563,14 @@ func TestMakeProxies(t *testing.T) {
 					RetryPolicy: &v1.RetryPolicy{
 						NumRetries:    34,
 						PerTryTimeout: "14m0s",
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+							"retriable-status-codes",
+							"5xx",
+						},
 					},
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "46m0s",
@@ -519,6 +599,14 @@ func TestMakeProxies(t *testing.T) {
 					RetryPolicy: &v1.RetryPolicy{
 						NumRetries:    34,
 						PerTryTimeout: "14m0s",
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+							"retriable-status-codes",
+							"5xx",
+						},
 					},
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "46m0s",
@@ -624,6 +712,15 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
+					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
@@ -655,6 +752,15 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
+					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
@@ -680,6 +786,15 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
+					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},
 					},
@@ -702,6 +817,15 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
 					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},
@@ -794,6 +918,15 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
+					},
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -836,6 +969,15 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   false,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
 					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
@@ -948,6 +1090,15 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
+					},
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -990,6 +1141,15 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
 					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
@@ -1090,6 +1250,15 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
+					},
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -1119,6 +1288,15 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
 					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},
@@ -1198,6 +1376,15 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
+					},
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -1230,6 +1417,15 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+					},
+					RetryPolicy: &v1.RetryPolicy{
+						NumRetries: 2,
+						RetryOn: []v1.RetryOn{
+							"connect-failure",
+							"refused-stream",
+							"cancelled",
+							"resource-exhausted",
+						},
 					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
