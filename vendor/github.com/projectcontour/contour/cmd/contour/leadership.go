@@ -1,4 +1,4 @@
-// Copyright Project Contour Authors
+// Copyright © 2019 VMware
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -128,7 +128,7 @@ func newResourceLock(ctx *serveContext, clients *k8s.Clients) resourcelock.Inter
 		ctx.LeaderElectionConfig.Namespace,
 		ctx.LeaderElectionConfig.Name,
 		clients.ClientSet().CoreV1(),
-		clients.ClientSet().CoordinationV1(),
+		clients.CoordinationClient(),
 		resourcelock.ResourceLockConfig{
 			Identity: resourceLockID,
 		},

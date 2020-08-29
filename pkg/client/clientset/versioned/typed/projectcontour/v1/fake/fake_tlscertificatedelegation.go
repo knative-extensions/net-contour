@@ -100,18 +100,6 @@ func (c *FakeTLSCertificateDelegations) Update(tLSCertificateDelegation *project
 	return obj.(*projectcontourv1.TLSCertificateDelegation), err
 }
 
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeTLSCertificateDelegations) UpdateStatus(tLSCertificateDelegation *projectcontourv1.TLSCertificateDelegation) (*projectcontourv1.TLSCertificateDelegation, error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(tlscertificatedelegationsResource, "status", c.ns, tLSCertificateDelegation), &projectcontourv1.TLSCertificateDelegation{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*projectcontourv1.TLSCertificateDelegation), err
-}
-
 // Delete takes name of the tLSCertificateDelegation and deletes it. Returns an error if one occurs.
 func (c *FakeTLSCertificateDelegations) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.

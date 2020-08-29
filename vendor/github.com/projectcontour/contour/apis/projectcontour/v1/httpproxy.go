@@ -1,4 +1,4 @@
-// Copyright Project Contour Authors
+// Copyright © 2019 VMware
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,14 +14,13 @@
 package v1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // HTTPProxySpec defines the spec of the CRD.
 type HTTPProxySpec struct {
 	// Virtualhost appears at most once. If it is present, the object is considered
-	// to be a "root" HTTPProxy.
+	// to be a "root".
 	// +optional
 	VirtualHost *VirtualHost `json:"virtualhost,omitempty"`
 	// Routes are the ingress routes. If TCPProxy is present, Routes is ignored.
@@ -30,8 +29,7 @@ type HTTPProxySpec struct {
 	// TCPProxy holds TCP proxy information.
 	// +optional
 	TCPProxy *TCPProxy `json:"tcpproxy,omitempty"`
-	// Includes allow for specific routing configuration to be included from another HTTPProxy,
-	// possibly in another namespace.
+	// Includes allow for specific routing configuration to be appended to another HTTPProxy in another namespace.
 	// +optional
 	Includes []Include `json:"includes,omitempty"`
 }
@@ -43,33 +41,27 @@ type Include struct {
 	// Namespace of the HTTPProxy to include. Defaults to the current namespace if not supplied.
 	// +optional
 	Namespace string `json:"namespace,omitempty"`
-	// Conditions are a set of rules that are applied to included HTTPProxies.
-	// In effect, they are added onto the Conditions of included HTTPProxy Route
-	// structs.
-	// When applied, they are merged using AND, with one exception:
-	// There can be only one Prefix MatchCondition per Conditions slice.
-	// More than one Prefix, or contradictory Conditions, will make the
-	// include invalid.
+	// Conditions are a set of routing properties that is applied to an HTTPProxy in a namespace.
 	// +optional
-	Conditions []MatchCondition `json:"conditions,omitempty"`
+	Conditions []Condition `json:"conditions,omitempty"`
 }
 
-// MatchCondition are a general holder for matching rules for HTTPProxies.
+// Condition are policies that are applied on top of HTTPProxies.
 // One of Prefix or Header must be provided.
-type MatchCondition struct {
+type Condition struct {
 	// Prefix defines a prefix match for a request.
 	// +optional
 	Prefix string `json:"prefix,omitempty"`
 
 	// Header specifies the header condition to match.
 	// +optional
-	Header *HeaderMatchCondition `json:"header,omitempty"`
+	Header *HeaderCondition `json:"header,omitempty"`
 }
 
-// HeaderMatchCondition specifies how to conditionally match against HTTP
+// HeaderCondition specifies how to conditionally match against HTTP
 // headers. The Name field is required, but only one of the remaining
 // fields should be be provided.
-type HeaderMatchCondition struct {
+type HeaderCondition struct {
 	// Name is the name of the header to match against. Name is required.
 	// Header names are case insensitive.
 	Name string `json:"name"`
@@ -105,11 +97,11 @@ type HeaderMatchCondition struct {
 // to be a "root".
 type VirtualHost struct {
 	// The fully qualified domain name of the root of the ingress tree
-	// all leaves of the DAG rooted at this object relate to the fqdn.
+	// all leaves of the DAG rooted at this object relate to the fqdn
 	Fqdn string `json:"fqdn"`
 	// If present describes tls properties. The SNI names that will be matched on
 	// are described in fqdn, the tls.secretName secret must contain a
-	// certificate that itself contains a name that matches the FQDN.
+	// matching certificate
 	// +optional
 	TLS *TLS `json:"tls,omitempty"`
 }
@@ -130,29 +122,19 @@ type TLS struct {
 	Passthrough bool `json:"passthrough,omitempty"`
 	// ClientValidation defines how to verify the client certificate
 	// when an external client establishes a TLS connection to Envoy.
-	//
 	// This setting:
-	//
 	// 1. Enables TLS client certificate validation.
 	// 2. Requires clients to present a TLS certificate (i.e. not optional validation).
 	// 3. Specifies how the client certificate will be validated.
 	// +optional
 	ClientValidation *DownstreamValidation `json:"clientValidation,omitempty"`
-
-	// EnableFallbackCertificate defines if the vhost should allow a default certificate to
-	// be applied which handles all requests which don't match the SNI defined in this vhost.
-	EnableFallbackCertificate bool `json:"enableFallbackCertificate,omitempty"`
 }
 
 // Route contains the set of routes for a virtual host.
 type Route struct {
-	// Conditions are a set of rules that are applied to a Route.
-	// When applied, they are merged using AND, with one exception:
-	// There can be only one Prefix MatchCondition per Conditions slice.
-	// More than one Prefix, or contradictory Conditions, will make the
-	// route invalid.
+	// Conditions are a set of routing properties that is applied to an HTTPProxy in a namespace.
 	// +optional
-	Conditions []MatchCondition `json:"conditions,omitempty"`
+	Conditions []Condition `json:"conditions,omitempty"`
 	// Services are the services to proxy traffic.
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:Required
@@ -202,7 +184,8 @@ type TCPProxy struct {
 	// +optional
 	LoadBalancerPolicy *LoadBalancerPolicy `json:"loadBalancerPolicy,omitempty"`
 	// Services are the services to proxy traffic
-	// +optional
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:Required
 	Services []Service `json:"services"`
 	// Include specifies that this tcpproxy should be delegated to another HTTPProxy.
 	// +optional
@@ -233,12 +216,6 @@ type Service struct {
 	// Names defined here will be used to look up corresponding endpoints which contain the ips to route.
 	Name string `json:"name"`
 	// Port (defined as Integer) to proxy traffic to since a service can have multiple defined.
-	//
-	// +required
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=65536
-	// +kubebuilder:validation:ExclusiveMinimum=false
-	// +kubebuilder:validation:ExclusiveMaximum=true
 	Port int `json:"port"`
 	// Protocol may be used to specify (or override) the protocol used to reach this Service.
 	// Values may be tls, h2, h2c. If omitted, protocol-selection falls back on Service annotations.
@@ -302,31 +279,22 @@ type TCPHealthCheckPolicy struct {
 	HealthyThresholdCount uint32 `json:"healthyThresholdCount"`
 }
 
-// TimeoutPolicy configures timeouts that are used for handling network requests.
-//
-// TimeoutPolicy durations are expressed in the Go [Duration format](https://godoc.org/time#ParseDuration).
-// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
-// The string "infinity" is also a valid input and specifies no timeout.
-// A value of "0s" will be treated as if the field were not set, i.e. by using Envoy's default behavior.
-//
-// Example input values: "300ms", "5s", "1m".
+// TimeoutPolicy defines the attributes associated with timeout.
 type TimeoutPolicy struct {
+	// TimeoutPolicy durations are expressed as per the format specified in the ParseDuration documentation: https://godoc.org/time#ParseDuration
+	// Example input values: "300ms", "5s", "1m". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+	// The string 'infinity' is also a valid input and specifies no timeout.
+
 	// Timeout for receiving a response from the server after processing a request from client.
-	// If not supplied, Envoy's default value of 15s applies.
+	// If not supplied the timeout duration is undefined.
 	// +optional
 	Response string `json:"response,omitempty"`
 
-	// Timeout after which, if there are no active requests for this route, the connection between
-	// Envoy and the backend or Envoy and the external client will be closed.
-	// If not specified, there is no per-route idle timeout, though a connection manager-wide
-	// stream_idle_timeout default of 5m still applies.
+	// Timeout after which if there are no active requests for this route, the connection between
+	// Envoy and the backend will be closed. If not specified, there is no per-route idle timeout.
 	// +optional
 	Idle string `json:"idle,omitempty"`
 }
-
-// RetryOn is a string type alias with validation to ensure that the value is valid.
-// +kubebuilder:validation:Enum="5xx";gateway-error;reset;connect-failure;retriable-4xx;refused-stream;retriable-status-codes;retriable-headers;cancelled;deadline-exceeded;internal;resource-exhausted;unavailable
-type RetryOn string
 
 // RetryPolicy defines the attributes associated with retrying policy.
 type RetryPolicy struct {
@@ -338,40 +306,13 @@ type RetryPolicy struct {
 	// PerTryTimeout specifies the timeout per retry attempt.
 	// Ignored if NumRetries is not supplied.
 	PerTryTimeout string `json:"perTryTimeout,omitempty"`
-	// RetryOn specifies the conditions on which to retry a request.
-	//
-	// Supported [HTTP conditions](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on):
-	//
-	// - `5xx`
-	// - `gateway-error`
-	// - `reset`
-	// - `connect-failure`
-	// - `retriable-4xx`
-	// - `refused-stream`
-	// - `retriable-status-codes`
-	// - `retriable-headers`
-	//
-	// Supported [gRPC conditions](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-grpc-on):
-	//
-	// - `cancelled`
-	// - `deadline-exceeded`
-	// - `internal`
-	// - `resource-exhausted`
-	// - `unavailable`
-	// +optional
-	RetryOn []RetryOn `json:"retryOn,omitempty"`
-	// RetriableStatusCodes specifies the HTTP status codes that should be retried.
-	//
-	// This field is only respected when you include `retriable-status-codes` in the `RetryOn` field.
-	// +optional
-	RetriableStatusCodes []uint32 `json:"retriableStatusCodes,omitempty"`
 }
 
 // ReplacePrefix describes a path prefix replacement.
 type ReplacePrefix struct {
 	// Prefix specifies the URL path prefix to be replaced.
 	//
-	// If Prefix is specified, it must exactly match the MatchCondition
+	// If Prefix is specified, it must exactly match the Condition
 	// prefix that is rendered by the chain of including HTTPProxies
 	// and only that path prefix will be replaced by Replacement.
 	// This allows HTTPProxies that are included through multiple
@@ -416,16 +357,12 @@ type LoadBalancerPolicy struct {
 	Strategy string `json:"strategy,omitempty"`
 }
 
-// HeadersPolicy defines how headers are managed during forwarding.
-// The `Host` header is treated specially and if set in a HTTP response
-// will be used as the SNI server name when forwarding over TLS. It is an
-// error to attempt to set the `Host` header in a HTTP response.
+// HeadersPolicy defines how headers are managed during forwarding
 type HeadersPolicy struct {
-	// Set specifies a list of HTTP header values that will be set in the HTTP header.
-	// If the header does not exist it will be added, otherwise it will be overwritten with the new value.
+	// Set specifies a list of HTTP header values that will be set in the HTTP header
 	// +optional
 	Set []HeaderValue `json:"set,omitempty"`
-	// Remove specifies a list of HTTP header names to remove.
+	// Remove specifies a list of HTTP header names to remove
 	// +optional
 	Remove []string `json:"remove,omitempty"`
 }
@@ -459,54 +396,31 @@ type DownstreamValidation struct {
 	CACertificate string `json:"caSecret"`
 }
 
-// HTTPProxyStatus reports the current state of the HTTPProxy.
-type HTTPProxyStatus struct {
+// Status reports the current state of the HTTPProxy.
+type Status struct {
 	// +optional
 	CurrentStatus string `json:"currentStatus,omitempty"`
 	// +optional
 	Description string `json:"description,omitempty"`
-	// +optional
-	// LoadBalancer contains the current status of the load balancer.
-	LoadBalancer corev1.LoadBalancerStatus `json:"loadBalancer,omitempty"`
-	// +optional
-	// Conditions contains information about the current status of the HTTPProxy,
-	// in an upstream-friendly container.
-	//
-	// Contour will update a single condition, `Valid`, that is in normal-true polarity.
-	// That is, when `currentStatus` is `valid`, the `Valid` condition will be `status: true`,
-	// and vice versa.
-	//
-	// Contour will leave untouched any other Conditions set in this block,
-	// in case some other controller wants to add a Condition.
-	//
-	// If you are another controller owner and wish to add a condition, you *should*
-	// namespace your condition with a label, like `controller.domain.com/ConditionName`.
-	// +patchMergeKey=type
-	// +patchStrategy=merge
-	// +listType=map
-	// +listMapKey=type
-	Conditions []DetailedCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// HTTPProxy is an Ingress CRD specification.
+// HTTPProxy is an Ingress CRD specification
 // +k8s:openapi-gen=true
 // +kubebuilder:printcolumn:name="FQDN",type="string",JSONPath=".spec.virtualhost.fqdn",description="Fully qualified domain name"
 // +kubebuilder:printcolumn:name="TLS Secret",type="string",JSONPath=".spec.virtualhost.tls.secretName",description="Secret with TLS credentials"
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.currentStatus",description="The current status of the HTTPProxy"
 // +kubebuilder:printcolumn:name="Status Description",type="string",JSONPath=".status.description",description="Description of the current status"
 // +kubebuilder:resource:scope=Namespaced,path=httpproxies,shortName=proxy;proxies,singular=httpproxy
-// +kubebuilder:subresource:status
 type HTTPProxy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
 	Spec HTTPProxySpec `json:"spec"`
-	// Status is a container for computed information about the HTTPProxy.
 	// +optional
-	Status HTTPProxyStatus `json:"status,omitempty"`
+	Status Status `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

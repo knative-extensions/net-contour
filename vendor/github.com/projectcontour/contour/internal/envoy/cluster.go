@@ -1,4 +1,4 @@
-// Copyright Project Contour Authors
+// Copyright © 2019 VMware
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,7 +14,7 @@
 package envoy
 
 import (
-	"crypto/sha1" // nolint:gosec
+	"crypto/sha1"
 	"crypto/sha256"
 	"fmt"
 	"strconv"
@@ -28,7 +28,6 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/projectcontour/contour/internal/dag"
 	"github.com/projectcontour/contour/internal/protobuf"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 func clusterDefaults() *v2.Cluster {
@@ -85,14 +84,14 @@ func Cluster(c *dag.Cluster) *v2.Cluster {
 			),
 		)
 	case "h2":
-		cluster.Http2ProtocolOptions = &envoy_api_v2_core.Http2ProtocolOptions{}
 		cluster.TransportSocket = UpstreamTLSTransportSocket(
 			UpstreamTLSContext(
 				c.UpstreamValidation,
-				c.SNI,
+				service.ExternalName,
 				"h2",
 			),
 		)
+		fallthrough
 	case "h2c":
 		cluster.Http2ProtocolOptions = &envoy_api_v2_core.Http2ProtocolOptions{}
 	}
@@ -100,45 +99,33 @@ func Cluster(c *dag.Cluster) *v2.Cluster {
 	return cluster
 }
 
-// ClusterLoadAssignmentName generates the name used for an EDS
-// ClusterLoadAssignment, given a fully qualified Service name and
-// port. This name is a contract between the producer of a cluster
-// (i.e. the EDS service) and the consumer of a cluster (most likely
-// a HTTP Route Action).
-func ClusterLoadAssignmentName(service types.NamespacedName, port string) string {
+// StaticClusterLoadAssignment creates a *v2.ClusterLoadAssignment pointing to the external DNS address of the service
+func StaticClusterLoadAssignment(service *dag.Service) *v2.ClusterLoadAssignment {
 	name := []string{
 		service.Namespace,
 		service.Name,
-		port,
+		service.ServicePort.Name,
 	}
 
-	// If the port is empty, omit it.
-	if port == "" {
-		return strings.Join(name[:2], "/")
-	}
-
-	return strings.Join(name, "/")
-}
-
-// StaticClusterLoadAssignment creates a *v2.ClusterLoadAssignment pointing to the external DNS address of the service
-func StaticClusterLoadAssignment(service *dag.Service) *v2.ClusterLoadAssignment {
 	addr := SocketAddress(service.ExternalName, int(service.ServicePort.Port))
 	return &v2.ClusterLoadAssignment{
-		Endpoints: Endpoints(addr),
-		ClusterName: ClusterLoadAssignmentName(
-			types.NamespacedName{Name: service.Name, Namespace: service.Namespace},
-			service.ServicePort.Name,
-		),
+		ClusterName: strings.Join(name, "/"),
+		Endpoints:   Endpoints(addr),
 	}
 }
 
 func edsconfig(cluster string, service *dag.Service) *v2.Cluster_EdsClusterConfig {
+	name := []string{
+		service.Namespace,
+		service.Name,
+		service.ServicePort.Name,
+	}
+	if name[2] == "" {
+		name = name[:2]
+	}
 	return &v2.Cluster_EdsClusterConfig{
-		EdsConfig: ConfigSource(cluster),
-		ServiceName: ClusterLoadAssignmentName(
-			types.NamespacedName{Name: service.Name, Namespace: service.Namespace},
-			service.ServicePort.Name,
-		),
+		EdsConfig:   ConfigSource(cluster),
+		ServiceName: strings.Join(name, "/"),
 	}
 }
 
@@ -195,9 +182,7 @@ func Clustername(cluster *dag.Cluster) string {
 		buf += uv.SubjectName
 	}
 
-	// This isn't a crypto hash, we just want a unique name.
-	hash := sha1.Sum([]byte(buf)) // nolint:gosec
-
+	hash := sha1.Sum([]byte(buf))
 	ns := service.Namespace
 	name := service.Name
 	return hashname(60, ns, name, strconv.Itoa(int(service.Port)), fmt.Sprintf("%x", hash[:5]))

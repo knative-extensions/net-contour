@@ -1,4 +1,4 @@
-// Copyright Project Contour Authors
+// Copyright © 2019 VMware
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,12 +21,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	ingressroutev1 "github.com/projectcontour/contour/apis/contour/v1beta1"
 	projcontour "github.com/projectcontour/contour/apis/projectcontour/v1"
 	"github.com/projectcontour/contour/internal/dag"
 	"github.com/projectcontour/contour/internal/k8s"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 // EventHandler implements cache.ResourceEventHandler, filters k8s events towards
@@ -178,6 +178,7 @@ func (e *EventHandler) onUpdate(op interface{}) bool {
 		return e.Builder.Source.Insert(op.obj)
 	case opUpdate:
 		if cmp.Equal(op.oldObj, op.newObj,
+			cmpopts.IgnoreFields(ingressroutev1.IngressRoute{}, "Status"),
 			cmpopts.IgnoreFields(projcontour.HTTPProxy{}, "Status"),
 			cmpopts.IgnoreFields(metav1.ObjectMeta{}, "ResourceVersion")) {
 			e.WithField("op", "update").Debugf("%T skipping update, only status has changed", op.newObj)
@@ -218,17 +219,28 @@ func (e *EventHandler) updateDAG() {
 		statuses := dag.Statuses()
 		e.setStatus(statuses)
 
-		metrics := calculateRouteMetric(statuses)
-		e.Metrics.SetHTTPProxyMetric(metrics)
+		metrics, proxymetrics := calculateRouteMetric(statuses)
+		e.Metrics.SetIngressRouteMetric(metrics)
+		e.Metrics.SetHTTPProxyMetric(proxymetrics)
 	default:
 		e.Debug("skipping metrics and CRD status update, not leader")
 	}
 }
 
 // setStatus updates the status of objects.
-func (e *EventHandler) setStatus(statuses map[types.NamespacedName]dag.Status) {
+func (e *EventHandler) setStatus(statuses map[k8s.FullName]dag.Status) {
 	for _, st := range statuses {
 		switch obj := st.Object.(type) {
+		case *ingressroutev1.IngressRoute:
+			err := e.StatusClient.SetStatus(st.Status, st.Description, obj)
+			if err != nil {
+				e.WithError(err).
+					WithField("status", st.Status).
+					WithField("desc", st.Description).
+					WithField("name", obj.Name).
+					WithField("namespace", obj.Namespace).
+					Error("failed to set status")
+			}
 		case *projcontour.HTTPProxy:
 			err := e.StatusClient.SetStatus(st.Status, st.Description, obj)
 			if err != nil {
