@@ -1,4 +1,4 @@
-// Copyright Project Contour Authors
+// Copyright © 2020 VMware
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,7 +18,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/projectcontour/contour/internal/contour"
@@ -35,9 +34,6 @@ const (
 	healthcheckFailURL = "http://localhost:9001/healthcheck/fail"
 	prometheusStat     = "envoy_http_downstream_cx_active"
 )
-
-// File path used in the /shutdown endpoint.
-const shutdownReadyFile = "/ok"
 
 func prometheusLabels() []string {
 	return []string{contour.ENVOY_HTTP_LISTENER, contour.ENVOY_HTTPS_LISTENER}
@@ -70,66 +66,39 @@ func newShutdownManagerContext() *shutdownmanagerContext {
 	}
 }
 
-// healthzHandler handles the /healthz endpoint which is used for the shutdown-manager's liveness probe.
+// handles the /healthz endpoint which is used for the shutdown-manager's liveness probe
 func (s *shutdownmanagerContext) healthzHandler(w http.ResponseWriter, r *http.Request) {
 	http.StatusText(http.StatusOK)
 	if _, err := w.Write([]byte("OK")); err != nil {
-		s.WithField("context", "healthzHandler").Error(err)
+		s.Error(err)
 	}
 }
 
-// shutdownReadyHandler handles the /shutdown endpoint which is used by Envoy to determine if it can terminate.
-// Once enough connections have drained based upon configuration, a file will be written to "/ok" in
-// the shutdown manager's file system. Any HTTP request to /shutdown will use the existence of this
-// file to understand if it is safe to terminate. The file-based approach is used since the process in which
-// the kubelet calls the shutdown command is different than the HTTP request from Envoy to /shutdown
-func (s *shutdownmanagerContext) shutdownReadyHandler(w http.ResponseWriter, r *http.Request) {
-	for {
-		if _, err := os.Stat(shutdownReadyFile); err == nil {
-			http.StatusText(http.StatusOK)
-			if _, err := w.Write([]byte("OK")); err != nil {
-				s.WithField("context", "shutdownReadyHandler").Error(err)
-			}
-			return
-		} else {
-			s.WithField("context", "shutdownReadyHandler").Errorf("error checking for file: %v", err)
-		}
-		time.Sleep(1 * time.Second)
-	}
-}
-
-// shutdownHandler is called from a pod preStop hook, where it will block pod shutdown
-// until envoy is able to drain connections to below the min-open threshold.
-func (s *shutdownmanagerContext) shutdownHandler() {
-
+// shutdownHandler handles the /shutdown endpoint which should be called from a pod preStop hook,
+// where it will block pod shutdown until envoy is able to drain connections to below the min-open threshold
+func (s *shutdownmanagerContext) shutdownHandler(w http.ResponseWriter, r *http.Request) {
 	// Send shutdown signal to Envoy to start draining connections
 	s.Infof("failing envoy healthchecks")
-	if err := shutdownEnvoy(); err != nil {
-		s.WithField("context", "shutdownHandler").Errorf("error sending envoy healthcheck fail: %v", err)
+	err := shutdownEnvoy(healthcheckFailURL)
+	if err != nil {
+		s.Errorf("error sending envoy healthcheck fail: %v", err)
 	}
 
-	s.WithField("context", "shutdownHandler").Infof("waiting %s before polling for draining connections", s.checkDelay)
+	s.Infof("waiting %s before polling for draining connections", s.checkDelay)
 	time.Sleep(s.checkDelay)
 
 	for {
-		openConnections, err := getOpenConnections()
+		openConnections, err := getOpenConnections(prometheusURL)
 		if err != nil {
 			s.Error(err)
 		} else {
 			if openConnections <= s.minOpenConnections {
-				s.WithField("context", "shutdownHandler").
-					WithField("open_connections", openConnections).
+				s.WithField("open_connections", openConnections).
 					WithField("min_connections", s.minOpenConnections).
 					Info("min number of open connections found, shutting down")
-				file, err := os.Create(shutdownReadyFile)
-				if err != nil {
-					s.Error(err)
-				}
-				defer file.Close()
 				return
 			}
-			s.WithField("context", "shutdownHandler").
-				WithField("open_connections", openConnections).
+			s.WithField("open_connections", openConnections).
 				WithField("min_connections", s.minOpenConnections).
 				Info("polled open connections")
 		}
@@ -138,29 +107,29 @@ func (s *shutdownmanagerContext) shutdownHandler() {
 }
 
 // shutdownEnvoy sends a POST request to /healthcheck/fail to tell Envoy to start draining connections
-func shutdownEnvoy() error {
-	resp, err := http.Post(healthcheckFailURL, "", nil)
+func shutdownEnvoy(url string) error {
+	resp, err := http.Post(url, "", nil)
 	if err != nil {
-		return fmt.Errorf("creating healthcheck fail POST request failed: %s", err)
+		return fmt.Errorf("creating healthcheck fail post request failed: %s", err)
 	}
 
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("POST for %q returned HTTP status %s", healthcheckFailURL, resp.Status)
+		return fmt.Errorf("post request for url %q returned http status %s", url, resp.Status)
 	}
 	return nil
 }
 
 // getOpenConnections parses a http request to a prometheus endpoint returning the sum of values found
-func getOpenConnections() (int, error) {
+func getOpenConnections(url string) (int, error) {
 	// Make request to Envoy Prometheus endpoint
-	resp, err := http.Get(prometheusURL)
+	resp, err := http.Get(url)
 	if err != nil {
-		return -1, fmt.Errorf("creating metrics GET request failed: %s", err)
+		return -1, fmt.Errorf("get request for metrics failed: %s", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return -1, fmt.Errorf("GET for %q returned HTTP status %s", prometheusURL, resp.Status)
+		return -1, fmt.Errorf("get request for metrics failed with http status %s", resp.Status)
 	}
 
 	// Parse Prometheus listener stats for open connections
@@ -201,12 +170,11 @@ func parseOpenConnections(stats io.Reader) (int, error) {
 }
 
 func doShutdownManager(config *shutdownmanagerContext) {
-
 	config.Info("started envoy shutdown manager")
 	defer config.Info("stopped")
 
 	http.HandleFunc("/healthz", config.healthzHandler)
-	http.HandleFunc("/shutdown", config.shutdownReadyHandler)
+	http.HandleFunc("/shutdown", config.shutdownHandler)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.httpServePort), nil))
 }
 
@@ -220,6 +188,5 @@ func registerShutdownManager(cmd *kingpin.CmdClause, log logrus.FieldLogger) (*k
 	shutdownmgr.Flag("check-delay", "Time wait before polling Envoy for open connections.").Default("60s").DurationVar(&ctx.checkDelay)
 	shutdownmgr.Flag("min-open-connections", "Min number of open connections when polling Envoy.").IntVar(&ctx.minOpenConnections)
 	shutdownmgr.Flag("serve-port", "Port to serve the http server on.").IntVar(&ctx.httpServePort)
-
 	return shutdownmgr, ctx
 }

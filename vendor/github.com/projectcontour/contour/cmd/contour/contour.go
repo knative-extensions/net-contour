@@ -1,4 +1,4 @@
-// Copyright Project Contour Authors
+// Copyright © 2019 VMware
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,7 +19,6 @@ import (
 
 	resource "github.com/envoyproxy/go-control-plane/pkg/resource/v2"
 	"github.com/projectcontour/contour/internal/build"
-	"github.com/projectcontour/contour/internal/envoy"
 	"github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"k8s.io/klog"
@@ -36,13 +35,9 @@ func init() {
 func main() {
 	log := logrus.StandardLogger()
 	app := kingpin.New("contour", "Contour Kubernetes ingress controller.")
-	app.HelpFlag.Short('h')
 
-	envoyCmd := app.Command("envoy", "Sub-command for envoy actions.")
-	sdm, shutdownManagerCtx := registerShutdownManager(envoyCmd, log)
-
-	// Add a "shutdown" command which initiates an Envoy shutdown sequence.
-	sdmShutdown := envoyCmd.Command("shutdown", "Initiate an shutdown sequence which configures Envoy to begin draining connections.")
+	envoy := app.Command("envoy", "Sub-command for envoy actions.")
+	shutdownManager, shutdownManagerCtx := registerShutdownManager(envoy, log)
 
 	bootstrap, bootstrapCtx := registerBootstrap(app)
 	certgenApp, certgenConfig := registerCertGen(app)
@@ -71,12 +66,10 @@ func main() {
 
 	args := os.Args[1:]
 	switch kingpin.MustParse(app.Parse(args)) {
-	case sdm.FullCommand():
+	case shutdownManager.FullCommand():
 		doShutdownManager(shutdownManagerCtx)
-	case sdmShutdown.FullCommand():
-		shutdownManagerCtx.shutdownHandler()
 	case bootstrap.FullCommand():
-		check(envoy.WriteBootstrap(bootstrapCtx))
+		doBootstrap(bootstrapCtx)
 	case certgenApp.FullCommand():
 		doCertgen(certgenConfig)
 	case cds.FullCommand():

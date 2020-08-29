@@ -124,8 +124,8 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
-					Conditions: []v1.MatchCondition{{
-						Header: &v1.HeaderMatchCondition{
+					Conditions: []v1.Condition{{
+						Header: &v1.HeaderCondition{
 							Name:  "K-Network-Hash",
 							Exact: "override",
 						},
@@ -262,8 +262,8 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
-					Conditions: []v1.MatchCondition{{
-						Header: &v1.HeaderMatchCondition{
+					Conditions: []v1.Condition{{
+						Header: &v1.HeaderCondition{
 							Name:  "K-Network-Hash",
 							Exact: "override",
 						},
@@ -328,8 +328,8 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
-					Conditions: []v1.MatchCondition{{
-						Header: &v1.HeaderMatchCondition{
+					Conditions: []v1.Condition{{
+						Header: &v1.HeaderCondition{
 							Name:  "K-Network-Hash",
 							Exact: "override",
 						},
@@ -394,8 +394,8 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
-					Conditions: []v1.MatchCondition{{
-						Header: &v1.HeaderMatchCondition{
+					Conditions: []v1.Condition{{
+						Header: &v1.HeaderCondition{
 							Name:  "K-Network-Hash",
 							Exact: "override",
 						},
@@ -495,8 +495,8 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "46m0s",
 					},
-					Conditions: []v1.MatchCondition{{
-						Header: &v1.HeaderMatchCondition{
+					Conditions: []v1.Condition{{
+						Header: &v1.HeaderCondition{
 							Name:  "K-Network-Hash",
 							Exact: "override",
 						},
@@ -606,15 +606,15 @@ func TestMakeProxies(t *testing.T) {
 					Fqdn: "example.com",
 				},
 				Routes: []v1.Route{{
-					Conditions: []v1.MatchCondition{{
+					Conditions: []v1.Condition{{
 						Prefix: "/goo",
 					}, {
-						Header: &v1.HeaderMatchCondition{
+						Header: &v1.HeaderCondition{
 							Name:  "tag",
 							Exact: "goo",
 						},
 					}, {
-						Header: &v1.HeaderMatchCondition{
+						Header: &v1.HeaderCondition{
 							Name:  "K-Network-Hash",
 							Exact: "override",
 						},
@@ -637,15 +637,15 @@ func TestMakeProxies(t *testing.T) {
 						Weight:   100,
 					}},
 				}, {
-					Conditions: []v1.MatchCondition{{
+					Conditions: []v1.Condition{{
 						Prefix: "/doo",
 					}, {
-						Header: &v1.HeaderMatchCondition{
+						Header: &v1.HeaderCondition{
 							Name:  "tag",
 							Exact: "doo",
 						},
 					}, {
-						Header: &v1.HeaderMatchCondition{
+						Header: &v1.HeaderCondition{
 							Name:  "K-Network-Hash",
 							Exact: "override",
 						},
@@ -667,10 +667,10 @@ func TestMakeProxies(t *testing.T) {
 						Weight: 100,
 					}},
 				}, {
-					Conditions: []v1.MatchCondition{{
+					Conditions: []v1.Condition{{
 						Prefix: "/goo",
 					}, {
-						Header: &v1.HeaderMatchCondition{
+						Header: &v1.HeaderCondition{
 							Name:  "tag",
 							Exact: "goo",
 						},
@@ -690,10 +690,10 @@ func TestMakeProxies(t *testing.T) {
 						Weight:   100,
 					}},
 				}, {
-					Conditions: []v1.MatchCondition{{
+					Conditions: []v1.Condition{{
 						Prefix: "/doo",
 					}, {
-						Header: &v1.HeaderMatchCondition{
+						Header: &v1.HeaderCondition{
 							Name:  "tag",
 							Exact: "doo",
 						},
@@ -794,8 +794,8 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
-					Conditions: []v1.MatchCondition{{
-						Header: &v1.HeaderMatchCondition{
+					Conditions: []v1.Condition{{
+						Header: &v1.HeaderCondition{
 							Name:  "K-Network-Hash",
 							Exact: "override",
 						},
@@ -948,8 +948,8 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
-					Conditions: []v1.MatchCondition{{
-						Header: &v1.HeaderMatchCondition{
+					Conditions: []v1.Condition{{
+						Header: &v1.HeaderCondition{
 							Name:  "K-Network-Hash",
 							Exact: "override",
 						},
@@ -1090,8 +1090,8 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
-					Conditions: []v1.MatchCondition{{
-						Header: &v1.HeaderMatchCondition{
+					Conditions: []v1.Condition{{
+						Header: &v1.HeaderCondition{
 							Name:  "K-Network-Hash",
 							Exact: "override",
 						},
@@ -1198,8 +1198,8 @@ func TestMakeProxies(t *testing.T) {
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 					},
-					Conditions: []v1.MatchCondition{{
-						Header: &v1.HeaderMatchCondition{
+					Conditions: []v1.Condition{{
+						Header: &v1.HeaderCondition{
 							Name:  "K-Network-Hash",
 							Exact: "override",
 						},

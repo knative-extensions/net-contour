@@ -1,4 +1,4 @@
-// Copyright Project Contour Authors
+// Copyright © 2019 VMware
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,7 +21,6 @@ import (
 
 	envoy_api_v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/sirupsen/logrus"
 )
@@ -130,14 +129,9 @@ func (xh *xdsHandler) stream(st grpcStream) error {
 				resources = r.Query(req.ResourceNames)
 			}
 
-			any := make([]*any.Any, 0, len(resources))
-			for _, r := range resources {
-				a, err := ptypes.MarshalAny(r)
-				if err != nil {
-					return done(log, err)
-				}
-
-				any = append(any, a)
+			any, err := toAny(r.TypeURL(), resources)
+			if err != nil {
+				return done(log, err)
 			}
 
 			resp := &envoy_api_v2.DiscoveryResponse{
@@ -155,6 +149,20 @@ func (xh *xdsHandler) stream(st grpcStream) error {
 			return done(log, ctx.Err())
 		}
 	}
+}
+
+// toAny converts the contents of a resourcer's Values to the
+// respective slice of *any.Any.
+func toAny(typeURL string, values []proto.Message) ([]*any.Any, error) {
+	var resources []*any.Any
+	for _, value := range values {
+		v, err := proto.Marshal(value)
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, &any.Any{TypeUrl: typeURL, Value: v})
+	}
+	return resources, nil
 }
 
 // counter holds an atomically incrementing counter.
