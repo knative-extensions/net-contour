@@ -20,7 +20,7 @@ source $(dirname $0)/e2e-common.sh
 # Script entry point.
 initialize $@  --skip-istio-addon
 
-go_test_e2e -timeout=60m -parallel=12 \
+go_test_e2e -timeout=60m \
 	    ./test/conformance \
 	    --enable-beta --enable-alpha \
 	    --ingressClass=contour.ingress.networking.knative.dev || fail_test
