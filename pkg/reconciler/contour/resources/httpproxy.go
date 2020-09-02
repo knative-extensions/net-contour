@@ -113,15 +113,27 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				}
 			}
 
-			var retry *v1.RetryPolicy
+			// By default retry on connection problems twice.
+			// This matches the default behavior of Istio:
+			// https://istio.io/latest/docs/concepts/traffic-management/#retries
+			retry := &v1.RetryPolicy{
+				NumRetries: 2,
+				RetryOn: []v1.RetryOn{
+					"connect-failure",
+					"refused-stream",
+					"cancelled",
+					"resource-exhausted",
+				},
+			}
 			if path.Retries != nil && path.Retries.Attempts > 0 {
-				retry = &v1.RetryPolicy{
-					NumRetries: int64(path.Retries.Attempts),
-				}
+				retry.NumRetries = int64(path.Retries.Attempts)
+
+				// When retries is specified explicitly, then we retry some http-level failures as well.
+				retry.RetryOn = append(retry.RetryOn, "retriable-status-codes", "5xx")
+
 				if path.Retries.PerTryTimeout != nil {
 					retry.PerTryTimeout = path.Retries.PerTryTimeout.Duration.String()
 				}
-
 			}
 
 			preSplitHeaders := &v1.HeadersPolicy{
@@ -177,9 +189,9 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				})
 			}
 
-			var conditions []v1.Condition
+			var conditions []v1.MatchCondition
 			if path.Path != "" {
-				conditions = append(conditions, v1.Condition{
+				conditions = append(conditions, v1.MatchCondition{
 					// This is technically not accurate since it's not a prefix,
 					// but a regular expression, however, all usage is either empty
 					// or absolute paths.
@@ -187,8 +199,8 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				})
 			}
 			for header, match := range path.Headers {
-				conditions = append(conditions, v1.Condition{
-					Header: &v1.HeaderCondition{
+				conditions = append(conditions, v1.MatchCondition{
+					Header: &v1.HeaderMatchCondition{
 						Name:  header,
 						Exact: match.Exact,
 					},

@@ -39,6 +39,7 @@ type TLSCertificateDelegationsGetter interface {
 type TLSCertificateDelegationInterface interface {
 	Create(*v1.TLSCertificateDelegation) (*v1.TLSCertificateDelegation, error)
 	Update(*v1.TLSCertificateDelegation) (*v1.TLSCertificateDelegation, error)
+	UpdateStatus(*v1.TLSCertificateDelegation) (*v1.TLSCertificateDelegation, error)
 	Delete(name string, options *metav1.DeleteOptions) error
 	DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error
 	Get(name string, options metav1.GetOptions) (*v1.TLSCertificateDelegation, error)
@@ -126,6 +127,22 @@ func (c *tLSCertificateDelegations) Update(tLSCertificateDelegation *v1.TLSCerti
 		Namespace(c.ns).
 		Resource("tlscertificatedelegations").
 		Name(tLSCertificateDelegation.Name).
+		Body(tLSCertificateDelegation).
+		Do().
+		Into(result)
+	return
+}
+
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+
+func (c *tLSCertificateDelegations) UpdateStatus(tLSCertificateDelegation *v1.TLSCertificateDelegation) (result *v1.TLSCertificateDelegation, err error) {
+	result = &v1.TLSCertificateDelegation{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("tlscertificatedelegations").
+		Name(tLSCertificateDelegation.Name).
+		SubResource("status").
 		Body(tLSCertificateDelegation).
 		Do().
 		Into(result)
