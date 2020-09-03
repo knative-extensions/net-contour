@@ -515,7 +515,7 @@ func TestMakeProxies(t *testing.T) {
 					Visibility: v1alpha1.IngressVisibilityClusterLocal,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
-							Retries: &v1alpha1.HTTPRetry{
+							DeprecatedRetries: &v1alpha1.HTTPRetry{
 								Attempts:      34,
 								PerTryTimeout: &metav1.Duration{Duration: 14 * time.Minute},
 							},

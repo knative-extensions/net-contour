@@ -61,7 +61,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
-				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -111,7 +111,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"doo.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -155,7 +155,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
-				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{network.GetServiceHostname("foo", "bar")},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -189,7 +189,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"goo.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -216,13 +216,13 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
-				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityClusterLocal,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
-							Retries: &v1alpha1.HTTPRetry{
+							DeprecatedRetries: &v1alpha1.HTTPRetry{
 								Attempts:      34,
 								PerTryTimeout: &metav1.Duration{Duration: 14 * time.Minute},
 							},
@@ -255,7 +255,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"goo.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityClusterLocal,
@@ -282,7 +282,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
-				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -335,7 +335,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"goo.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -362,7 +362,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
-				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -478,7 +478,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"doo.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -520,7 +520,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
-				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -645,7 +645,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"doo.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -717,7 +717,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
-				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -752,7 +752,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"goo.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,

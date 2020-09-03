@@ -137,6 +137,10 @@ func TestReconcile(t *testing.T) {
 			}),
 		}},
 		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: "ns",
+				Resource:  v1alpha1.SchemeGroupVersion.WithResource("ingresses"),
+			},
 			Name: "name--ep",
 		}},
 	}, {
@@ -167,6 +171,10 @@ func TestReconcile(t *testing.T) {
 			}),
 		}},
 		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: "ns",
+				Resource:  v1alpha1.SchemeGroupVersion.WithResource("ingresses"),
+			},
 			Name: "name--ep",
 		}},
 		WantEvents: []string{
@@ -233,6 +241,10 @@ func TestReconcile(t *testing.T) {
 			mustMakeProbe(t, ing("name", "ns", withBasicSpec, withContour), makeItReady),
 		}, mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour))...), servicesAndEndpoints...),
 		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: "ns",
+				Resource:  v1alpha1.SchemeGroupVersion.WithResource("ingresses"),
+			},
 			Name: "name--ep",
 		}},
 	}, {
@@ -254,6 +266,10 @@ func TestReconcile(t *testing.T) {
 			)[0],
 		}},
 		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: "ns",
+				Resource:  v1alpha1.SchemeGroupVersion.WithResource("ingresses"),
+			},
 			Name: "name--ep",
 		}},
 		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
@@ -306,6 +322,10 @@ func TestReconcile(t *testing.T) {
 			}),
 		}},
 		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: "ns",
+				Resource:  v1alpha1.SchemeGroupVersion.WithResource("ingresses"),
+			},
 			Name: "name--ep",
 		}},
 	}, {
@@ -418,6 +438,10 @@ func TestReconcile(t *testing.T) {
 			}),
 		}},
 		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: "ns",
+				Resource:  v1alpha1.SchemeGroupVersion.WithResource("ingresses"),
+			},
 			Name: "name--ep",
 		}},
 		WantEvents: []string{
@@ -721,7 +745,6 @@ func withBasicSpec(i *v1alpha1.Ingress) {
 				}},
 			},
 		}},
-		Visibility: "ExternalIP",
 	}
 }
 
@@ -744,7 +767,6 @@ func withBasicSpec2(i *v1alpha1.Ingress) {
 				}},
 			},
 		}},
-		Visibility: "ExternalIP",
 	}
 }
 
@@ -767,7 +789,6 @@ func withMultiProxySpec(i *v1alpha1.Ingress) {
 				}},
 			},
 		}},
-		Visibility: "ExternalIP",
 	}
 }
 
