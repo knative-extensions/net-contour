@@ -43,7 +43,7 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 		},
 		Spec: v1alpha1.IngressSpec{
-			Visibility: ing.Spec.Visibility, // Copy the top-level visibility.
+			DeprecatedVisibility: ing.Spec.DeprecatedVisibility, // Copy the top-level visibility.
 		},
 	}
 

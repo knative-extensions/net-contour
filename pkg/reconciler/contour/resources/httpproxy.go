@@ -125,14 +125,14 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					"resource-exhausted",
 				},
 			}
-			if path.Retries != nil && path.Retries.Attempts > 0 {
-				retry.NumRetries = int64(path.Retries.Attempts)
+			if path.DeprecatedRetries != nil && path.DeprecatedRetries.Attempts > 0 {
+				retry.NumRetries = int64(path.DeprecatedRetries.Attempts)
 
 				// When retries is specified explicitly, then we retry some http-level failures as well.
 				retry.RetryOn = append(retry.RetryOn, "retriable-status-codes", "5xx")
 
-				if path.Retries.PerTryTimeout != nil {
-					retry.PerTryTimeout = path.Retries.PerTryTimeout.Duration.String()
+				if path.DeprecatedRetries.PerTryTimeout != nil {
+					retry.PerTryTimeout = path.DeprecatedRetries.PerTryTimeout.Duration.String()
 				}
 			}
 
