@@ -34,10 +34,12 @@ func TestIngressConformance(t *testing.T) {
 	for i := 0; i < iterations; i++ {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			t.Parallel()
-			ingress.RunConformance(t)
-
-			// TODO(https://github.com/knative-sandbox/net-contour/issues/211): Replace with running alpha when this is fixed.
-			t.Run("headers/tags", ingress.TestTagHeaders)
+			// ingress.RunConformance(t)
+			t.Run("canary", ingress.TestBasics)
 		})
+
+		if testing.Short() {
+			break
+		}
 	}
 }
