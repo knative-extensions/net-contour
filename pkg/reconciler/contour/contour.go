@@ -267,7 +267,6 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		logger.Debugf("Status prober returned %v.", ready)
 		if ready {
 			ing.Status.MarkLoadBalancerReady(
-				nil,
 				lbStatus(ctx, v1alpha1.IngressVisibilityExternalIP),
 				lbStatus(ctx, v1alpha1.IngressVisibilityClusterLocal))
 		} else {
