@@ -127,7 +127,6 @@ func TestReconcile(t *testing.T) {
 				i.Status.InitializeConditions()
 				i.Status.MarkNetworkConfigured()
 				i.Status.MarkLoadBalancerReady(
-					[]v1alpha1.LoadBalancerIngressStatus{},
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: publicSvc,
 					}},
@@ -161,7 +160,6 @@ func TestReconcile(t *testing.T) {
 				i.Status.InitializeConditions()
 				i.Status.MarkNetworkConfigured()
 				i.Status.MarkLoadBalancerReady(
-					[]v1alpha1.LoadBalancerIngressStatus{},
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: publicSvc,
 					}},
@@ -285,7 +283,6 @@ func TestReconcile(t *testing.T) {
 				i.Status.InitializeConditions()
 				i.Status.MarkNetworkConfigured()
 				i.Status.MarkLoadBalancerReady(
-					[]v1alpha1.LoadBalancerIngressStatus{},
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: publicSvc,
 					}},
@@ -312,7 +309,6 @@ func TestReconcile(t *testing.T) {
 				i.Status.InitializeConditions()
 				i.Status.MarkNetworkConfigured()
 				i.Status.MarkLoadBalancerReady(
-					[]v1alpha1.LoadBalancerIngressStatus{},
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: publicSvc,
 					}},
@@ -428,7 +424,6 @@ func TestReconcile(t *testing.T) {
 				i.Status.InitializeConditions()
 				i.Status.MarkNetworkConfigured()
 				i.Status.MarkLoadBalancerReady(
-					[]v1alpha1.LoadBalancerIngressStatus{},
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: publicSvc,
 					}},
@@ -717,7 +712,6 @@ func makeItReady(i *v1alpha1.Ingress) {
 	i.Status.InitializeConditions()
 	i.Status.MarkNetworkConfigured()
 	i.Status.MarkLoadBalancerReady(
-		[]v1alpha1.LoadBalancerIngressStatus{},
 		[]v1alpha1.LoadBalancerIngressStatus{{
 			DomainInternal: publicSvc,
 		}},
