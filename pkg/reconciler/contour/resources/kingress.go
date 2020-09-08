@@ -101,7 +101,7 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 		}
 		for _, vis := range si.Visibilities() {
 			childIng.Spec.Rules = append(childIng.Spec.Rules, v1alpha1.IngressRule{
-				Hosts:      []string{fmt.Sprintf("%s.%s.%s.net-contour.invalid", name, ing.Name, ing.Namespace)},
+				Hosts:      []string{fmt.Sprintf("%s.gen-%d.%s.%s.net-contour.invalid", name, ing.Generation, ing.Name, ing.Namespace)},
 				Visibility: vis,
 				HTTP: &v1alpha1.HTTPIngressRuleValue{
 					Paths: []v1alpha1.HTTPIngressPath{{

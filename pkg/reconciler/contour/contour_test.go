@@ -256,7 +256,7 @@ func TestReconcile(t *testing.T) {
 		Key:  "ns/name",
 		Objects: append(append([]runtime.Object{
 			ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
-			mustMakeProbe(t, ing("name", "ns", withBasicSpec2, withContour), makeItReady),
+			mustMakeProbe(t, ing("name", "ns", withBasicSpec2, withContour, withGeneration(1)), makeItReady),
 		}, mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour))...), servicesAndEndpoints...),
 		WantUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: mustMakeProxies(t,
@@ -354,7 +354,7 @@ func TestReconcile(t *testing.T) {
 		},
 		Objects: append(append([]runtime.Object{
 			ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
-			mustMakeProbe(t, ing("name", "ns", withBasicSpec2, withContour), makeItReady),
+			mustMakeProbe(t, ing("name", "ns", withBasicSpec2, withContour, withGeneration(1)), makeItReady),
 		}, mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour))...), servicesAndEndpoints...),
 		WantUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: mustMakeProxies(t,
@@ -381,7 +381,7 @@ func TestReconcile(t *testing.T) {
 		},
 		Objects: append(append([]runtime.Object{
 			ing("name", "ns", withContour, withGeneration(1), withBasicSpec2),
-			mustMakeProbe(t, ing("name", "ns", withBasicSpec2, withContour), makeItReady),
+			mustMakeProbe(t, ing("name", "ns", withBasicSpec2, withContour, withGeneration(1)), makeItReady),
 		}, mustMakeProxies(t, ing("name", "ns", withBasicSpec, withContour))...), servicesAndEndpoints...),
 		WantUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: mustMakeProxies(t,
