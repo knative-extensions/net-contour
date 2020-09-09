@@ -75,7 +75,7 @@ func TestDefaultTLSSecret(t *testing.T) {
 	// this always requires a namespace
 	cm.Data["default-tls-secret"] = "error-name"
 
-	cfg, err = NewContourFromConfigMap(cm)
+	_, err = NewContourFromConfigMap(cm)
 	if err == nil {
 		t.Errorf("expected an error parsing erroneous 'default-tls-secret'")
 	}
