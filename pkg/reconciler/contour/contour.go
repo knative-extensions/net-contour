@@ -119,7 +119,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		desiredChIng := resources.MakeEndpointProbeIngress(ctx, ing, oldGeneration)
 		actualChIng, err := r.ingressLister.Ingresses(desiredChIng.Namespace).Get(desiredChIng.Name)
 		if apierrs.IsNotFound(err) { // Create it.
-			actualChIng, err = r.ingressClient.NetworkingV1alpha1().Ingresses(desiredChIng.Namespace).Create(desiredChIng)
+			actualChIng, err = r.ingressClient.NetworkingV1alpha1().Ingresses(desiredChIng.Namespace).Create(ctx, desiredChIng, metav1.CreateOptions{})
 			if err != nil {
 				return err
 			}
@@ -130,7 +130,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			original := actualChIng
 			actualChIng = original.DeepCopy()
 			actualChIng.Spec = desiredChIng.Spec
-			actualChIng, err = r.ingressClient.NetworkingV1alpha1().Ingresses(actualChIng.Namespace).Update(actualChIng)
+			actualChIng, err = r.ingressClient.NetworkingV1alpha1().Ingresses(actualChIng.Namespace).Update(ctx, actualChIng, metav1.UpdateOptions{})
 			if err != nil {
 				return err
 			}
@@ -204,7 +204,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			return err
 		}
 		if len(matches) == 0 {
-			proxy, err := r.contourClient.ProjectcontourV1().HTTPProxies(proxy.Namespace).Create(proxy)
+			proxy, err := r.contourClient.ProjectcontourV1().HTTPProxies(proxy.Namespace).Create(ctx, proxy, metav1.CreateOptions{})
 			if err != nil {
 				return err
 			}
@@ -219,7 +219,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			// Avoid updates that don't change anything.
 			continue
 		}
-		if _, err = r.contourClient.ProjectcontourV1().HTTPProxies(proxy.Namespace).Update(update); err != nil {
+		if _, err = r.contourClient.ProjectcontourV1().HTTPProxies(proxy.Namespace).Update(ctx, update, metav1.UpdateOptions{}); err != nil {
 			return err
 		}
 		if diff, err := kmp.SafeDiff(update, matches[0]); err == nil {
@@ -242,7 +242,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			logger.Debugf("Leftover: %#v.", leftover)
 		}
 		if err := r.contourClient.ProjectcontourV1().HTTPProxies(ing.Namespace).DeleteCollection(
-			&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: selector.String()}); err != nil {
+			ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: selector.String()}); err != nil {
 			return err
 		}
 	}
@@ -283,7 +283,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		if ing.IsReady() {
 			// Delete the endpoints probe once we have reached a steady state.
 			if err := r.ingressClient.NetworkingV1alpha1().Ingresses(ing.Namespace).Delete(
-				names.EndpointProbeIngress(ing), &metav1.DeleteOptions{}); err != nil {
+				ctx, names.EndpointProbeIngress(ing), metav1.DeleteOptions{}); err != nil {
 				return err
 			}
 			logger.Debug("Deleted endpoint probe.")
