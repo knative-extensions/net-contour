@@ -1,8 +1,14 @@
 name: KinD e2e tests
 
 on:
+  pull_request:
+    branches: [ 'master' ]
+
   push:
     branches: [ 'master' ]
+
+  schedule:
+  - cron: '0 * * * *'
 
 jobs:
 
@@ -52,10 +58,10 @@ jobs:
     - name: Check out code onto GOPATH
       uses: actions/checkout@v2
       with:
-        path: ./src/knative.dev/serving
+        path: ./src/knative.dev/net-contour
 
     - name: Install KinD
-      working-directory: ./src/knative.dev/serving
+      working-directory: ./src/knative.dev/net-contour
       run: |
         set -x
 
@@ -69,7 +75,7 @@ jobs:
         sudo mv kind /usr/local/bin
 
     - name: Create KinD Cluster
-      working-directory: ./src/knative.dev/serving
+      working-directory: ./src/knative.dev/net-contour
       run: |
         set -x
 
@@ -125,7 +131,8 @@ jobs:
         echo Waiting for Pods to become ready.
         kubectl wait pod --for=condition=Ready -n contour-external -l '!job-name'
         kubectl wait pod --for=condition=Ready -n contour-internal -l '!job-name'
-        kubectl wait pod --for=condition=Ready -n knative-serving  --all
+        # # TODO(mattmoor): Find a good way to do this with chaos enabled.
+        # kubectl wait pod --for=condition=Ready -n knative-serving  --all
 
         # For debugging.
         kubectl get pods --all-namespaces
@@ -142,3 +149,18 @@ jobs:
         go test -race -count=1 -short -timeout=20m -tags=e2e ${{ matrix.test-suite }} \
            --ingressendpoint="${IPS[0]}" \
            --ingressClass=contour.ingress.networking.knative.dev
+
+    - name: Post failure notice to Slack
+      uses: rtCamp/action-slack-notify@v2.1.0
+      if: ${{ failure() && github.event_name != 'pull_request' }}
+      env:
+        SLACK_ICON: http://github.com/knative.png?size=48
+        SLACK_USERNAME: github-actions
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+
+        SLACK_CHANNEL: 'net-contour'
+        SLACK_COLOR: '#8E1600'
+        MSG_MINIMAL: 'true'
+        SLACK_TITLE: Periodic ${{ matrix.k8s-version }} failed.
+        SLACK_MESSAGE: |
+          For detailed logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
