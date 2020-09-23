@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: contour-internal
+  name: contour-external
   labels:
     networking.knative.dev/ingress-provider: contour
 roleRef:
@@ -11,7 +11,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: contour
-  namespace: contour-internal
+  namespace: contour-external
 ---
 # This file is generated from the individual YAML files by generate-deployment.sh. Do not
 # edit this file directly but instead edit the source files and re-render.
@@ -31,7 +31,7 @@ subjects:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: contour-internal
+  name: contour-external
   labels:
     networking.knative.dev/ingress-provider: contour
 ---
@@ -39,7 +39,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: contour
-  namespace: contour-internal
+  namespace: contour-external
   labels:
     networking.knative.dev/ingress-provider: contour
 ---
@@ -47,7 +47,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: envoy
-  namespace: contour-internal
+  namespace: contour-external
   labels:
     networking.knative.dev/ingress-provider: contour
 ---
@@ -55,14 +55,14 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: contour
-  namespace: contour-internal
+  namespace: contour-external
   labels:
     networking.knative.dev/ingress-provider: contour
 data:
   contour.yaml: |
     leaderelection:
       configmap-name: contour
-      configmap-namespace: contour-internal
+      configmap-namespace: contour-external
     # should contour expect to be running inside a k8s cluster
     # incluster: true
     #
@@ -79,11 +79,11 @@ data:
     # SNI defined for a vhost.
       fallback-certificate:
     #   name: fallback-secret-name
-    #   namespace: contour-internal
+    #   namespace: contour-external
     # The following config shows the defaults for the leader election.
     # leaderelection:
     #   configmap-name: leader-elect
-    #   configmap-namespace: contour-internal
+    #   configmap-namespace: contour-external
     ### Logging options
     # Default setting
     accesslog-format: envoy
@@ -1443,7 +1443,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: contour-certgen
-  namespace: contour-internal
+  namespace: contour-external
   labels:
     networking.knative.dev/ingress-provider: contour
 ---
@@ -1451,7 +1451,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:
   name: contour
-  namespace: contour-internal
+  namespace: contour-external
   labels:
     networking.knative.dev/ingress-provider: contour
 roleRef:
@@ -1461,13 +1461,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: contour-certgen
-  namespace: contour-internal
+  namespace: contour-external
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: Role
 metadata:
   name: contour-certgen
-  namespace: contour-internal
+  namespace: contour-external
   labels:
     networking.knative.dev/ingress-provider: contour
 rules:
@@ -1483,7 +1483,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: contour-certgen-v1.8.1
-  namespace: contour-internal
+  namespace: contour-external
   labels:
     networking.knative.dev/ingress-provider: contour
 spec:
@@ -1613,7 +1613,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: contour
-  namespace: contour-internal
+  namespace: contour-external
   labels:
     networking.knative.dev/ingress-provider: contour
 spec:
@@ -1630,7 +1630,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: envoy
-  namespace: contour-internal
+  namespace: contour-external
   annotations:
     # This annotation puts the AWS ELB into "TCP" mode so that it does not
     # do HTTP negotiation for HTTPS connections at the ELB edge.
@@ -1642,7 +1642,7 @@ metadata:
   labels:
     networking.knative.dev/ingress-provider: contour
 spec:
-  # externalTrafficPolicy: Local
+  externalTrafficPolicy: Local
   ports:
   - port: 80
     name: http
@@ -1652,7 +1652,7 @@ spec:
     protocol: TCP
   selector:
     app: envoy
-  type: ClusterIP
+  type: LoadBalancer
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -1661,7 +1661,7 @@ metadata:
     app: contour
     networking.knative.dev/ingress-provider: contour
   name: contour
-  namespace: contour-internal
+  namespace: contour-external
 spec:
   replicas: 2
   strategy:
@@ -1693,7 +1693,7 @@ spec:
       containers:
       - args:
         - serve
-        - --ingress-class-name=contour-internal
+        - --ingress-class-name=contour-external
         - --incluster
         - --xds-address=0.0.0.0
         - --xds-port=8001
@@ -1766,7 +1766,7 @@ metadata:
     app: envoy
     networking.knative.dev/ingress-provider: contour
   name: envoy
-  namespace: contour-internal
+  namespace: contour-external
 spec:
   updateStrategy:
     type: RollingUpdate
