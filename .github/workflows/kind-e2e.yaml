@@ -1,8 +1,14 @@
 name: KinD e2e tests
 
 on:
+  pull_request:
+    branches: [ 'master' ]
+
   push:
     branches: [ 'master' ]
+
+  schedule:
+  - cron: '0 * * * *'
 
 jobs:
 
