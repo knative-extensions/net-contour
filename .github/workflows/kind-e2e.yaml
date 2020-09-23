@@ -131,7 +131,8 @@ jobs:
         echo Waiting for Pods to become ready.
         kubectl wait pod --for=condition=Ready -n contour-external -l '!job-name'
         kubectl wait pod --for=condition=Ready -n contour-internal -l '!job-name'
-        kubectl wait pod --for=condition=Ready -n knative-serving  --all
+        # # TODO(mattmoor): Find a good way to do this with chaos enabled.
+        # kubectl wait pod --for=condition=Ready -n knative-serving  --all
 
         # For debugging.
         kubectl get pods --all-namespaces
