@@ -58,10 +58,10 @@ jobs:
     - name: Check out code onto GOPATH
       uses: actions/checkout@v2
       with:
-        path: ./src/knative.dev/serving
+        path: ./src/knative.dev/net-contour
 
     - name: Install KinD
-      working-directory: ./src/knative.dev/serving
+      working-directory: ./src/knative.dev/net-contour
       run: |
         set -x
 
@@ -75,7 +75,7 @@ jobs:
         sudo mv kind /usr/local/bin
 
     - name: Create KinD Cluster
-      working-directory: ./src/knative.dev/serving
+      working-directory: ./src/knative.dev/net-contour
       run: |
         set -x
 
