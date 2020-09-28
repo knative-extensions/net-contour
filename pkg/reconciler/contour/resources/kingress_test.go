@@ -463,6 +463,9 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 					}},
 				}},
 			},
+			Status: v1.HTTPProxyStatus{
+				CurrentStatus: "valid",
+			},
 		}},
 		want: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
@@ -629,6 +632,9 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 						Port: 123,
 					}},
 				}},
+			},
+			Status: v1.HTTPProxyStatus{
+				CurrentStatus: "valid",
 			},
 		}},
 		want: &v1alpha1.Ingress{
