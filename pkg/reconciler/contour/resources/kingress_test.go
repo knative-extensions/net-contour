@@ -712,6 +712,178 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			},
 		},
 	}, {
+		name: "single external domain with split (w/ invalid prev)",
+		ing: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar",
+			},
+			Spec: v1alpha1.IngressSpec{
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
+				Rules: []v1alpha1.IngressRule{{
+					Hosts:      []string{"example.com"},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							AppendHeaders: map[string]string{
+								"Foo": "bar",
+							},
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceName: "goo",
+									ServicePort: intstr.FromInt(123),
+								},
+								Percent: 12,
+								AppendHeaders: map[string]string{
+									"Baz":   "blah",
+									"Bleep": "bloop",
+								},
+							}, {
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceName: "doo",
+									ServicePort: intstr.FromInt(124),
+								},
+								Percent: 88,
+								AppendHeaders: map[string]string{
+									"Baz": "blurg",
+								},
+							}},
+						}},
+					},
+				}},
+			},
+		},
+		prev: []*v1.HTTPProxy{{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar-example.com",
+				Labels: map[string]string{
+					DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
+					GenerationKey: "0",
+					ParentKey:     "bar",
+				},
+				Annotations: map[string]string{
+					"projectcontour.io/ingress.class": publicClass,
+				},
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion:         "networking.internal.knative.dev/v1alpha1",
+					Kind:               "Ingress",
+					Name:               "bar",
+					Controller:         ptr.Bool(true),
+					BlockOwnerDeletion: ptr.Bool(true),
+				}},
+			},
+			Spec: v1.HTTPProxySpec{
+				VirtualHost: &v1.VirtualHost{
+					Fqdn: "example.com",
+				},
+				Routes: []v1.Route{{
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+					},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "Foo",
+							Value: "bar",
+						}, {
+							Name:  "K-Network-Hash",
+							Value: "99dbaae65d712842149f0be3a930d0e229226f86fadddd36bb7b87b0a38ffd3e",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:   "kung",
+						Port:   123,
+						Weight: 12,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blah",
+							}, {
+								Name:  "Bleep",
+								Value: "bloop",
+							}},
+						},
+					}, {
+						Name:   "fu",
+						Port:   124,
+						Weight: 88,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blurg",
+							}},
+						},
+					}},
+				}, {
+					// TODO(https://github.com/knative-sandbox/net-certmanager/issues/44): Probe this once fixed.
+					Conditions: []v1.MatchCondition{{
+						Prefix: "/blah",
+					}},
+					Services: []v1.Service{{
+						Name: "blah",
+						Port: 123,
+					}},
+				}},
+			},
+			Status: v1.HTTPProxyStatus{
+				CurrentStatus: "invalid",
+				Description:   "Spec.Routes unresolved service reference: service \"foo/kung\" not found",
+			},
+		}},
+		want: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar--ep",
+				Annotations: map[string]string{
+					EndpointsProbeKey: "true",
+				},
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion:         "networking.internal.knative.dev/v1alpha1",
+					Kind:               "Ingress",
+					Name:               "bar",
+					Controller:         ptr.Bool(true),
+					BlockOwnerDeletion: ptr.Bool(true),
+				}},
+			},
+			Spec: v1alpha1.IngressSpec{
+				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
+				// want ingress only from valid HTTPProxy.
+				Rules: []v1alpha1.IngressRule{{
+					Hosts:      []string{"doo.gen-0.bar.foo.net-contour.invalid"},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceNamespace: "foo",
+									ServiceName:      "doo",
+									ServicePort:      intstr.FromInt(124),
+								},
+								Percent: 100,
+							}},
+						}},
+					},
+				}, {
+					Hosts:      []string{"goo.gen-0.bar.foo.net-contour.invalid"},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceNamespace: "foo",
+									ServiceName:      "goo",
+									ServicePort:      intstr.FromInt(123),
+								},
+								Percent: 100,
+							}},
+						}},
+					},
+				}},
+			},
+		},
+	}, {
 		name: "single with host rewrite (host rewrite passes down)",
 		ing: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
