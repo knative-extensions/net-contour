@@ -39,12 +39,12 @@ func TestStoreLoadWithContext(t *testing.T) {
 
 	expectedContour, _ := NewContourFromConfigMap(contourConfig)
 	if diff := cmp.Diff(expectedContour, config.Contour); diff != "" {
-		t.Errorf("Unexpected contour config (-want, +got): %v", diff)
+		t.Error("Unexpected contour config (-want, +got):", diff)
 	}
 
 	expectNetworkConfig, _ := network.NewConfigFromConfigMap(networkConfig)
 	if diff := cmp.Diff(expectNetworkConfig, config.Network); diff != "" {
-		t.Errorf("Unexpected TLS mode (-want, +got): %s", diff)
+		t.Error("Unexpected TLS mode (-want, +got):", diff)
 	}
 }
 
