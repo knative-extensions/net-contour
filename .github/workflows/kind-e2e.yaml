@@ -10,9 +10,13 @@ on:
   schedule:
   - cron: '0 * * * *'
 
-jobs:
+defaults:
+  run:
+    shell: bash
+    working-directory: ./src/knative.dev/net-contour
 
-  ko-resolve:
+jobs:
+  e2e-tests:
     name: e2e tests
     runs-on: ubuntu-latest
     strategy:
@@ -52,6 +56,7 @@ jobs:
         go-version: 1.15.x
 
     - name: Install Dependencies
+      working-directory: ./
       run: |
         GO111MODULE=on go get github.com/google/ko/cmd/ko@master
 
@@ -61,7 +66,6 @@ jobs:
         path: ./src/knative.dev/net-contour
 
     - name: Install KinD
-      working-directory: ./src/knative.dev/net-contour
       run: |
         set -x
 
@@ -75,7 +79,6 @@ jobs:
         sudo mv kind /usr/local/bin
 
     - name: Create KinD Cluster
-      working-directory: ./src/knative.dev/net-contour
       run: |
         set -x
 
@@ -107,7 +110,6 @@ jobs:
         kind create cluster --config kind.yaml
 
     - name: Install Knative net-contour
-      working-directory: ./src/knative.dev/net-contour
       run: |
         set -o pipefail
 
@@ -120,13 +122,11 @@ jobs:
           kubectl apply -f -
 
     - name: Upload Test Images
-      working-directory: ./src/knative.dev/net-contour
       run: |
         # Build and Publish our test images to the docker daemon.
         ./test/upload-test-images.sh
 
     - name: Wait for Ready
-      working-directory: ./src/knative.dev/net-contour
       run: |
         echo Waiting for Pods to become ready.
         kubectl wait pod --for=condition=Ready -n contour-external -l '!job-name'
@@ -138,7 +138,6 @@ jobs:
         kubectl get pods --all-namespaces
 
     - name: Run e2e Tests
-      working-directory: ./src/knative.dev/net-contour
       run: |
         set -x
 
