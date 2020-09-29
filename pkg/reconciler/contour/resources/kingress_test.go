@@ -780,7 +780,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			got := MakeEndpointProbeIngress(ctx, test.ing, test.prev)
 			if !cmp.Equal(test.want, got) {
-				t.Errorf("MakeHTTPProxies (-want, +got) = %s", cmp.Diff(test.want, got))
+				t.Error("MakeHTTPProxies (-want, +got) =", cmp.Diff(test.want, got))
 			}
 		})
 	}
