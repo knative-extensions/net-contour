@@ -158,7 +158,7 @@ func TestListProbeTargets(t *testing.T) {
 			}
 
 			if !cmp.Equal(test.want, got) {
-				t.Errorf("ListProbeTargets (-want, +got) = %s", cmp.Diff(test.want, got))
+				t.Error("ListProbeTargets (-want, +got) =", cmp.Diff(test.want, got))
 			}
 		})
 	}

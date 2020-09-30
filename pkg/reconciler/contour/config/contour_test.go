@@ -32,11 +32,11 @@ func TestContour(t *testing.T) {
 	cm, example := ConfigMapsFromTestFile(t, ContourConfigName)
 
 	if _, err := NewContourFromConfigMap(cm); err != nil {
-		t.Errorf("NewContourFromConfigMap(actual) = %v", err)
+		t.Error("NewContourFromConfigMap(actual) =", err)
 	}
 
 	if _, err := NewContourFromConfigMap(example); err != nil {
-		t.Errorf("NewContourFromConfigMap(example) = %v", err)
+		t.Error("NewContourFromConfigMap(example) =", err)
 	}
 }
 
@@ -53,7 +53,7 @@ func TestDefaultTLSSecret(t *testing.T) {
 
 	cfg, err := NewContourFromConfigMap(cm)
 	if err != nil {
-		t.Errorf("NewContourFromConfigMap(enable-fallback-certificate:true) = %v", err)
+		t.Error("NewContourFromConfigMap(enable-fallback-certificate:true) =", err)
 	}
 
 	want := types.NamespacedName{Namespace: "some-namespace", Name: "some-secret"}
@@ -65,7 +65,7 @@ func TestDefaultTLSSecret(t *testing.T) {
 
 	cfg, err = NewContourFromConfigMap(cm)
 	if err != nil {
-		t.Errorf("NewContourFromConfigMap(enable-fallback-certificate:false) = %v", err)
+		t.Error("NewContourFromConfigMap(enable-fallback-certificate:false) =", err)
 	}
 
 	if cfg.DefaultTLSSecret != nil {

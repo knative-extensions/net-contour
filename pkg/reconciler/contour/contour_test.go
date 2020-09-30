@@ -678,7 +678,7 @@ func deleteSelector(t *testing.T, generation int) labels.Selector {
 	l, err := labels.Parse(fmt.Sprintf("%s=name,%s!=%d",
 		resources.ParentKey, resources.GenerationKey, generation))
 	if err != nil {
-		t.Fatalf("labels.Parse() = %v", err)
+		t.Fatal("labels.Parse() =", err)
 	}
 	return l
 }

@@ -1327,7 +1327,7 @@ func TestMakeProxies(t *testing.T) {
 
 			got := MakeHTTPProxies(ctx, test.ing, serviceToProtocol)
 			if !cmp.Equal(test.want, got) {
-				t.Errorf("MakeHTTPProxies (-want, +got) = %s", cmp.Diff(test.want, got))
+				t.Error("MakeHTTPProxies (-want, +got) =", cmp.Diff(test.want, got))
 			}
 		})
 	}
@@ -1390,7 +1390,7 @@ func TestServiceNames(t *testing.T) {
 				got.Insert(key)
 			}
 			if !cmp.Equal(test.want, got) {
-				t.Errorf("ServiceNames (-want, +got): %s", cmp.Diff(test.want, got))
+				t.Error("ServiceNames (-want, +got):", cmp.Diff(test.want, got))
 			}
 		})
 	}
