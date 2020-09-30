@@ -33,7 +33,7 @@ function upload_test_images() {
       sed "s@ko://@ko://knative.dev/net-contour/vendor/@g" $yaml \
         `# ko resolve is being used for the side-effect of publishing images,` \
         `# so the resulting yaml produced is ignored.` \
-        | ko resolve --strict ${tag_option} -RBf- > /dev/null
+        | ko resolve --platform=all --strict ${tag_option} -RBf- > /dev/null
     done
   )
 }
