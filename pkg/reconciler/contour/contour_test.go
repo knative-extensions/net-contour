@@ -43,7 +43,6 @@ import (
 	networkingpkg "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
-	servingclient "knative.dev/networking/pkg/client/injection/client/fake"
 	ingressreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -475,7 +474,7 @@ func TestReconcile(t *testing.T) {
 			},
 		}
 
-		ingr := ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+		ingr := ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakeingressclient.Get(ctx),
 			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
 			controller.Options{
 				ConfigStore: &testConfigStore{
@@ -519,7 +518,7 @@ func TestReconcileProberNotReady(t *testing.T) {
 				},
 			},
 		}
-		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakeingressclient.Get(ctx),
 			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
 			controller.Options{
 				ConfigStore: &testConfigStore{
@@ -567,7 +566,7 @@ func TestReconcileProbeError(t *testing.T) {
 			},
 		}
 
-		ingr := ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+		ingr := ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakeingressclient.Get(ctx),
 			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
 			controller.Options{
 				ConfigStore: &testConfigStore{
