@@ -24,7 +24,7 @@ set -o pipefail
 cd ${ROOT_DIR}
 
 # This controls the knative release version we track.
-KN_VERSION="release-0.18" # This is for controlling the knative related release version.
+KN_VERSION="master" # This is for controlling the knative related release version.
 CONTOUR_VERSION="v1.8.1" # This is for controlling which version of contour we want to use.
 
 # The list of dependencies that we track at HEAD and periodically
