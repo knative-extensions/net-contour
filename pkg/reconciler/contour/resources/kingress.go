@@ -51,11 +51,10 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 
 	// Reverse engineer our previous state from the prior generation's HTTP Proxy resources.
 	for _, proxy := range previousState {
-		logging.FromContext(ctx).Infof("previous state from proxy %q status = %q", proxy.Name, proxy.Status.CurrentStatus)
-
 		// Skip probe when status is not valid. It happens when the previous revision was garbage collected.
 		// see: https://github.com/knative/serving/issues/9582
 		if proxy.Status.CurrentStatus != "valid" {
+			logging.FromContext(ctx).Infof("Skip invalid proxy: %#v", proxy)
 			continue
 		}
 
