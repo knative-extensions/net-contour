@@ -223,7 +223,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			return err
 		}
 		if diff, err := kmp.SafeDiff(update, matches[0]); err == nil {
-			logger.Debugf("Updated http proxy diff: %s", diff)
+			logger.Debug("Updated http proxy diff: ", diff)
 		} else {
 			logger.Warnw("Error diffing http proxy", zap.Error(err))
 		}
