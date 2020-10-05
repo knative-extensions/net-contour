@@ -77,10 +77,6 @@ function rewrite_contour_namespace() {
       | sed "s@name: projectcontour@name: $1@g"
 }
 
-function configure_leader_election() {
-  sed -e $'s@  contour.yaml: |@  contour.yaml: |\\\n    leaderelection:\\\n      configmap-name: contour\\\n      configmap-namespace: '$1'@g'
-}
-
 function rewrite_serve_args() {
   sed -e $'s@        - serve@        - serve\\\n        - --ingress-class-name='$1'@g'
 }
@@ -136,7 +132,6 @@ EOF
 contour_yaml \
   | delete_contour_cluster_role_bindings \
   | rewrite_contour_namespace contour-internal \
-  | configure_leader_election contour-internal \
   | rewrite_serve_args contour-internal | rewrite_user \
   | rewrite_image | rewrite_command | disable_hostport | privatize_loadbalancer \
   | add_ingress_provider_labels  >> config/contour/internal.yaml
@@ -164,7 +159,6 @@ EOF
 contour_yaml \
   | delete_contour_cluster_role_bindings \
   | rewrite_contour_namespace contour-external \
-  | configure_leader_election contour-external \
   | rewrite_serve_args contour-external | rewrite_user \
   | rewrite_image | rewrite_command | disable_hostport \
   | add_ingress_provider_labels >> config/contour/external.yaml

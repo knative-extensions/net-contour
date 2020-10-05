@@ -60,9 +60,6 @@ metadata:
     networking.knative.dev/ingress-provider: contour
 data:
   contour.yaml: |
-    leaderelection:
-      configmap-name: contour
-      configmap-namespace: contour-external
     # should contour expect to be running inside a k8s cluster
     # incluster: true
     #
