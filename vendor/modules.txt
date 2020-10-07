@@ -79,7 +79,7 @@ github.com/davecgh/go-spew/spew
 # github.com/emicklei/go-restful v2.9.5+incompatible
 github.com/emicklei/go-restful
 github.com/emicklei/go-restful/log
-# github.com/envoyproxy/go-control-plane v0.9.5
+# github.com/envoyproxy/go-control-plane v0.9.6
 github.com/envoyproxy/go-control-plane/envoy/annotations
 github.com/envoyproxy/go-control-plane/envoy/api/v2
 github.com/envoyproxy/go-control-plane/envoy/api/v2/auth
@@ -91,6 +91,7 @@ github.com/envoyproxy/go-control-plane/envoy/api/v2/route
 github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v2
 github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2
 github.com/envoyproxy/go-control-plane/envoy/config/filter/accesslog/v2
+github.com/envoyproxy/go-control-plane/envoy/config/filter/http/ext_authz/v2
 github.com/envoyproxy/go-control-plane/envoy/config/filter/http/lua/v2
 github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2
 github.com/envoyproxy/go-control-plane/envoy/config/filter/network/tcp_proxy/v2
@@ -103,8 +104,12 @@ github.com/envoyproxy/go-control-plane/envoy/type
 github.com/envoyproxy/go-control-plane/envoy/type/matcher
 github.com/envoyproxy/go-control-plane/envoy/type/metadata/v2
 github.com/envoyproxy/go-control-plane/envoy/type/tracing/v2
+github.com/envoyproxy/go-control-plane/pkg/cache/types
+github.com/envoyproxy/go-control-plane/pkg/cache/v2
 github.com/envoyproxy/go-control-plane/pkg/conversion
+github.com/envoyproxy/go-control-plane/pkg/log
 github.com/envoyproxy/go-control-plane/pkg/resource/v2
+github.com/envoyproxy/go-control-plane/pkg/server/v2
 github.com/envoyproxy/go-control-plane/pkg/wellknown
 # github.com/envoyproxy/protoc-gen-validate v0.1.0
 github.com/envoyproxy/protoc-gen-validate/validate
@@ -213,7 +218,7 @@ github.com/modern-go/reflect2
 github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
-# github.com/projectcontour/contour v1.8.1
+# github.com/projectcontour/contour v1.9.0
 ## explicit
 github.com/projectcontour/contour/apis/projectcontour/v1
 github.com/projectcontour/contour/apis/projectcontour/v1alpha1
@@ -225,15 +230,19 @@ github.com/projectcontour/contour/internal/contour
 github.com/projectcontour/contour/internal/dag
 github.com/projectcontour/contour/internal/debug
 github.com/projectcontour/contour/internal/envoy
+github.com/projectcontour/contour/internal/envoy/v2
 github.com/projectcontour/contour/internal/health
 github.com/projectcontour/contour/internal/httpsvc
 github.com/projectcontour/contour/internal/k8s
 github.com/projectcontour/contour/internal/metrics
 github.com/projectcontour/contour/internal/protobuf
 github.com/projectcontour/contour/internal/sorter
+github.com/projectcontour/contour/internal/status
 github.com/projectcontour/contour/internal/timeout
 github.com/projectcontour/contour/internal/workgroup
 github.com/projectcontour/contour/internal/xds
+github.com/projectcontour/contour/internal/xdscache
+github.com/projectcontour/contour/internal/xdscache/v2
 # github.com/prometheus/client_golang v1.6.0
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
@@ -372,6 +381,8 @@ golang.org/x/tools/internal/typesinternal
 # golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
+# gomodules.xyz/jsonpatch/v2 v2.1.0
+gomodules.xyz/jsonpatch/v2
 # google.golang.org/api v0.31.0
 google.golang.org/api/internal
 google.golang.org/api/iterator
@@ -539,7 +550,7 @@ honnef.co/go/tools/staticcheck
 honnef.co/go/tools/stylecheck
 honnef.co/go/tools/unused
 honnef.co/go/tools/version
-# k8s.io/api v0.18.8 => k8s.io/api v0.18.8
+# k8s.io/api v0.18.9 => k8s.io/api v0.18.8
 ## explicit
 k8s.io/api/admission/v1
 k8s.io/api/admissionregistration/v1
@@ -582,11 +593,12 @@ k8s.io/api/settings/v1alpha1
 k8s.io/api/storage/v1
 k8s.io/api/storage/v1alpha1
 k8s.io/api/storage/v1beta1
-# k8s.io/apiextensions-apiserver v0.18.4 => k8s.io/apiextensions-apiserver v0.18.8
+# k8s.io/apiextensions-apiserver v0.18.6 => k8s.io/apiextensions-apiserver v0.18.8
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
-# k8s.io/apimachinery v0.18.8 => k8s.io/apimachinery v0.18.8
+# k8s.io/apimachinery v0.18.9 => k8s.io/apimachinery v0.18.8
 ## explicit
+k8s.io/apimachinery/pkg/api/apitesting/fuzzer
 k8s.io/apimachinery/pkg/api/equality
 k8s.io/apimachinery/pkg/api/errors
 k8s.io/apimachinery/pkg/api/meta
@@ -825,6 +837,7 @@ k8s.io/client-go/plugin/pkg/client/auth/gcp
 k8s.io/client-go/plugin/pkg/client/auth/oidc
 k8s.io/client-go/rest
 k8s.io/client-go/rest/watch
+k8s.io/client-go/restmapper
 k8s.io/client-go/testing
 k8s.io/client-go/third_party/forked/golang/template
 k8s.io/client-go/tools/auth
@@ -910,7 +923,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/networking v0.0.0-20201006030922-372eb2857f0d
+# knative.dev/networking v0.0.0-20201007014820-8b51ffb23d22
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
@@ -947,11 +960,13 @@ knative.dev/networking/test/test_images/runtime/handlers
 knative.dev/networking/test/test_images/timeout
 knative.dev/networking/test/test_images/wsserver
 knative.dev/networking/test/types
-# knative.dev/pkg v0.0.0-20201006044120-247841408e57
+# knative.dev/pkg v0.0.0-20201007162021-4c07e187d496
 ## explicit
 knative.dev/pkg/apis
+knative.dev/pkg/apis/duck
 knative.dev/pkg/apis/duck/ducktypes
 knative.dev/pkg/apis/duck/v1
+knative.dev/pkg/apis/testing/fuzzer
 knative.dev/pkg/changeset
 knative.dev/pkg/client/injection/kube/client
 knative.dev/pkg/client/injection/kube/client/fake
@@ -1010,10 +1025,11 @@ knative.dev/pkg/tracker
 knative.dev/pkg/version
 knative.dev/pkg/webhook
 knative.dev/pkg/webhook/certificates/resources
-# knative.dev/test-infra v0.0.0-20201006044420-26457f2cad45
+# knative.dev/test-infra v0.0.0-20201006161322-f94f2bcbb2ee
 ## explicit
 knative.dev/test-infra/scripts
-# sigs.k8s.io/controller-runtime v0.6.1
+# sigs.k8s.io/controller-runtime v0.6.2
+sigs.k8s.io/controller-runtime/pkg/client/apiutil
 sigs.k8s.io/controller-runtime/pkg/scheme
 # sigs.k8s.io/service-apis v0.0.0-20200213014236-51691dd89266
 sigs.k8s.io/service-apis/api/v1alpha1
