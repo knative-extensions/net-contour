@@ -82,6 +82,11 @@ jobs:
       run: |
         set -x
 
+        # Use a semi-random cluster suffix, but somewhat predictable
+        # so reruns don't just give us a completely new value.
+        CLUSTER_SUFFIX=cluster${GITHUB_RUN_ID}.local
+        echo "CLUSTER_SUFFIX=$CLUSTER_SUFFIX" >> $GITHUB_ENV
+
         # KinD configuration.
         cat > kind.yaml <<EOF
         apiVersion: kind.x-k8s.io/v1alpha4
@@ -92,8 +97,10 @@ jobs:
         - role: worker
           image: kindest/node:${{ matrix.k8s-version }}@${{ matrix.kind-image-sha }}
 
-        # This is needed in order to support projected volumes with service account tokens.
-        # See: https://kubernetes.slack.com/archives/CEKK1KTN2/p1600268272383600
+        # This is needed in order to
+        # (1) support projected volumes with service account tokens. See
+        #     https://kubernetes.slack.com/archives/CEKK1KTN2/p1600268272383600
+        # (2) use a random cluster suffix
         kubeadmConfigPatches:
           - |
             apiVersion: kubeadm.k8s.io/v1beta2
@@ -104,6 +111,8 @@ jobs:
               extraArgs:
                 "service-account-issuer": "kubernetes.default.svc"
                 "service-account-signing-key-file": "/etc/kubernetes/pki/sa.key"
+            networking:
+              dnsDomain: "${CLUSTER_SUFFIX}"
         EOF
 
         # Create a cluster!
@@ -147,11 +156,12 @@ jobs:
         # Run the tests tagged as e2e on the KinD cluster.
         go test -race -count=1 -short -timeout=20m -tags=e2e ${{ matrix.test-suite }} \
            --ingressendpoint="${IPS[0]}" \
-           --ingressClass=contour.ingress.networking.knative.dev
+           --ingressClass=contour.ingress.networking.knative.dev \
+           --cluster-suffix=$CLUSTER_SUFFIX
 
     - name: Post failure notice to Slack
       uses: rtCamp/action-slack-notify@v2.1.0
-      if: ${{ failure() && github.event_name != 'pull_request' }}
+      if: ${{ failure() && github.event_name != 'pull_request' && github.repository == 'knative/net-contour'}}
       env:
         SLACK_ICON: http://github.com/knative.png?size=48
         SLACK_USERNAME: github-actions
