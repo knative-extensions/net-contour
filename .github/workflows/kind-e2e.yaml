@@ -48,6 +48,9 @@ jobs:
       GOPATH: ${{ github.workspace }}
       GO111MODULE: off
       KO_DOCKER_REPO: kind.local
+      # Use a semi-random cluster suffix, but somewhat predictable
+      # so reruns don't just give us a completely new value.
+      CLUSTER_SUFFIX: c${{ github.run_id }}.local
 
     steps:
     - name: Set up Go 1.15.x
@@ -81,11 +84,6 @@ jobs:
     - name: Create KinD Cluster
       run: |
         set -x
-
-        # Use a semi-random cluster suffix, but somewhat predictable
-        # so reruns don't just give us a completely new value.
-        CLUSTER_SUFFIX=cluster${GITHUB_RUN_ID}.local
-        echo "CLUSTER_SUFFIX=$CLUSTER_SUFFIX" >> $GITHUB_ENV
 
         # KinD configuration.
         cat > kind.yaml <<EOF
