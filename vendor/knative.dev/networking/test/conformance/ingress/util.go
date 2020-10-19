@@ -38,7 +38,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"testing"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -54,7 +53,6 @@ import (
 	"knative.dev/networking/test/types"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
-	pkgTest "knative.dev/pkg/test"
 	"knative.dev/pkg/test/logging"
 )
 
@@ -85,7 +83,7 @@ func (ua *uaRoundTripper) RoundTrip(rq *http.Request) (*http.Response, error) {
 // specified with the given portName.  It returns the service name, the port on
 // which the service is listening, and a "cancel" function to clean up the
 // created resources.
-func CreateRuntimeService(ctx context.Context, t *testing.T, clients *test.Clients, portName string) (string, int, context.CancelFunc) {
+func CreateRuntimeService(ctx context.Context, t *test.T, clients *test.Clients, portName string) (string, int, context.CancelFunc) {
 	t.Helper()
 	name := test.ObjectNameForTest(t)
 
@@ -108,7 +106,7 @@ func CreateRuntimeService(ctx context.Context, t *testing.T, clients *test.Clien
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{
 				Name:            "foo",
-				Image:           pkgTest.ImagePath("runtime"),
+				Image:           t.Images.Path("runtime"),
 				ImagePullPolicy: corev1.PullIfNotPresent,
 				Ports: []corev1.ContainerPort{{
 					Name:          portName,
@@ -158,7 +156,7 @@ func CreateRuntimeService(ctx context.Context, t *testing.T, clients *test.Clien
 // CreateProxyService creates a Kubernetes service that will forward requests to
 // the specified target.  It returns the service name, the port on which the service
 // is listening, and a "cancel" function to clean up the created resources.
-func CreateProxyService(ctx context.Context, t *testing.T, clients *test.Clients, target string, gatewayDomain string) (string, int, context.CancelFunc) {
+func CreateProxyService(ctx context.Context, t *test.T, clients *test.Clients, target string, gatewayDomain string) (string, int, context.CancelFunc) {
 	t.Helper()
 	name := test.ObjectNameForTest(t)
 
@@ -181,7 +179,7 @@ func CreateProxyService(ctx context.Context, t *testing.T, clients *test.Clients
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{
 				Name:            "foo",
-				Image:           pkgTest.ImagePath("httpproxy"),
+				Image:           t.Images.Path("httpproxy"),
 				ImagePullPolicy: corev1.PullIfNotPresent,
 				Ports: []corev1.ContainerPort{{
 					ContainerPort: int32(containerPort),
@@ -230,7 +228,7 @@ func CreateProxyService(ctx context.Context, t *testing.T, clients *test.Clients
 // specified with the given portName.  It returns the service name, the port on
 // which the service is listening, and a "cancel" function to clean up the
 // created resources.
-func CreateTimeoutService(ctx context.Context, t *testing.T, clients *test.Clients) (string, int, context.CancelFunc) {
+func CreateTimeoutService(ctx context.Context, t *test.T, clients *test.Clients) (string, int, context.CancelFunc) {
 	t.Helper()
 	name := test.ObjectNameForTest(t)
 
@@ -253,7 +251,7 @@ func CreateTimeoutService(ctx context.Context, t *testing.T, clients *test.Clien
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{
 				Name:            "foo",
-				Image:           pkgTest.ImagePath("timeout"),
+				Image:           t.Images.Path("timeout"),
 				ImagePullPolicy: corev1.PullIfNotPresent,
 				Ports: []corev1.ContainerPort{{
 					Name:          networking.ServicePortNameHTTP1,
@@ -301,7 +299,7 @@ func CreateTimeoutService(ctx context.Context, t *testing.T, clients *test.Clien
 
 // CreateFlakyService creates a Kubernetes service where the backing pod will
 // succeed only every Nth request.
-func CreateFlakyService(ctx context.Context, t *testing.T, clients *test.Clients, period int) (string, int, context.CancelFunc) {
+func CreateFlakyService(ctx context.Context, t *test.T, clients *test.Clients, period int) (string, int, context.CancelFunc) {
 	t.Helper()
 	name := test.ObjectNameForTest(t)
 
@@ -324,7 +322,7 @@ func CreateFlakyService(ctx context.Context, t *testing.T, clients *test.Clients
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{
 				Name:            "foo",
-				Image:           pkgTest.ImagePath("flaky"),
+				Image:           t.Images.Path("flaky"),
 				ImagePullPolicy: corev1.PullIfNotPresent,
 				Ports: []corev1.ContainerPort{{
 					Name:          networking.ServicePortNameHTTP1,
@@ -376,7 +374,7 @@ func CreateFlakyService(ctx context.Context, t *testing.T, clients *test.Clients
 
 // CreateWebsocketService creates a Kubernetes service that will upgrade the connection
 // to use websockets and echo back the received messages with the provided suffix.
-func CreateWebsocketService(ctx context.Context, t *testing.T, clients *test.Clients, suffix string) (string, int, context.CancelFunc) {
+func CreateWebsocketService(ctx context.Context, t *test.T, clients *test.Clients, suffix string) (string, int, context.CancelFunc) {
 	t.Helper()
 	name := test.ObjectNameForTest(t)
 
@@ -399,7 +397,7 @@ func CreateWebsocketService(ctx context.Context, t *testing.T, clients *test.Cli
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{
 				Name:            "foo",
-				Image:           pkgTest.ImagePath("wsserver"),
+				Image:           t.Images.Path("wsserver"),
 				ImagePullPolicy: corev1.PullIfNotPresent,
 				Ports: []corev1.ContainerPort{{
 					Name:          networking.ServicePortNameHTTP1,
@@ -451,7 +449,7 @@ func CreateWebsocketService(ctx context.Context, t *testing.T, clients *test.Cli
 
 // CreateGRPCService creates a Kubernetes service that will upgrade the connection
 // to use GRPC and echo back the received messages with the provided suffix.
-func CreateGRPCService(ctx context.Context, t *testing.T, clients *test.Clients, suffix string) (string, int, context.CancelFunc) {
+func CreateGRPCService(ctx context.Context, t *test.T, clients *test.Clients, suffix string) (string, int, context.CancelFunc) {
 	t.Helper()
 	name := test.ObjectNameForTest(t)
 
@@ -474,7 +472,7 @@ func CreateGRPCService(ctx context.Context, t *testing.T, clients *test.Clients,
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{
 				Name:            "foo",
-				Image:           pkgTest.ImagePath("grpc-ping"),
+				Image:           t.Images.Path("grpc-ping"),
 				ImagePullPolicy: corev1.PullIfNotPresent,
 				Ports: []corev1.ContainerPort{{
 					Name:          networking.ServicePortNameH2C,
@@ -524,7 +522,7 @@ func CreateGRPCService(ctx context.Context, t *testing.T, clients *test.Clients,
 }
 
 // createService is a helper for creating the service resource.
-func createService(ctx context.Context, t *testing.T, clients *test.Clients, svc *corev1.Service) context.CancelFunc {
+func createService(ctx context.Context, t *test.T, clients *test.Clients, svc *corev1.Service) context.CancelFunc {
 	t.Helper()
 
 	svcName := ktypes.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}
@@ -547,7 +545,7 @@ func createService(ctx context.Context, t *testing.T, clients *test.Clients, svc
 	}
 }
 
-func createExternalNameService(ctx context.Context, t *testing.T, clients *test.Clients, target, gatewayDomain string) context.CancelFunc {
+func createExternalNameService(ctx context.Context, t *test.T, clients *test.Clients, target, gatewayDomain string) context.CancelFunc {
 	targetName := strings.SplitN(target, ".", 3)
 	externalNameSvc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -571,7 +569,7 @@ func createExternalNameService(ctx context.Context, t *testing.T, clients *test.
 
 // createPodAndService is a helper for creating the pod and service resources, setting
 // up their context.CancelFunc, and waiting for it to become ready.
-func createPodAndService(ctx context.Context, t *testing.T, clients *test.Clients, pod *corev1.Pod, svc *corev1.Service) context.CancelFunc {
+func createPodAndService(ctx context.Context, t *test.T, clients *test.Clients, pod *corev1.Pod, svc *corev1.Service) context.CancelFunc {
 	t.Helper()
 
 	podName := ktypes.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}
@@ -644,7 +642,7 @@ func OverrideIngressAnnotation(annotations map[string]string) Option {
 }
 
 // createIngress creates a Knative Ingress resource
-func createIngress(ctx context.Context, t *testing.T, clients *test.Clients, spec v1alpha1.IngressSpec, io ...Option) (*v1alpha1.Ingress, context.CancelFunc) {
+func createIngress(ctx context.Context, t *test.T, clients *test.Clients, spec v1alpha1.IngressSpec, io ...Option) (*v1alpha1.Ingress, context.CancelFunc) {
 	t.Helper()
 
 	name := test.ObjectNameForTest(t)
@@ -655,7 +653,7 @@ func createIngress(ctx context.Context, t *testing.T, clients *test.Clients, spe
 			Name:      name,
 			Namespace: test.ServingNamespace,
 			Annotations: map[string]string{
-				networking.IngressClassAnnotationKey: test.NetworkingFlags.IngressClass,
+				networking.IngressClassAnnotationKey: t.IngressClass,
 			},
 		},
 		Spec: spec,
@@ -688,7 +686,7 @@ func createIngress(ctx context.Context, t *testing.T, clients *test.Clients, spe
 	}
 }
 
-func createIngressReadyDialContext(ctx context.Context, t *testing.T, clients *test.Clients, spec v1alpha1.IngressSpec) (*v1alpha1.Ingress, func(context.Context, string, string) (net.Conn, error), context.CancelFunc) {
+func createIngressReadyDialContext(ctx context.Context, t *test.T, clients *test.Clients, spec v1alpha1.IngressSpec) (*v1alpha1.Ingress, func(context.Context, string, string) (net.Conn, error), context.CancelFunc) {
 	t.Helper()
 
 	ing, cancel := createIngress(ctx, t, clients, spec)
@@ -711,7 +709,7 @@ func createIngressReadyDialContext(ctx context.Context, t *testing.T, clients *t
 	return ing, CreateDialContext(ctx, t, ing, clients), cancel
 }
 
-func CreateIngressReady(ctx context.Context, t *testing.T, clients *test.Clients, spec v1alpha1.IngressSpec) (*v1alpha1.Ingress, *http.Client, context.CancelFunc) {
+func CreateIngressReady(ctx context.Context, t *test.T, clients *test.Clients, spec v1alpha1.IngressSpec) (*v1alpha1.Ingress, *http.Client, context.CancelFunc) {
 	t.Helper()
 
 	// Create a client with a dialer based on the Ingress' public load balancer.
@@ -738,7 +736,7 @@ func CreateIngressReady(ctx context.Context, t *testing.T, clients *test.Clients
 }
 
 // UpdateIngress updates a Knative Ingress resource
-func UpdateIngress(ctx context.Context, t *testing.T, clients *test.Clients, name string, spec v1alpha1.IngressSpec) {
+func UpdateIngress(ctx context.Context, t *test.T, clients *test.Clients, name string, spec v1alpha1.IngressSpec) {
 	t.Helper()
 
 	if err := reconciler.RetryTestErrors(func(attempts int) error {
@@ -763,7 +761,7 @@ func UpdateIngress(ctx context.Context, t *testing.T, clients *test.Clients, nam
 	}
 }
 
-func UpdateIngressReady(ctx context.Context, t *testing.T, clients *test.Clients, name string, spec v1alpha1.IngressSpec) {
+func UpdateIngressReady(ctx context.Context, t *test.T, clients *test.Clients, name string, spec v1alpha1.IngressSpec) {
 	t.Helper()
 
 	UpdateIngress(ctx, t, clients, name, spec)
@@ -774,12 +772,12 @@ func UpdateIngressReady(ctx context.Context, t *testing.T, clients *test.Clients
 }
 
 // This is based on https://golang.org/src/crypto/tls/generate_cert.go
-func CreateTLSSecret(ctx context.Context, t *testing.T, clients *test.Clients, hosts []string) (string, context.CancelFunc) {
+func CreateTLSSecret(ctx context.Context, t *test.T, clients *test.Clients, hosts []string) (string, context.CancelFunc) {
 	return CreateTLSSecretWithCertPool(ctx, t, clients, hosts, test.ServingNamespace, rootCAs)
 }
 
 // CreateTLSSecretWithCertPool creates TLS certificate with given CertPool.
-func CreateTLSSecretWithCertPool(ctx context.Context, t *testing.T, clients *test.Clients, hosts []string, ns string, cas *x509.CertPool) (string, context.CancelFunc) {
+func CreateTLSSecretWithCertPool(ctx context.Context, t *test.T, clients *test.Clients, hosts []string, ns string, cas *x509.CertPool) (string, context.CancelFunc) {
 	t.Helper()
 
 	priv, err := ecdsa.GenerateKey(elliptic.P256(), cryptorand.Reader)
@@ -876,7 +874,7 @@ func CreateTLSSecretWithCertPool(ctx context.Context, t *testing.T, clients *tes
 //			DialContext: CreateDialContext(t, ing, clients),
 //		},
 //	}
-func CreateDialContext(ctx context.Context, t *testing.T, ing *v1alpha1.Ingress, clients *test.Clients) func(context.Context, string, string) (net.Conn, error) {
+func CreateDialContext(ctx context.Context, t *test.T, ing *v1alpha1.Ingress, clients *test.Clients) func(context.Context, string, string) (net.Conn, error) {
 	t.Helper()
 	if ing.Status.PublicLoadBalancer == nil || len(ing.Status.PublicLoadBalancer.Ingress) < 1 {
 		t.Fatal("Ingress does not have a public load balancer assigned.")
@@ -905,8 +903,8 @@ func CreateDialContext(ctx context.Context, t *testing.T, ing *v1alpha1.Ingress,
 	}
 
 	dial := network.NewBackoffDialer(dialBackoff)
-	if pkgTest.Flags.IngressEndpoint != "" {
-		t.Logf("ingressendpoint: %q", pkgTest.Flags.IngressEndpoint)
+	if t.Ingress.EndpointOverride != "" {
+		t.Logf("ingressendpoint: %q", t.Ingress.EndpointOverride)
 
 		// If we're using a manual --ingressendpoint then don't require
 		// "type: LoadBalancer", which may not play nice with KinD
@@ -917,7 +915,7 @@ func CreateDialContext(ctx context.Context, t *testing.T, ing *v1alpha1.Ingress,
 			}
 			for _, sp := range svc.Spec.Ports {
 				if fmt.Sprint(sp.Port) == port {
-					return dial(ctx, "tcp", fmt.Sprintf("%s:%d", pkgTest.Flags.IngressEndpoint, sp.NodePort))
+					return dial(ctx, "tcp", fmt.Sprintf("%s:%d", t.Ingress.EndpointOverride, sp.NodePort))
 				}
 			}
 			return nil, fmt.Errorf("service doesn't contain a matching port: %s", port)
@@ -946,7 +944,7 @@ func CreateDialContext(ctx context.Context, t *testing.T, ing *v1alpha1.Ingress,
 type RequestOption func(*http.Request)
 type ResponseExpectation func(response *http.Response) error
 
-func RuntimeRequest(ctx context.Context, t *testing.T, client *http.Client, url string, opts ...RequestOption) *types.RuntimeInfo {
+func RuntimeRequest(ctx context.Context, t *test.T, client *http.Client, url string, opts ...RequestOption) *types.RuntimeInfo {
 	return RuntimeRequestWithExpectations(ctx, t, client, url,
 		[]ResponseExpectation{StatusCodeExpectation(sets.NewInt(http.StatusOK))},
 		false,
@@ -956,7 +954,7 @@ func RuntimeRequest(ctx context.Context, t *testing.T, client *http.Client, url 
 // RuntimeRequestWithExpectations attempts to make a request to url and return runtime information.
 // If connection is successful only then it will validate all response expectations.
 // If allowDialError is set to true then function will not fail if connection is a dial error.
-func RuntimeRequestWithExpectations(ctx context.Context, t *testing.T, client *http.Client, url string,
+func RuntimeRequestWithExpectations(ctx context.Context, t *test.T, client *http.Client, url string,
 	responseExpectations []ResponseExpectation,
 	allowDialError bool,
 	opts ...RequestOption) *types.RuntimeInfo {
@@ -1008,7 +1006,7 @@ func RuntimeRequestWithExpectations(ctx context.Context, t *testing.T, client *h
 	return nil
 }
 
-func DumpResponse(ctx context.Context, t *testing.T, resp *http.Response) {
+func DumpResponse(ctx context.Context, t *test.T, resp *http.Response) {
 	t.Helper()
 	b, err := httputil.DumpResponse(resp, true)
 	if err != nil {

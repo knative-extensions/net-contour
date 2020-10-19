@@ -17,9 +17,6 @@ limitations under the License.
 package ingress
 
 import (
-	"context"
-	"testing"
-
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
@@ -27,17 +24,16 @@ import (
 )
 
 // TestRewriteHost verifies that a RewriteHost rule can be used to implement vanity URLs.
-func TestRewriteHost(t *testing.T) {
+func TestRewriteHost(t *test.T) {
 	t.Parallel()
-	ctx, clients := context.Background(), test.Setup(t)
 
-	name, port, _ := CreateRuntimeService(ctx, t, clients, networking.ServicePortNameHTTP1)
+	name, port, _ := CreateRuntimeService(t.C, t, t.Clients, networking.ServicePortNameHTTP1)
 
 	privateServiceName := test.ObjectNameForTest(t)
 	privateHostName := privateServiceName + "." + test.ServingNamespace + ".svc.cluster.local"
 
 	// Create a simple Ingress over the Service.
-	ing, _, _ := CreateIngressReady(ctx, t, clients, v1alpha1.IngressSpec{
+	ing, _, _ := CreateIngressReady(t.C, t, t.Clients, v1alpha1.IngressSpec{
 		Rules: []v1alpha1.IngressRule{{
 			Visibility: v1alpha1.IngressVisibilityClusterLocal,
 			Hosts:      []string{privateHostName},
@@ -57,7 +53,7 @@ func TestRewriteHost(t *testing.T) {
 
 	// Slap an ExternalName service in front of the kingress
 	loadbalancerAddress := ing.Status.PrivateLoadBalancer.Ingress[0].DomainInternal
-	createExternalNameService(ctx, t, clients, privateHostName, loadbalancerAddress)
+	createExternalNameService(t.C, t, t.Clients, privateHostName, loadbalancerAddress)
 
 	hosts := []string{
 		"vanity.ismy.name",
@@ -71,7 +67,7 @@ func TestRewriteHost(t *testing.T) {
 	}
 
 	// Now create a RewriteHost ingress to point a custom Host at the Service
-	_, client, _ := CreateIngressReady(ctx, t, clients, v1alpha1.IngressSpec{
+	_, client, _ := CreateIngressReady(t.C, t, t.Clients, v1alpha1.IngressSpec{
 		Rules: []v1alpha1.IngressRule{{
 			Hosts:      hosts,
 			Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -91,6 +87,6 @@ func TestRewriteHost(t *testing.T) {
 	})
 
 	for _, host := range hosts {
-		RuntimeRequest(ctx, t, client, "http://"+host)
+		RuntimeRequest(t.C, t, client, "http://"+host)
 	}
 }

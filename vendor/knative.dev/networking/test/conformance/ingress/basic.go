@@ -17,9 +17,6 @@ limitations under the License.
 package ingress
 
 import (
-	"context"
-	"testing"
-
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
@@ -27,14 +24,13 @@ import (
 )
 
 // TestBasics verifies that a no frills Ingress exposes a simple Pod/Service via the public load balancer.
-func TestBasics(t *testing.T) {
+func TestBasics(t *test.T) {
 	t.Parallel()
-	ctx, clients := context.Background(), test.Setup(t)
 
-	name, port, _ := CreateRuntimeService(ctx, t, clients, networking.ServicePortNameHTTP1)
+	name, port, _ := CreateRuntimeService(t.C, t, t.Clients, networking.ServicePortNameHTTP1)
 
 	// Create a simple Ingress over the Service.
-	_, client, _ := CreateIngressReady(ctx, t, clients, v1alpha1.IngressSpec{
+	_, client, _ := CreateIngressReady(t.C, t, t.Clients, v1alpha1.IngressSpec{
 		Rules: []v1alpha1.IngressRule{{
 			Hosts:      []string{name + ".example.com"},
 			Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -52,19 +48,18 @@ func TestBasics(t *testing.T) {
 		}},
 	})
 
-	RuntimeRequest(ctx, t, client, "http://"+name+".example.com")
+	RuntimeRequest(t.C, t, client, "http://"+name+".example.com")
 }
 
 // TestBasicsHTTP2 verifies that the same no-frills Ingress over a Service with http/2 configured
 // will see a ProtoMajor of 2.
-func TestBasicsHTTP2(t *testing.T) {
+func TestBasicsHTTP2(t *test.T) {
 	t.Parallel()
-	ctx, clients := context.Background(), test.Setup(t)
 
-	name, port, _ := CreateRuntimeService(ctx, t, clients, networking.ServicePortNameH2C)
+	name, port, _ := CreateRuntimeService(t.C, t, t.Clients, networking.ServicePortNameH2C)
 
 	// Create a simple Ingress over the Service.
-	_, client, _ := CreateIngressReady(ctx, t, clients, v1alpha1.IngressSpec{
+	_, client, _ := CreateIngressReady(t.C, t, t.Clients, v1alpha1.IngressSpec{
 		Rules: []v1alpha1.IngressRule{{
 			Hosts:      []string{name + ".example.com"},
 			Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -82,7 +77,7 @@ func TestBasicsHTTP2(t *testing.T) {
 		}},
 	})
 
-	ri := RuntimeRequest(ctx, t, client, "http://"+name+".example.com")
+	ri := RuntimeRequest(t.C, t, client, "http://"+name+".example.com")
 	if ri == nil {
 		return
 	}
