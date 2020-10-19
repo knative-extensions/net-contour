@@ -32,7 +32,7 @@ func TestIngressConformance(t *testing.T) {
 	for i := 0; i < iterations; i++ {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			t.Parallel()
-			ingress.RunConformance(globals.New(t))
+			ingress.RunConformance(globals.NewT(t))
 		})
 
 		if testing.Short() {
