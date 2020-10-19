@@ -726,7 +726,6 @@ func withBasicSpec(i *v1alpha1.Ingress) {
 			Visibility: v1alpha1.IngressVisibilityExternalIP,
 			HTTP: &v1alpha1.HTTPIngressRuleValue{
 				Paths: []v1alpha1.HTTPIngressPath{{
-					Timeout: &metav1.Duration{Duration: time.Second},
 					Splits: []v1alpha1.IngressBackendSplit{{
 						IngressBackend: v1alpha1.IngressBackend{
 							ServiceName:      "goo",
@@ -748,7 +747,6 @@ func withBasicSpec2(i *v1alpha1.Ingress) {
 			Visibility: v1alpha1.IngressVisibilityExternalIP,
 			HTTP: &v1alpha1.HTTPIngressRuleValue{
 				Paths: []v1alpha1.HTTPIngressPath{{
-					Timeout: &metav1.Duration{Duration: time.Second},
 					Splits: []v1alpha1.IngressBackendSplit{{
 						IngressBackend: v1alpha1.IngressBackend{
 							ServiceName:      "doo",
@@ -770,7 +768,6 @@ func withMultiProxySpec(i *v1alpha1.Ingress) {
 			Visibility: v1alpha1.IngressVisibilityExternalIP,
 			HTTP: &v1alpha1.HTTPIngressRuleValue{
 				Paths: []v1alpha1.HTTPIngressPath{{
-					Timeout: &metav1.Duration{Duration: time.Second},
 					Splits: []v1alpha1.IngressBackendSplit{{
 						IngressBackend: v1alpha1.IngressBackend{
 							ServiceName:      "goo",

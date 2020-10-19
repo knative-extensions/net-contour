@@ -440,7 +440,7 @@ func TestMakeProxies(t *testing.T) {
 			},
 		}},
 	}, {
-		name: "cluster local visibility with retry policy and timeout",
+		name: "cluster local visibility with retry policy",
 		ing: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
@@ -456,7 +456,6 @@ func TestMakeProxies(t *testing.T) {
 								Attempts:      34,
 								PerTryTimeout: &metav1.Duration{Duration: 14 * time.Minute},
 							},
-							Timeout: &metav1.Duration{Duration: 46 * time.Minute},
 							Splits: []v1alpha1.IngressBackendSplit{{
 								IngressBackend: v1alpha1.IngressBackend{
 									ServiceName: "goo",
@@ -514,7 +513,7 @@ func TestMakeProxies(t *testing.T) {
 						},
 					},
 					TimeoutPolicy: &v1.TimeoutPolicy{
-						Response: "46m0s",
+						Response: "infinity",
 					},
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
@@ -525,7 +524,7 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "b53cd0662ebbe11c2eebbcab7728ae3992b7e9b7167bed423b2aa10646dc3e8e",
+							Value: "9e1b02792803e1cbd5153bea0600879842245f6d263bee0821f4b4be5a55e40f",
 						}},
 					},
 					Services: []v1.Service{{
@@ -554,7 +553,7 @@ func TestMakeProxies(t *testing.T) {
 						},
 					},
 					TimeoutPolicy: &v1.TimeoutPolicy{
-						Response: "46m0s",
+						Response: "infinity",
 					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},

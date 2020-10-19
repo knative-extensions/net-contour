@@ -228,7 +228,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 								Attempts:      34,
 								PerTryTimeout: &metav1.Duration{Duration: 14 * time.Minute},
 							},
-							Timeout: &metav1.Duration{Duration: 46 * time.Minute},
 							Splits: []v1alpha1.IngressBackendSplit{{
 								IngressBackend: v1alpha1.IngressBackend{
 									ServiceName: "goo",
