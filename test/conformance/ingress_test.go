@@ -22,10 +22,8 @@ import (
 	"strconv"
 	"testing"
 
-	// This must come first for init ordering.
-	_ "knative.dev/networking/test"
-
 	"knative.dev/networking/test/conformance/ingress"
+	"knative.dev/networking/test/globals"
 )
 
 const iterations = 11
@@ -34,7 +32,7 @@ func TestIngressConformance(t *testing.T) {
 	for i := 0; i < iterations; i++ {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			t.Parallel()
-			ingress.RunConformance(t)
+			ingress.RunConformance(globals.New(t))
 		})
 
 		if testing.Short() {
