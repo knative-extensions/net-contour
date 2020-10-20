@@ -344,8 +344,8 @@ github.com/docker/go-units v0.4.0/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDD
 github.com/docker/libtrust v0.0.0-20150114040149-fa567046d9b1/go.mod h1:cyGadeNEkKy96OOhEzfZl+yxihPEzKnqJwvfuSUqbZE=
 github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96/go.mod h1:Qh8CwZgvJUkLughtfhJv5dyTYa91l1fOUCrgjqmcifM=
 github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815/go.mod h1:WwZ+bS3ebgob9U8Nd0kOddGdZWjyMGR8Wziv+TBNwSE=
-github.com/dprotaso/networking v0.0.0-20201019190559-a10635341d31 h1:PPAA86ThjMQF+ban+OzKrCzfWzHO0aDKbVy4S7nTM4A=
-github.com/dprotaso/networking v0.0.0-20201019190559-a10635341d31/go.mod h1:msIrlDWCK/3smp1GU4ujDOfQBmcKdzSLHc44VKPpl8Q=
+github.com/dprotaso/networking v0.0.0-20201020134053-789ecf6cfaa3 h1:KqlFhQWMP4auqv1wXK63VhCUEyJrbsoqLNlvG28yDkg=
+github.com/dprotaso/networking v0.0.0-20201020134053-789ecf6cfaa3/go.mod h1:D4bUIt/HNqYFIROWBAowHKWhag8p0394kZdz4AFt5oU=
 github.com/dsnet/compress v0.0.1/go.mod h1:Aw8dCMJ7RioblQeTqt88akK31OvO8Dhf5JflhBbQEHo=
 github.com/dsnet/golib v0.0.0-20171103203638-1ea166775780/go.mod h1:Lj+Z9rebOhdfkVLjJ8T6VcRQv3SXugXy999NBtR9aFY=
 github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
@@ -1935,9 +1935,8 @@ knative.dev/pkg v0.0.0-20200515002500-16d7b963416f/go.mod h1:tMOHGbxtRz8zYFGEGpV
 knative.dev/pkg v0.0.0-20200528142800-1c6815d7e4c9/go.mod h1:QgNZTxnwpB/oSpNcfnLVlw+WpEwwyKAvJlvR3hgeltA=
 knative.dev/pkg v0.0.0-20200711004937-22502028e31a/go.mod h1:AqAJV6rYi8IGikDjJ/9ZQd9qKdkXVlesVnVjwx62YB8=
 knative.dev/pkg v0.0.0-20200916171541-6e0430fd94db/go.mod h1:ZV1kWD8UMvELVVDld0PDRdjwdCsGwEwf1YUvGGDUl2c=
-knative.dev/pkg v0.0.0-20201018212257-b39d5da935b0/go.mod h1:wW3vq+5MMACzyzWpk8THk2Q8n2HSKGndsFp1FX8XiaU=
-knative.dev/pkg v0.0.0-20201019114258-95e9532f0457 h1:FYTkblGgEnRffT22HvPQa2G+Q/T9MDxumHtzKVDvVqE=
-knative.dev/pkg v0.0.0-20201019114258-95e9532f0457/go.mod h1:Gd7eJYKYPveffVad0/wImHpQSYn+Pt9q09HGJyL/b54=
+knative.dev/pkg v0.0.0-20201019233058-fc447086b7b0 h1:lgXE/cUCgdUm5G8/eX/Bt6wvm6/XIkmyIaZU+vp1Ofw=
+knative.dev/pkg v0.0.0-20201019233058-fc447086b7b0/go.mod h1:Gd7eJYKYPveffVad0/wImHpQSYn+Pt9q09HGJyL/b54=
 knative.dev/reconciler-test v0.0.0-20201019181059-6930dc6e06b8 h1:0rxepawwI4InGztBvp9do6Bdlutn7v0OrzkqDen/Rv8=
 knative.dev/reconciler-test v0.0.0-20201019181059-6930dc6e06b8/go.mod h1:F7Y6JPBUKHiWOPCKNFcZB+e85AZhZUvf40APlxdpL/I=
 knative.dev/test-infra v0.0.0-20200407185800-1b88cb3b45a5/go.mod h1:xcdUkMJrLlBswIZqL5zCuBFOC22WIPMQoVX1L35i0vQ=

@@ -871,7 +871,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/networking v0.0.0-20201019071058-ecd132c7658c => github.com/dprotaso/networking v0.0.0-20201019190559-a10635341d31
+# knative.dev/networking v0.0.0-20201019071058-ecd132c7658c => github.com/dprotaso/networking v0.0.0-20201020134053-789ecf6cfaa3
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
@@ -908,7 +908,7 @@ knative.dev/networking/test/test_images/runtime/handlers
 knative.dev/networking/test/test_images/timeout
 knative.dev/networking/test/test_images/wsserver
 knative.dev/networking/test/types
-# knative.dev/pkg v0.0.0-20201019114258-95e9532f0457
+# knative.dev/pkg v0.0.0-20201019233058-fc447086b7b0
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -958,7 +958,6 @@ knative.dev/pkg/reconciler/testing
 knative.dev/pkg/signals
 knative.dev/pkg/system
 knative.dev/pkg/system/testing
-knative.dev/pkg/test
 knative.dev/pkg/test/helpers
 knative.dev/pkg/test/ingress
 knative.dev/pkg/test/logging
@@ -996,4 +995,4 @@ sigs.k8s.io/yaml
 # k8s.io/client-go => k8s.io/client-go v0.18.8
 # k8s.io/code-generator => k8s.io/code-generator v0.18.8
 # k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
-# knative.dev/networking => github.com/dprotaso/networking v0.0.0-20201019190559-a10635341d31
+# knative.dev/networking => github.com/dprotaso/networking v0.0.0-20201020134053-789ecf6cfaa3

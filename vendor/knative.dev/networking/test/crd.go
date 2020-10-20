@@ -20,7 +20,6 @@ package test
 
 import (
 	"net/url"
-	"strings"
 
 	"knative.dev/pkg/test/helpers"
 )
@@ -48,14 +47,3 @@ var MakeK8sNamePrefix = helpers.MakeK8sNamePrefix
 
 // ObjectNameForTest generates a random object name based on the test name.
 var ObjectNameForTest = helpers.ObjectNameForTest
-
-type named interface {
-	Name() string
-}
-
-// SubServiceNameForTest generates a random service name based on the test name and
-// the given subservice name.
-func SubServiceNameForTest(t named, subsvc string) string {
-	fullPrefix := strings.TrimPrefix(t.Name(), "Test") + "-" + subsvc
-	return AppendRandomString(MakeK8sNamePrefix(fullPrefix))
-}

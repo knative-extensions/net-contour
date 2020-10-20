@@ -12,7 +12,7 @@ require (
 	k8s.io/apimachinery v0.18.9
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	knative.dev/networking v0.0.0-20201019071058-ecd132c7658c
-	knative.dev/pkg v0.0.0-20201019114258-95e9532f0457
+	knative.dev/pkg v0.0.0-20201019233058-fc447086b7b0
 	knative.dev/test-infra v0.0.0-20201015231956-d236fb0ea9ff
 )
 
@@ -26,4 +26,4 @@ replace (
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
 )
 
-replace knative.dev/networking => github.com/dprotaso/networking v0.0.0-20201019190559-a10635341d31
+replace knative.dev/networking => github.com/dprotaso/networking v0.0.0-20201020134053-789ecf6cfaa3
