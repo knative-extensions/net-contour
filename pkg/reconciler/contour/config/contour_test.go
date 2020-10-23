@@ -81,6 +81,120 @@ func TestDefaultTLSSecret(t *testing.T) {
 	}
 }
 
+func TestTimeoutPolicyResponse(t *testing.T) {
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: system.Namespace(),
+			Name:      ContourConfigName,
+		},
+		Data: map[string]string{
+			"timeout-policy-response": "60s",
+		},
+	}
+
+	cfg, err := NewContourFromConfigMap(cm)
+	if err != nil {
+		t.Error("NewContourFromConfigMap(timeout-policy-response:60s) =", err)
+	}
+
+	if got, want := cfg.TimeoutPolicyResponse, "60s"; got != want {
+		t.Errorf("TimeoutPolicyResponse got %q want %q", got, want)
+	}
+
+	cm.Data["timeout-policy-response"] = "infinity"
+	cfg, err = NewContourFromConfigMap(cm)
+	if err != nil {
+		t.Error("NewContourFromConfigMap(timeout-policy-response:infinity) =", err)
+	}
+
+	if got, want := cfg.TimeoutPolicyResponse, "infinity"; got != want {
+		t.Errorf("TimeoutPolicyResponse got %q want %q", got, want)
+	}
+
+	delete(cm.Data, "timeout-policy-response")
+	cfg, err = NewContourFromConfigMap(cm)
+	if err != nil {
+		t.Error("NewContourFromConfigMap(timeout-policy-response:60s) =", err)
+	}
+
+	if cfg.TimeoutPolicyResponse != "infinity" {
+		t.Errorf("TimeoutPolicyResponse got %q - want empty", cfg.TimeoutPolicyResponse)
+	}
+
+	// format should be as per time.ParseDuration
+	cm.Data["timeout-policy-response"] = "60"
+
+	_, err = NewContourFromConfigMap(cm)
+	if err == nil {
+		t.Errorf("expected an error parsing erroneous 'timeout-policy-response'")
+	}
+
+	// This should be "infinity"
+	cm.Data["timeout-policy-response"] = "xyz"
+
+	_, err = NewContourFromConfigMap(cm)
+	if err == nil {
+		t.Errorf("expected an error parsing erroneous 'timeout-policy-response'")
+	}
+}
+
+func TestTimeoutPolicyIdle(t *testing.T) {
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: system.Namespace(),
+			Name:      ContourConfigName,
+		},
+		Data: map[string]string{
+			"timeout-policy-idle": "60s",
+		},
+	}
+
+	cfg, err := NewContourFromConfigMap(cm)
+	if err != nil {
+		t.Error("NewContourFromConfigMap(timeout-policy-idle:60s) =", err)
+	}
+
+	if got, want := cfg.TimeoutPolicyIdle, "60s"; got != want {
+		t.Errorf("TimeoutPolicyIdle got %q want %q", got, want)
+	}
+
+	cm.Data["timeout-policy-idle"] = "infinity"
+	cfg, err = NewContourFromConfigMap(cm)
+	if err != nil {
+		t.Error("NewContourFromConfigMap(timeout-policy-idle:infinity) =", err)
+	}
+
+	if got, want := cfg.TimeoutPolicyIdle, "infinity"; got != want {
+		t.Errorf("TimeoutPolicyIdle got %q want %q", got, want)
+	}
+	delete(cm.Data, "timeoutPolicy-idle")
+
+	cfg, err = NewContourFromConfigMap(cm)
+	if err != nil {
+		t.Error("NewContourFromConfigMap(timeout-policy-idle:60s) =", err)
+	}
+
+	if cfg.TimeoutPolicyIdle != "infinity" {
+		t.Errorf("TimeoutPolicyIdle got %q - want empty", cfg.TimeoutPolicyIdle)
+	}
+
+	// format should be as per time.ParseDuration
+	cm.Data["timeout-policy-idle"] = "60"
+
+	_, err = NewContourFromConfigMap(cm)
+	if err == nil {
+		t.Errorf("expected an error parsing erroneous 'timeout-policy-idle'")
+	}
+
+	// This should be "infinity"
+	cm.Data["timeout-policy-idle"] = "xyz"
+
+	_, err = NewContourFromConfigMap(cm)
+	if err == nil {
+		t.Errorf("expected an error parsing erroneous 'timeout-policy-idle'")
+	}
+}
+
 func TestConfigurationErrors(t *testing.T) {
 	tests := []struct {
 		name    string

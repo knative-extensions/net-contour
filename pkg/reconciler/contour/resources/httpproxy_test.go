@@ -124,6 +124,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
@@ -171,6 +172,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -264,6 +266,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
@@ -289,6 +292,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -332,6 +336,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
@@ -357,6 +362,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -400,6 +406,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
@@ -425,6 +432,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -514,6 +522,7 @@ func TestMakeProxies(t *testing.T) {
 					},
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
@@ -554,6 +563,7 @@ func TestMakeProxies(t *testing.T) {
 					},
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},
@@ -655,6 +665,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -687,6 +698,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -713,6 +725,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -737,6 +750,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -829,6 +843,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   false,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
@@ -873,6 +888,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   false,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -985,6 +1001,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
@@ -1029,6 +1046,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -1129,6 +1147,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
@@ -1160,6 +1179,122 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blah",
+							}},
+						},
+					}},
+				}},
+			},
+		}},
+	}, {
+		name: "single external domain with TimeoutPolicyResponse and TimeoutPolicyIdle set",
+		modifyConfig: func(c *config.Config) {
+			c.Contour.TimeoutPolicyResponse = "60s"
+			c.Contour.TimeoutPolicyIdle = "60s"
+		},
+		ing: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar",
+			},
+			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{{
+					Hosts:      []string{"example.com"},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceName: "goo",
+									ServicePort: intstr.FromInt(123),
+								},
+								Percent: 100,
+								AppendHeaders: map[string]string{
+									"Baz": "blah",
+								},
+							}},
+						}},
+					},
+				}},
+			},
+		},
+		want: []*v1.HTTPProxy{{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar-" + publicClass + "-example.com",
+				Labels: map[string]string{
+					DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
+					GenerationKey: "0",
+					ParentKey:     "bar",
+					ClassKey:      publicClass,
+				},
+				Annotations: map[string]string{
+					ClassKey: publicClass,
+				},
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion:         "networking.internal.knative.dev/v1alpha1",
+					Kind:               "Ingress",
+					Name:               "bar",
+					Controller:         ptr.Bool(true),
+					BlockOwnerDeletion: ptr.Bool(true),
+				}},
+			},
+			Spec: v1.HTTPProxySpec{
+				VirtualHost: &v1.VirtualHost{
+					Fqdn: "example.com",
+				},
+				Routes: []v1.Route{{
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "60s",
+						Idle:     "60s",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "K-Network-Hash",
+							Value: "f87d6dc22c28a3558c40fc7c774c8656f79011ca70d21103d469c310ac5c0bc7",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blah",
+							}},
+						},
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "60s",
+						Idle:     "60s",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -1239,6 +1374,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
@@ -1273,6 +1409,7 @@ func TestMakeProxies(t *testing.T) {
 					PermitInsecure:   true,
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
+						Idle:     "infinity",
 					},
 					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -1311,6 +1448,8 @@ func TestMakeProxies(t *testing.T) {
 						v1alpha1.IngressVisibilityClusterLocal: privateClass,
 						v1alpha1.IngressVisibilityExternalIP:   publicClass,
 					},
+					TimeoutPolicyResponse: "infinity",
+					TimeoutPolicyIdle:     "infinity",
 				},
 				Network: &networkingpkg.Config{
 					HTTPProtocol: sec,
