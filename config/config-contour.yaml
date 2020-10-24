@@ -28,6 +28,12 @@ data:
     #                              #
     ################################
 
+    # timeout-policy-idle sets TimeoutPolicy.Idle in contour HTTPProxy spec
+    timeout-policy-idle: "infinity"
+
+    # timeout-policy-response sets TimeoutPolicy.Response in contour HTTPProxy spec
+    timeou-policy-response: "infinity"
+
     # If auto-TLS is disabled fallback to the following certificate
     #
     # An operator is required to setup a TLSCertificateDelegation
