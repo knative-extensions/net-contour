@@ -6,14 +6,14 @@ require (
 	github.com/google/go-cmp v0.5.2
 	github.com/mikefarah/yq/v3 v3.0.0-20200601230220-721dd57ed41b
 	github.com/projectcontour/contour v1.9.0
-	go.uber.org/zap v1.15.0
+	go.uber.org/zap v1.16.0
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.18.9
 	k8s.io/apimachinery v0.18.9
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/networking v0.0.0-20201027230234-f0e013a2a1e2
-	knative.dev/pkg v0.0.0-20201028014535-ed076316cbe1
-	knative.dev/test-infra v0.0.0-20201028004634-fe8002e29c05
+	knative.dev/hack v0.0.0-20201027221733-0d7f2f064b7b
+	knative.dev/networking v0.0.0-20201028132534-429a6210295c
+	knative.dev/pkg v0.0.0-20201028171634-6a24d54694a8
 )
 
 replace (
