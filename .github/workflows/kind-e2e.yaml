@@ -116,6 +116,28 @@ jobs:
         # Create a cluster!
         kind create cluster --config kind.yaml
 
+    - name: Setup metallb
+      run: |
+        kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
+        kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
+        kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+
+        network=$(docker network inspect kind -f "{{(index .IPAM.Config 0).Subnet}}" | cut -d '.' -f1,2)
+        cat <<EOF | kubectl apply -f -
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          namespace: metallb-system
+          name: config
+        data:
+          config: |
+            address-pools:
+            - name: default
+              protocol: layer2
+              addresses:
+              - $network.255.1-$network.255.250
+        EOF
+
     - name: Install Knative net-contour
       run: |
         set -o pipefail
@@ -124,7 +146,6 @@ jobs:
         export GO111MODULE=on
         export GOFLAGS=-mod=vendor
         ko resolve --platform=all -Pf test/config/ -f config/contour -f config | \
-          sed 's/LoadBalancer/NodePort/g' | \
           sed 's/imagePullPolicy:/# DISABLED: imagePullPolicy:/g' | \
           kubectl apply -f -
 
@@ -148,13 +169,9 @@ jobs:
       run: |
         set -x
 
-        # Exclude the control-plane node, which doesn't seem to expose the nodeport service.
-        IPS=( $(kubectl get nodes -lkubernetes.io/hostname!=kind-control-plane -ojsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}') )
-
         # Run the tests tagged as e2e on the KinD cluster.
         go test -race -count=1 -short -timeout=20m -tags=e2e ${{ matrix.test-suite }} \
-           --ingressendpoint="${IPS[0]}" \
-            --enable-beta --enable-alpha \
+           --enable-beta --enable-alpha \
            --ingressClass=contour.ingress.networking.knative.dev \
            --cluster-suffix=$CLUSTER_SUFFIX
 
