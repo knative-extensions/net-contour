@@ -6,11 +6,11 @@ require (
 	github.com/go-logr/zapr v0.1.1 // indirect
 	github.com/google/go-cmp v0.5.2
 	github.com/mikefarah/yq/v3 v3.0.0-20200601230220-721dd57ed41b
-	github.com/projectcontour/contour v1.9.0
+	github.com/projectcontour/contour v1.10.0
 	go.uber.org/zap v1.16.0
 	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/api v0.18.9
-	k8s.io/apimachinery v0.18.9
+	k8s.io/api v0.19.2
+	k8s.io/apimachinery v0.19.2
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	knative.dev/hack v0.0.0-20201112185459-01a34c573bd8
 	knative.dev/networking v0.0.0-20201116165202-57530ee4cbfc
