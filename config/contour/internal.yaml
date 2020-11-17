@@ -2016,7 +2016,7 @@ metadata:
   labels:
     networking.knative.dev/ingress-provider: contour
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: contour
@@ -2032,7 +2032,7 @@ subjects:
   name: contour-certgen
   namespace: contour-internal
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: contour-certgen
@@ -2051,7 +2051,7 @@ rules:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: contour-certgen-v1.9.0
+  name: contour-certgen-v1.10.0
   namespace: contour-internal
   labels:
     networking.knative.dev/ingress-provider: contour
@@ -2299,6 +2299,9 @@ spec:
           name: xds
           protocol: TCP
         - containerPort: 8000
+          name: metrics
+          protocol: TCP
+        - containerPort: 6060
           name: debug
           protocol: TCP
         livenessProbe:
@@ -2401,7 +2404,7 @@ spec:
         - --log-level info
         command:
         - envoy
-        image: docker.io/envoyproxy/envoy:v1.15.1
+        image: docker.io/envoyproxy/envoy:v1.16.0
         imagePullPolicy: IfNotPresent
         name: envoy
         env:
@@ -2447,6 +2450,7 @@ spec:
         - /config/envoy.json
         - --xds-address=contour
         - --xds-port=8001
+        - --xds-resource-version=v3
         - --resources-dir=/config/resources
         - --envoy-cafile=/certs/ca.crt
         - --envoy-cert-file=/certs/tls.crt
