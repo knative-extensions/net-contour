@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/go-logr/zapr v0.1.1 // indirect
-	github.com/google/go-cmp v0.5.2
+	github.com/google/go-cmp v0.5.4
 	github.com/mikefarah/yq/v3 v3.0.0-20200601230220-721dd57ed41b
 	github.com/projectcontour/contour v1.10.0
 	go.uber.org/zap v1.16.0
@@ -12,9 +12,9 @@ require (
 	k8s.io/api v0.19.2
 	k8s.io/apimachinery v0.19.2
 	k8s.io/client-go v0.19.2
-	knative.dev/hack v0.0.0-20201201234937-fddbf732e450
-	knative.dev/networking v0.0.0-20201213231442-54d26dd4fc50
-	knative.dev/pkg v0.0.0-20201210165642-80c1131539da
+	knative.dev/hack v0.0.0-20201214230143-4ed1ecb8db24
+	knative.dev/networking v0.0.0-20201215014943-f9843265b98a
+	knative.dev/pkg v0.0.0-20201215015243-0908e494c4d0
 )
 
 replace (
