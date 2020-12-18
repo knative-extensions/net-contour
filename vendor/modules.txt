@@ -152,8 +152,6 @@ github.com/envoyproxy/protoc-gen-validate/validate
 github.com/evanphx/json-patch
 # github.com/fatih/color v1.9.0
 github.com/fatih/color
-# github.com/ghodss/yaml v1.0.0
-github.com/ghodss/yaml
 # github.com/go-logr/logr v0.2.1
 github.com/go-logr/logr
 # github.com/go-logr/zapr v0.1.1
@@ -922,7 +920,7 @@ k8s.io/utils/trace
 # knative.dev/hack v0.0.0-20201214230143-4ed1ecb8db24
 ## explicit
 knative.dev/hack
-# knative.dev/networking v0.0.0-20201217015204-ceef42482365
+# knative.dev/networking v0.0.0-20201218015602-5b9803233324
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
@@ -958,7 +956,7 @@ knative.dev/networking/test/test_images/runtime/handlers
 knative.dev/networking/test/test_images/timeout
 knative.dev/networking/test/test_images/wsserver
 knative.dev/networking/test/types
-# knative.dev/pkg v0.0.0-20201217014702-b0c121fb667f
+# knative.dev/pkg v0.0.0-20201217152402-7226f4f447a8
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
