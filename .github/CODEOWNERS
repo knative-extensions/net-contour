@@ -1,0 +1,6 @@
+# Default owners are Networking WG leads and TOC
+* @knative-sandbox/networking-wg-leads @knative-sandbox/technical-oversight-committee
+
+# hack and test are owned by productivity
+/hack/* @knative-sandbox/productivity-wg-leads
+/test/* @knative-sandbox/productivity-wg-leads
