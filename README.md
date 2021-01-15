@@ -1,5 +1,7 @@
 # Knative Contour KIngress controller.
 
+DO NOT SUBMIT
+
 [![GoDoc](https://godoc.org/knative.dev/net-contour?status.svg)](https://godoc.org/knative.dev/net-contour)
 [![Go Report Card](https://goreportcard.com/badge/knative/net-contour)](https://goreportcard.com/report/knative/net-contour)
 
