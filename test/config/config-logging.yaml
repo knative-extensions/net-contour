@@ -27,15 +27,15 @@ data:
       "errorOutputPaths": ["stderr"],
       "encoding": "json",
       "encoderConfig": {
-        "timeKey": "ts",
-        "levelKey": "level",
+        "timeKey": "timestamp",
+        "levelKey": "severity",
         "nameKey": "logger",
         "callerKey": "caller",
-        "messageKey": "msg",
+        "messageKey": "message",
         "stacktraceKey": "stacktrace",
         "lineEnding": "",
         "levelEncoder": "",
-        "timeEncoder": "iso8601",
+        "timeEncoder": "rfc3339",
         "durationEncoder": "",
         "callerEncoder": ""
       }
