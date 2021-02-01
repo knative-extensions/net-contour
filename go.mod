@@ -15,8 +15,8 @@ require (
 	k8s.io/client-go v0.19.7
 	k8s.io/kube-openapi v0.0.0-20200410145947-bcb3869e6f29 // indirect
 	knative.dev/hack v0.0.0-20210120165453-8d623a0af457
-	knative.dev/networking v0.0.0-20210125050654-94433ab7f620
-	knative.dev/pkg v0.0.0-20210125222030-6040b3af4803
+	knative.dev/networking v0.0.0-20210201021832-342a3fbb8756
+	knative.dev/pkg v0.0.0-20210130001831-ca02ef752ac6
 	sigs.k8s.io/structured-merge-diff/v3 v3.0.1-0.20200706213357-43c19bbb7fba // indirect
 )
 
