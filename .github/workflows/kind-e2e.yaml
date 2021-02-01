@@ -149,7 +149,7 @@ jobs:
         # Build and Publish our containers to the docker daemon (including test assets)
         export GO111MODULE=on
         export GOFLAGS=-mod=vendor
-        ko resolve --platform=all -Pf test/config/ -f config/contour -f config | \
+        ko resolve --platform=linux/amd64 -Pf test/config/ -f config/contour -f config | \
           sed 's/imagePullPolicy:/# DISABLED: imagePullPolicy:/g' | \
           kubectl apply -f -
 
