@@ -18,7 +18,6 @@ package resources
 
 import (
 	"context"
-	"net/http"
 	"testing"
 	"time"
 
@@ -126,7 +125,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -174,7 +172,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "Foo",
@@ -268,7 +265,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -294,7 +290,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},
 					},
@@ -338,7 +333,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -364,7 +358,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},
 					},
@@ -408,7 +401,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -434,7 +426,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},
 					},
@@ -504,22 +495,6 @@ func TestMakeProxies(t *testing.T) {
 				Routes: []v1.Route{{
 					EnableWebsockets: true,
 					PermitInsecure:   true,
-					RetryPolicy: &v1.RetryPolicy{
-						NumRetries:    34,
-						PerTryTimeout: "14m0s",
-						RetryOn: []v1.RetryOn{
-							"cancelled",
-							"connect-failure",
-							"refused-stream",
-							"resource-exhausted",
-							"retriable-status-codes",
-							"reset",
-							"5xx",
-						},
-						RetriableStatusCodes: []uint32{
-							http.StatusServiceUnavailable,
-						},
-					},
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 						Idle:     "infinity",
@@ -545,22 +520,6 @@ func TestMakeProxies(t *testing.T) {
 				}, {
 					EnableWebsockets: true,
 					PermitInsecure:   true,
-					RetryPolicy: &v1.RetryPolicy{
-						NumRetries:    34,
-						PerTryTimeout: "14m0s",
-						RetryOn: []v1.RetryOn{
-							"cancelled",
-							"connect-failure",
-							"refused-stream",
-							"resource-exhausted",
-							"retriable-status-codes",
-							"reset",
-							"5xx",
-						},
-						RetriableStatusCodes: []uint32{
-							http.StatusServiceUnavailable,
-						},
-					},
 					TimeoutPolicy: &v1.TimeoutPolicy{
 						Response: "infinity",
 						Idle:     "infinity",
@@ -667,7 +626,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
@@ -700,7 +658,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
@@ -727,7 +684,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},
 					},
@@ -752,7 +708,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},
 					},
@@ -845,7 +800,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -890,7 +844,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "Foo",
@@ -1003,7 +956,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -1048,7 +1000,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "Foo",
@@ -1149,7 +1100,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -1181,7 +1131,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},
 					},
@@ -1264,7 +1213,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "60s",
 						Idle:     "60s",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -1296,7 +1244,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "60s",
 						Idle:     "60s",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{},
 					},
@@ -1376,7 +1323,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					Conditions: []v1.MatchCondition{{
 						Header: &v1.HeaderMatchCondition{
 							Name:  "K-Network-Hash",
@@ -1411,7 +1357,6 @@ func TestMakeProxies(t *testing.T) {
 						Response: "infinity",
 						Idle:     "infinity",
 					},
-					RetryPolicy: defaultRetryPolicy(),
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "Host",

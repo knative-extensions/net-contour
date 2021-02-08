@@ -21,7 +21,6 @@ import (
 	// nolint:gosec // No strong cryptography needed.
 	"crypto/sha1"
 	"fmt"
-	"net/http"
 	"sort"
 	"strings"
 
@@ -78,26 +77,6 @@ func ServiceNames(ctx context.Context, ing *v1alpha1.Ingress) map[string]Service
 	return s
 }
 
-func defaultRetryPolicy() *v1.RetryPolicy {
-	return &v1.RetryPolicy{
-		NumRetries: 2,
-		RetryOn: []v1.RetryOn{
-			"cancelled",
-			"connect-failure",
-			"refused-stream",
-			"resource-exhausted",
-			"retriable-status-codes",
-
-			// In addition to what Istio specifies (above),
-			// also retry connection resets.
-			"reset",
-		},
-		RetriableStatusCodes: []uint32{
-			http.StatusServiceUnavailable,
-		},
-	}
-}
-
 func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtocol map[string]string) []*v1.HTTPProxy {
 	ing = ing.DeepCopy()
 	ingress.InsertProbe(ing)
@@ -127,22 +106,6 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 			top := &v1.TimeoutPolicy{
 				Response: config.FromContext(ctx).Contour.TimeoutPolicyResponse,
 				Idle:     config.FromContext(ctx).Contour.TimeoutPolicyIdle,
-			}
-
-			// By default retry on connection problems twice.
-			// This matches the default behavior of Istio:
-			// https://istio.io/latest/docs/concepts/traffic-management/#retries
-			// However, in addition to the codes specified by istio
-			retry := defaultRetryPolicy()
-			if path.DeprecatedRetries != nil && path.DeprecatedRetries.Attempts > 0 {
-				retry.NumRetries = int64(path.DeprecatedRetries.Attempts)
-
-				// When retries is specified explicitly, then we retry some http-level failures as well.
-				retry.RetryOn = append(retry.RetryOn, "5xx")
-
-				if path.DeprecatedRetries.PerTryTimeout != nil {
-					retry.PerTryTimeout = path.DeprecatedRetries.PerTryTimeout.Duration.String()
-				}
 			}
 
 			preSplitHeaders := &v1.HeadersPolicy{
@@ -233,7 +196,6 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 			routes = append(routes, v1.Route{
 				Conditions:           conditions,
 				TimeoutPolicy:        top,
-				RetryPolicy:          retry,
 				Services:             svcs,
 				EnableWebsockets:     true,
 				RequestHeadersPolicy: preSplitHeaders,
