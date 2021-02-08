@@ -898,7 +898,7 @@ k8s.io/utils/trace
 # knative.dev/hack v0.0.0-20210203173706-8368e1f6eacf
 ## explicit
 knative.dev/hack
-# knative.dev/networking v0.0.0-20210204170711-b61da138ba21
+# knative.dev/networking v0.0.0-20210208003533-45b7ed13aeaa
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
@@ -929,6 +929,7 @@ knative.dev/networking/test/defaultsystem
 knative.dev/networking/test/test_images/grpc-ping
 knative.dev/networking/test/test_images/grpc-ping/proto
 knative.dev/networking/test/test_images/httpproxy
+knative.dev/networking/test/test_images/retry
 knative.dev/networking/test/test_images/runtime
 knative.dev/networking/test/test_images/runtime/handlers
 knative.dev/networking/test/test_images/timeout
