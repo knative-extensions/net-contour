@@ -31,6 +31,8 @@ import (
 const iterations = 11
 
 func TestIngressConformance(t *testing.T) {
+	t.Parallel()
+
 	for i := 0; i < iterations; i++ {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			t.Parallel()
