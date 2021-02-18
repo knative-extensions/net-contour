@@ -1,6 +1,6 @@
 # Knative Contour KIngress controller.
 
-[![GoDoc](https://godoc.org/knative.dev/net-contour?status.svg)](https://godoc.org/knative.dev/net-contour)
+[![Go Reference](https://pkg.go.dev/badge/knative.dev/net-contour.svg)](https://pkg.go.dev/knative.dev/net-contour)
 [![Go Report Card](https://goreportcard.com/badge/knative/net-contour)](https://goreportcard.com/report/knative/net-contour)
 
 The `net-contour` controller enables [Contour](https://projectcontour.io) to
