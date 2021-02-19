@@ -1,7 +1,7 @@
 # Default owners are Networking WG leads and TOC
 * @knative-sandbox/technical-oversight-committee
 * @knative-sandbox/networking-wg-leads
-# Last match takes precendence for reviews
+# Last match takes precedence for reviews
 * @knative-sandbox/net-contour-approvers
 
 # hack and test are owned by productivity
