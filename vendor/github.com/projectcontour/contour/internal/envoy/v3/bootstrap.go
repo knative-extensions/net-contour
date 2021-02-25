@@ -155,6 +155,7 @@ func bootstrapConfig(c *envoy.BootstrapConfig) *envoy_bootstrap_v3.Bootstrap {
 		},
 		StaticResources: &envoy_bootstrap_v3.Bootstrap_StaticResources{
 			Clusters: []*envoy_cluster_v3.Cluster{{
+				DnsLookupFamily:      parseDNSLookupFamily(c.DNSLookupFamily),
 				Name:                 "contour",
 				AltStatName:          strings.Join([]string{c.Namespace, "contour", strconv.Itoa(c.GetXdsGRPCPort())}, "_"),
 				ConnectTimeout:       protobuf.Duration(5 * time.Second),
@@ -173,7 +174,7 @@ func bootstrapConfig(c *envoy.BootstrapConfig) *envoy_bootstrap_v3.Bootstrap {
 						KeepaliveInterval: protobuf.UInt32(5),
 					},
 				},
-				Http2ProtocolOptions: new(envoy_core_v3.Http2ProtocolOptions), // enables http2
+				TypedExtensionProtocolOptions: http2ProtocolOptions(),
 				CircuitBreakers: &envoy_cluster_v3.CircuitBreakers{
 					Thresholds: []*envoy_cluster_v3.CircuitBreakers_Thresholds{{
 						Priority:           envoy_core_v3.RoutingPriority_HIGH,
