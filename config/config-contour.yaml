@@ -32,7 +32,7 @@ data:
     timeout-policy-idle: "infinity"
 
     # timeout-policy-response sets TimeoutPolicy.Response in contour HTTPProxy spec
-    timeou-policy-response: "infinity"
+    timeout-policy-response: "infinity"
 
     # If auto-TLS is disabled fallback to the following certificate
     #
