@@ -85,8 +85,8 @@ jobs:
         # https://kubernetes.slack.com/archives/CEKK1KTN2/p1615134111016300
         # https://github.com/kubernetes-sigs/kind/issues/845
         #
-        sudo mkdir /tmp/etcd
-        sudo mount -t tmpfs /tmp/etcd
+        sudo mkdir -p /tmp/etcd
+        sudo mount -t tmpfs tmpfs /tmp/etcd
 
         curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/${{ matrix.kind-version }}/kind-$(uname)-amd64
         chmod +x ./kind
