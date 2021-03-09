@@ -1,10 +1,10 @@
 # Development
 
 This doc explains how to setup a development environment so you can get started
-[contributing](https://github.com/knative/docs/blob/master/community/CONTRIBUTING.md)
+[contributing](https://github.com/knative/docs/blob/main/community/CONTRIBUTING.md)
 to Knative `net-contour`. Also take a look at:
 
-- [The pull request workflow](https://github.com/knative/docs/blob/master/community/CONTRIBUTING.md#pull-requests)
+- [The pull request workflow](https://github.com/knative/docs/blob/main/community/CONTRIBUTING.md#pull-requests)
 
 ## Getting started
 
