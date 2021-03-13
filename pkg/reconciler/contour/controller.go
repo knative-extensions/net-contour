@@ -90,12 +90,12 @@ func NewController(
 
 	// Enqueue us if any of our children kingress resources change.
 	ingressInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("Ingress")),
+		FilterFunc: controller.FilterController(&v1alpha1.Ingress{}),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
 	proxyInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("Ingress")),
+		FilterFunc: controller.FilterController(&v1alpha1.Ingress{}),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
