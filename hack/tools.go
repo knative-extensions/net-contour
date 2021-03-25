@@ -33,6 +33,9 @@ import (
 	// For chaos testing the leaderelection stuff.
 	_ "knative.dev/pkg/leaderelection/chaosduck"
 
+	// To get the networking CRDs
+	_ "knative.dev/networking/config"
+
 	_ "github.com/mikefarah/yq/v3"
 	_ "github.com/projectcontour/contour/cmd/contour"
 )

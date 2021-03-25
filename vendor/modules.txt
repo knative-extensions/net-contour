@@ -915,6 +915,7 @@ k8s.io/utils/trace
 knative.dev/hack
 # knative.dev/networking v0.0.0-20210323181619-8fc278deb519
 ## explicit
+knative.dev/networking/config
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
