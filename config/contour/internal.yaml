@@ -1776,7 +1776,7 @@ rules:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: contour-certgen-v1.13.0
+  name: contour-certgen-v1.13.1
   namespace: contour-internal
   labels:
     networking.knative.dev/ingress-provider: contour
@@ -2137,7 +2137,7 @@ spec:
             - --log-level info
           command:
             - envoy
-          image: docker.io/envoyproxy/envoy:v1.17.0
+          image: docker.io/envoyproxy/envoy:v1.17.1
           imagePullPolicy: IfNotPresent
           name: envoy
           env:
