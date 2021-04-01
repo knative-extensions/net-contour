@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    control-plane: contour-operator
+  name: contour-internal
+---
+apiVersion: operator.projectcontour.io/v1alpha1
+kind: Contour
+metadata:
+  name: contour-internal
+  namespace: contour-internal
+spec:
+  namespace:
+    name: contour-internal
+  ingressClassName: contour-internal
+  networkPublishing:
+    envoy:
+      type: ClusterIPService

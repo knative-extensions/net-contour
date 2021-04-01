@@ -77,6 +77,9 @@ github.com/cncf/udpa/go/udpa/annotations
 github.com/cncf/udpa/go/xds/core/v3
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
+# github.com/docker/distribution v2.7.1+incompatible
+github.com/docker/distribution/digestset
+github.com/docker/distribution/reference
 # github.com/emicklei/go-restful v2.9.5+incompatible
 github.com/emicklei/go-restful
 github.com/emicklei/go-restful/log
@@ -131,8 +134,12 @@ github.com/envoyproxy/protoc-gen-validate/validate
 github.com/evanphx/json-patch
 # github.com/fatih/color v1.9.0
 github.com/fatih/color
+# github.com/fsnotify/fsnotify v1.4.9
+github.com/fsnotify/fsnotify
 # github.com/go-logr/logr v0.3.0
 github.com/go-logr/logr
+# github.com/go-logr/zapr v0.2.0
+github.com/go-logr/zapr
 # github.com/go-openapi/jsonpointer v0.19.3
 github.com/go-openapi/jsonpointer
 # github.com/go-openapi/jsonreference v0.19.3
@@ -227,6 +234,8 @@ github.com/mikefarah/yq/v3/pkg/yqlib
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
 github.com/modern-go/reflect2
+# github.com/opencontainers/go-digest v1.0.0
+github.com/opencontainers/go-digest
 # github.com/openzipkin/zipkin-go v0.2.5
 github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
@@ -260,6 +269,39 @@ github.com/projectcontour/contour/internal/xdscache
 github.com/projectcontour/contour/internal/xdscache/v3
 github.com/projectcontour/contour/pkg/certs
 github.com/projectcontour/contour/pkg/config
+# github.com/projectcontour/contour-operator v1.14.0
+## explicit
+github.com/projectcontour/contour-operator/api/v1alpha1
+github.com/projectcontour/contour-operator/cmd
+github.com/projectcontour/contour-operator/internal/equality
+github.com/projectcontour/contour-operator/internal/intstr
+github.com/projectcontour/contour-operator/internal/objects
+github.com/projectcontour/contour-operator/internal/objects/clusterrole
+github.com/projectcontour/contour-operator/internal/objects/clusterrolebinding
+github.com/projectcontour/contour-operator/internal/objects/configmap
+github.com/projectcontour/contour-operator/internal/objects/contour
+github.com/projectcontour/contour-operator/internal/objects/daemonset
+github.com/projectcontour/contour-operator/internal/objects/deployment
+github.com/projectcontour/contour-operator/internal/objects/gateway
+github.com/projectcontour/contour-operator/internal/objects/gatewayclass
+github.com/projectcontour/contour-operator/internal/objects/job
+github.com/projectcontour/contour-operator/internal/objects/namespace
+github.com/projectcontour/contour-operator/internal/objects/role
+github.com/projectcontour/contour-operator/internal/objects/rolebinding
+github.com/projectcontour/contour-operator/internal/objects/service
+github.com/projectcontour/contour-operator/internal/objects/serviceaccount
+github.com/projectcontour/contour-operator/internal/objects/sharedconfig
+github.com/projectcontour/contour-operator/internal/operator
+github.com/projectcontour/contour-operator/internal/operator/config
+github.com/projectcontour/contour-operator/internal/operator/controller/contour
+github.com/projectcontour/contour-operator/internal/operator/controller/gateway
+github.com/projectcontour/contour-operator/internal/operator/controller/gatewayclass
+github.com/projectcontour/contour-operator/internal/operator/status
+github.com/projectcontour/contour-operator/internal/parse
+github.com/projectcontour/contour-operator/internal/retryableerror
+github.com/projectcontour/contour-operator/pkg/labels
+github.com/projectcontour/contour-operator/pkg/slice
+github.com/projectcontour/contour-operator/pkg/validation
 # github.com/prometheus/client_golang v1.10.0
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
@@ -533,6 +575,7 @@ gopkg.in/yaml.v3
 # k8s.io/api v0.20.2
 ## explicit
 k8s.io/api/admission/v1
+k8s.io/api/admission/v1beta1
 k8s.io/api/admissionregistration/v1
 k8s.io/api/admissionregistration/v1beta1
 k8s.io/api/apiserverinternal/v1alpha1
@@ -579,6 +622,7 @@ k8s.io/api/storage/v1beta1
 # k8s.io/apiextensions-apiserver v0.20.1
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
+k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1
 # k8s.io/apimachinery v0.20.2
 ## explicit
 k8s.io/apimachinery/pkg/api/equality
@@ -890,6 +934,9 @@ k8s.io/code-generator/cmd/set-gen
 k8s.io/code-generator/pkg/namer
 k8s.io/code-generator/pkg/util
 k8s.io/code-generator/third_party/forked/golang/reflect
+# k8s.io/component-base v0.20.2
+k8s.io/component-base/config
+k8s.io/component-base/config/v1alpha1
 # k8s.io/gengo v0.0.0-20201214224949-b6c5ce23f027
 k8s.io/gengo/args
 k8s.io/gengo/examples/deepcopy-gen/generators
@@ -1025,12 +1072,45 @@ knative.dev/pkg/version
 knative.dev/pkg/webhook
 knative.dev/pkg/webhook/certificates/resources
 # sigs.k8s.io/controller-runtime v0.8.2
+sigs.k8s.io/controller-runtime
+sigs.k8s.io/controller-runtime/pkg/builder
 sigs.k8s.io/controller-runtime/pkg/cache
 sigs.k8s.io/controller-runtime/pkg/cache/internal
 sigs.k8s.io/controller-runtime/pkg/client
 sigs.k8s.io/controller-runtime/pkg/client/apiutil
+sigs.k8s.io/controller-runtime/pkg/client/config
+sigs.k8s.io/controller-runtime/pkg/cluster
+sigs.k8s.io/controller-runtime/pkg/config
+sigs.k8s.io/controller-runtime/pkg/config/v1alpha1
+sigs.k8s.io/controller-runtime/pkg/controller
+sigs.k8s.io/controller-runtime/pkg/controller/controllerutil
+sigs.k8s.io/controller-runtime/pkg/conversion
+sigs.k8s.io/controller-runtime/pkg/event
+sigs.k8s.io/controller-runtime/pkg/handler
+sigs.k8s.io/controller-runtime/pkg/healthz
+sigs.k8s.io/controller-runtime/pkg/internal/controller
+sigs.k8s.io/controller-runtime/pkg/internal/controller/metrics
 sigs.k8s.io/controller-runtime/pkg/internal/log
+sigs.k8s.io/controller-runtime/pkg/internal/recorder
+sigs.k8s.io/controller-runtime/pkg/leaderelection
 sigs.k8s.io/controller-runtime/pkg/log
+sigs.k8s.io/controller-runtime/pkg/log/zap
+sigs.k8s.io/controller-runtime/pkg/manager
+sigs.k8s.io/controller-runtime/pkg/manager/signals
+sigs.k8s.io/controller-runtime/pkg/metrics
+sigs.k8s.io/controller-runtime/pkg/predicate
+sigs.k8s.io/controller-runtime/pkg/ratelimiter
+sigs.k8s.io/controller-runtime/pkg/reconcile
+sigs.k8s.io/controller-runtime/pkg/recorder
+sigs.k8s.io/controller-runtime/pkg/runtime/inject
+sigs.k8s.io/controller-runtime/pkg/scheme
+sigs.k8s.io/controller-runtime/pkg/source
+sigs.k8s.io/controller-runtime/pkg/source/internal
+sigs.k8s.io/controller-runtime/pkg/webhook
+sigs.k8s.io/controller-runtime/pkg/webhook/admission
+sigs.k8s.io/controller-runtime/pkg/webhook/conversion
+sigs.k8s.io/controller-runtime/pkg/webhook/internal/certwatcher
+sigs.k8s.io/controller-runtime/pkg/webhook/internal/metrics
 # sigs.k8s.io/gateway-api v0.2.0
 sigs.k8s.io/gateway-api/apis/v1alpha1
 # sigs.k8s.io/structured-merge-diff/v4 v4.0.2

@@ -21,6 +21,7 @@ set -o pipefail
 source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 
 CONTOUR_VERSION="v1.14.0" # This is for controlling which version of contour we want to use.
+CONTOUR_OPERATOR_VERSION="main" # This is for controlling which version of contour-operator we want to use.
 
 CLUSTER_ROLE_NAME=knative-contour
 
@@ -66,8 +67,16 @@ function rewrite_image_pull_policy() {
   sed -E $'s@imagePullPolicy: Always@imagePullPolicy: IfNotPresent@g'
 }
 
+function rewrite_operator_image() {
+  sed -E $'s@docker.io/projectcontour/contour-operator:.+@ko://github.com/projectcontour/contour-operator/cmd@g'
+}
+
 function rewrite_command() {
   sed -e $'s@/bin/contour@contour@g'
+}
+
+function rewrite_operator_command() {
+  sed -e $'s@ /contour-operator@ /ko-app/cmd@g'
 }
 
 function disable_hostport() {
@@ -86,6 +95,10 @@ function privatize_loadbalancer() {
 function contour_yaml() {
   # Used to be: KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour/examples/contour/
   curl "https://raw.githubusercontent.com/projectcontour/contour/${CONTOUR_VERSION}/examples/render/contour.yaml"
+}
+
+function contour_operator_yaml() {
+  curl "https://raw.githubusercontent.com/projectcontour/contour-operator/${CONTOUR_OPERATOR_VERSION}/examples/operator/operator.yaml"
 }
 
 rm -rf config/contour/*
@@ -145,3 +158,9 @@ contour_yaml \
   | rewrite_serve_args contour-external | rewrite_user \
   | rewrite_image | rewrite_image_pull_policy | rewrite_command | disable_hostport \
   | add_ingress_provider_labels >> config/contour/external.yaml
+
+rm -rf config/contour-operator/operator.yaml
+
+contour_operator_yaml \
+  | rewrite_operator_image | rewrite_operator_command \
+  >> config/contour-operator/operator.yaml
