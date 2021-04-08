@@ -70,6 +70,12 @@ type HTTPProxyProcessor struct {
 	// ClientCertificate is the optional identifier of the TLS secret containing client certificate and
 	// private key to be used when establishing TLS connection to upstream cluster.
 	ClientCertificate *types.NamespacedName
+
+	// Request headers that will be set on all routes (optional).
+	RequestHeadersPolicy *HeadersPolicy
+
+	// Response headers that will be set on all routes (optional).
+	ResponseHeadersPolicy *HeadersPolicy
 }
 
 // Run translates HTTPProxies into DAG objects and
@@ -184,7 +190,7 @@ func (p *HTTPProxyProcessor) computeHTTPProxy(proxy *contour_api_v1.HTTPProxy) {
 				return
 			}
 
-			svhost := p.dag.EnsureSecureVirtualHost(host)
+			svhost := p.dag.EnsureSecureVirtualHost(ListenerName{Name: host, ListenerName: "ingress_https"})
 			svhost.Secret = sec
 			// default to a minimum TLS version of 1.2 if it's not specified
 			svhost.MinTLSVersion = annotation.MinTLSVersion(tls.MinimumProtocolVersion, "1.2")
@@ -296,7 +302,7 @@ func (p *HTTPProxyProcessor) computeHTTPProxy(proxy *contour_api_v1.HTTPProxy) {
 	}
 
 	routes := p.computeRoutes(validCond, proxy, proxy, nil, nil, tlsEnabled)
-	insecure := p.dag.EnsureVirtualHost(host)
+	insecure := p.dag.EnsureVirtualHost(ListenerName{Name: host, ListenerName: "ingress_http"})
 	cp, err := toCORSPolicy(proxy.Spec.VirtualHost.CORSPolicy)
 	if err != nil {
 		validCond.AddErrorf(contour_api_v1.ConditionTypeCORSError, "PolicyDidNotParse",
@@ -318,7 +324,7 @@ func (p *HTTPProxyProcessor) computeHTTPProxy(proxy *contour_api_v1.HTTPProxy) {
 	// if TLS is enabled for this virtual host and there is no tcp proxy defined,
 	// then add routes to the secure virtualhost definition.
 	if tlsEnabled && proxy.Spec.TCPProxy == nil {
-		secure := p.dag.EnsureSecureVirtualHost(host)
+		secure := p.dag.EnsureSecureVirtualHost(ListenerName{Name: host, ListenerName: "ingress_https"})
 		secure.CORSPolicy = cp
 
 		rlp, err := rateLimitPolicy(proxy.Spec.VirtualHost.RateLimitPolicy)
@@ -574,14 +580,13 @@ func (p *HTTPProxyProcessor) computeRoutes(
 			dynamicHeaders["CONTOUR_SERVICE_NAME"] = service.Name
 			dynamicHeaders["CONTOUR_SERVICE_PORT"] = strconv.Itoa(service.Port)
 
-			reqHP, err := headersPolicyService(service.RequestHeadersPolicy, dynamicHeaders)
+			reqHP, err := headersPolicyService(p.RequestHeadersPolicy, service.RequestHeadersPolicy, dynamicHeaders)
 			if err != nil {
 				validCond.AddErrorf(contour_api_v1.ConditionTypeServiceError, "RequestHeadersPolicyInvalid",
 					"%s on request headers", err)
 				return nil
 			}
-
-			respHP, err := headersPolicyService(service.ResponseHeadersPolicy, dynamicHeaders)
+			respHP, err := headersPolicyService(p.ResponseHeadersPolicy, service.ResponseHeadersPolicy, dynamicHeaders)
 			if err != nil {
 				validCond.AddErrorf(contour_api_v1.ConditionTypeServiceError, "ResponseHeadersPolicyInvalid",
 					"%s on response headers", err)
@@ -694,7 +699,7 @@ func (p *HTTPProxyProcessor) processHTTPProxyTCPProxy(validCond *contour_api_v1.
 				SNI:                  s.ExternalName,
 			})
 		}
-		secure := p.dag.EnsureSecureVirtualHost(host)
+		secure := p.dag.EnsureSecureVirtualHost(ListenerName{Name: host, ListenerName: "ingress_https"})
 		secure.TCPProxy = &proxy
 
 		return true

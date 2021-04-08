@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v2"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 // ServerType is the name of a xDS server implementation.
@@ -43,10 +44,17 @@ func (s ServerType) Validate() error {
 }
 
 // Validate the GatewayConfig.
-// Name & Namespace must be specified.
-func (g GatewayParameters) Validate() error {
+func (g *GatewayParameters) Validate() error {
 
 	var errorString string
+	if g == nil {
+		return nil
+	}
+
+	if len(g.Name) == 0 && len(g.Namespace) == 0 {
+		return nil
+	}
+
 	if len(g.Name) == 0 {
 		errorString = "name required"
 	}
@@ -396,6 +404,45 @@ func (t TimeoutParameters) Validate() error {
 	return nil
 }
 
+type HeadersPolicy struct {
+	Set    map[string]string `yaml:"set,omitempty"`
+	Remove []string          `yaml:"remove,omitempty"`
+}
+
+func (h HeadersPolicy) Validate() error {
+	for key := range h.Set {
+		if msgs := validation.IsHTTPHeaderName(key); len(msgs) != 0 {
+			return fmt.Errorf("invalid header name %q: %v", key, msgs)
+		}
+	}
+	for _, val := range h.Remove {
+		if msgs := validation.IsHTTPHeaderName(val); len(msgs) != 0 {
+			return fmt.Errorf("invalid header name %q: %v", val, msgs)
+		}
+	}
+	return nil
+}
+
+// PolicyParameters holds default policy used if not explicitly set by the user
+type PolicyParameters struct {
+	// RequestHeadersPolicy defines the request headers set/removed on all routes
+	RequestHeadersPolicy HeadersPolicy `yaml:"request-headers,omitempty"`
+
+	// ResponseHeadersPolicy defines the response headers set/removed on all routes
+	ResponseHeadersPolicy HeadersPolicy `yaml:"response-headers,omitempty"`
+}
+
+// Validate the header parameters.
+func (h PolicyParameters) Validate() error {
+	if err := h.RequestHeadersPolicy.Validate(); err != nil {
+		return err
+	}
+	if err := h.ResponseHeadersPolicy.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
 // ClusterParameters holds various configurable cluster values.
 type ClusterParameters struct {
 	// DNSLookupFamily defines how external names are looked up
@@ -446,7 +493,7 @@ type Parameters struct {
 
 	// GatewayConfig contains parameters for the gateway-api Gateway that Contour
 	// is configured to serve traffic.
-	GatewayConfig GatewayParameters `yaml:"gateway,omitempty"`
+	GatewayConfig *GatewayParameters `yaml:"gateway,omitempty"`
 
 	// Address to be placed in status.loadbalancer field of Ingress objects.
 	// May be either a literal IP address or a host name.
@@ -482,6 +529,9 @@ type Parameters struct {
 	// Timeouts holds various configurable timeouts that can
 	// be set in the config file.
 	Timeouts TimeoutParameters `yaml:"timeouts,omitempty"`
+
+	// Policy specifies default policy applied if not overridden by the user
+	Policy PolicyParameters `yaml:"policy,omitempty"`
 
 	// Namespace of the envoy service to inspect for Ingress status details.
 	EnvoyServiceNamespace string `yaml:"envoy-service-namespace,omitempty"`
@@ -524,6 +574,14 @@ type RateLimitService struct {
 	// Rate Limit Service fails to respond with a valid rate limit
 	// decision within the timeout defined on the extension service.
 	FailOpen bool `yaml:"failOpen,omitempty"`
+
+	// EnableXRateLimitHeaders defines whether to include the X-RateLimit
+	// headers X-RateLimit-Limit, X-RateLimit-Remaining, and X-RateLimit-Reset
+	// (as defined by the IETF Internet-Draft linked below), on responses
+	// to clients when the Rate Limit Service is consulted for a request.
+	//
+	// ref. https://tools.ietf.org/id/draft-polli-ratelimit-headers-03.html
+	EnableXRateLimitHeaders bool `yaml:"enableXRateLimitHeaders,omitempty"`
 }
 
 // Validate verifies that the parameter values do not have any syntax errors.
@@ -556,6 +614,10 @@ func (p *Parameters) Validate() error {
 		return err
 	}
 
+	if err := p.Policy.Validate(); err != nil {
+		return err
+	}
+
 	for _, v := range p.DefaultHTTPVersions {
 		if err := v.Validate(); err != nil {
 			return err
@@ -576,10 +638,6 @@ func Defaults() Parameters {
 		Server: ServerParameters{
 			XDSServerType: ContourServerType,
 		},
-		GatewayConfig: GatewayParameters{
-			Name:      "contour",
-			Namespace: contourNamespace,
-		},
 		IngressStatusAddress:      "",
 		AccessLogFormat:           DEFAULT_ACCESS_LOG_TYPE,
 		AccessLogFields:           DefaultFields,
@@ -597,6 +655,10 @@ func Defaults() Parameters {
 			// This is chosen as a rough default to stop idle connections wasting resources,
 			// without stopping slow connections from being terminated too quickly.
 			ConnectionIdleTimeout: "60s",
+		},
+		Policy: PolicyParameters{
+			RequestHeadersPolicy:  HeadersPolicy{},
+			ResponseHeadersPolicy: HeadersPolicy{},
 		},
 		EnvoyServiceName:      "envoy",
 		EnvoyServiceNamespace: contourNamespace,

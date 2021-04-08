@@ -79,6 +79,7 @@ func GlobalRateLimits(descriptors []*dag.RateLimitDescriptor) []*envoy_route_v3.
 				rl.Actions = append(rl.Actions, &envoy_route_v3.RateLimit_Action{
 					ActionSpecifier: &envoy_route_v3.RateLimit_Action_GenericKey_{
 						GenericKey: &envoy_route_v3.RateLimit_Action_GenericKey{
+							DescriptorKey:   entry.GenericKeyKey,
 							DescriptorValue: entry.GenericKeyValue,
 						},
 					},
@@ -110,10 +111,11 @@ func GlobalRateLimits(descriptors []*dag.RateLimitDescriptor) []*envoy_route_v3.
 // GlobalRateLimitConfig stores configuration for
 // an HTTP global rate limiting filter.
 type GlobalRateLimitConfig struct {
-	ExtensionService types.NamespacedName
-	FailOpen         bool
-	Timeout          timeout.Setting
-	Domain           string
+	ExtensionService        types.NamespacedName
+	FailOpen                bool
+	Timeout                 timeout.Setting
+	Domain                  string
+	EnableXRateLimitHeaders bool
 }
 
 // GlobalRateLimitFilter returns a configured HTTP global rate limit filter,
@@ -140,7 +142,15 @@ func GlobalRateLimitFilter(config *GlobalRateLimitConfig) *http.HttpFilter {
 					},
 					TransportApiVersion: envoy_core_v3.ApiVersion_V3,
 				},
+				EnableXRatelimitHeaders: enableXRateLimitHeaders(config.EnableXRateLimitHeaders),
 			}),
 		},
 	}
+}
+
+func enableXRateLimitHeaders(enable bool) ratelimit_filter_v3.RateLimit_XRateLimitHeadersRFCVersion {
+	if enable {
+		return ratelimit_filter_v3.RateLimit_DRAFT_VERSION_03
+	}
+	return ratelimit_filter_v3.RateLimit_OFF
 }
