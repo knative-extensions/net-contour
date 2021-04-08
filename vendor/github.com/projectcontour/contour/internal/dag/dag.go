@@ -102,13 +102,44 @@ type MatchCondition interface {
 	fmt.Stringer
 }
 
+// PrefixMatchType represents different types of prefix matching alternatives.
+type PrefixMatchType int
+
+const (
+	// PrefixMatchString represents a prefix match that functions like a
+	// string prefix match, i.e. prefix /foo matches /foobar
+	PrefixMatchString PrefixMatchType = iota
+	// PrefixMatchSegment represents a prefix match that only matches full path
+	// segments, i.e. prefix /foo matches /foo/bar but not /foobar
+	PrefixMatchSegment
+)
+
+var prefixMatchTypeToName = map[PrefixMatchType]string{
+	PrefixMatchString:  "string",
+	PrefixMatchSegment: "segment",
+}
+
 // PrefixMatchCondition matches the start of a URL.
 type PrefixMatchCondition struct {
-	Prefix string
+	Prefix          string
+	PrefixMatchType PrefixMatchType
+}
+
+func (ec *ExactMatchCondition) String() string {
+	return "exact: " + ec.Path
+}
+
+// ExactMatchCondition matches the entire path of a URL.
+type ExactMatchCondition struct {
+	Path string
 }
 
 func (pc *PrefixMatchCondition) String() string {
-	return "prefix: " + pc.Prefix
+	str := "prefix: " + pc.Prefix
+	if typeStr, ok := prefixMatchTypeToName[pc.PrefixMatchType]; ok {
+		str += " type: " + typeStr
+	}
+	return str
 }
 
 // RegexMatchCondition matches the URL by regular expression.
@@ -119,6 +150,18 @@ type RegexMatchCondition struct {
 func (rc *RegexMatchCondition) String() string {
 	return "regex: " + rc.Regex
 }
+
+const (
+	// HeaderMatchTypeExact matches a header value exactly.
+	HeaderMatchTypeExact = "exact"
+
+	// HeaderMatchTypeContains matches a header value if it contains the
+	// provided value.
+	HeaderMatchTypeContains = "contains"
+
+	// HeaderMatchTypePresent matches a header if it is present in a request.
+	HeaderMatchTypePresent = "present"
+)
 
 // HeaderMatchCondition matches request headers by MatchType
 type HeaderMatchCondition struct {
@@ -382,6 +425,8 @@ type VirtualHost struct {
 	// as defined by RFC 3986.
 	Name string
 
+	ListenerName string
+
 	// CORSPolicy is the cross-origin policy to apply to the VirtualHost.
 	CORSPolicy *CORSPolicy
 
@@ -468,6 +513,11 @@ func (s *SecureVirtualHost) Valid() bool {
 	// 1. it has a secret and at least one route.
 	// 2. it has a tcpproxy, because the tcpproxy backend may negotiate TLS itself.
 	return (s.Secret != nil && len(s.routes) > 0) || s.TCPProxy != nil
+}
+
+type ListenerName struct {
+	Name         string
+	ListenerName string
 }
 
 // A Listener represents a TCP socket that accepts

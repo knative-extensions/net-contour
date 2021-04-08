@@ -132,7 +132,7 @@ func registerServe(app *kingpin.Application) (*kingpin.CmdClause, *serveContext)
 	serve.Flag("insecure", "Allow serving without TLS secured gRPC.").BoolVar(&ctx.PermitInsecureGRPC)
 	serve.Flag("root-namespaces", "Restrict contour to searching these namespaces for root ingress routes.").PlaceHolder("<ns,ns>").StringVar(&ctx.rootNamespaces)
 
-	serve.Flag("ingress-class-name", "Contour IngressClass name.").PlaceHolder("<name>").StringVar(&ctx.ingressClass)
+	serve.Flag("ingress-class-name", "Contour IngressClass name.").PlaceHolder("<name>").StringVar(&ctx.ingressClassName)
 	serve.Flag("ingress-status-address", "Address to set in Ingress object status.").PlaceHolder("<address>").StringVar(&ctx.Config.IngressStatusAddress)
 	serve.Flag("envoy-http-access-log", "Envoy HTTP access log.").PlaceHolder("/path/to/file").StringVar(&ctx.httpAccessLog)
 	serve.Flag("envoy-https-access-log", "Envoy HTTPS access log.").PlaceHolder("/path/to/file").StringVar(&ctx.httpsAccessLog)
@@ -279,13 +279,47 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 		ctx.Config.Listener.ConnectionBalancer = ""
 	}
 
+	var requestHeadersPolicy dag.HeadersPolicy
+	if ctx.Config.Policy.RequestHeadersPolicy.Set != nil {
+		requestHeadersPolicy.Set = make(map[string]string)
+		for k, v := range ctx.Config.Policy.RequestHeadersPolicy.Set {
+			requestHeadersPolicy.Set[k] = v
+		}
+	}
+	if ctx.Config.Policy.RequestHeadersPolicy.Remove != nil {
+		requestHeadersPolicy.Remove = make([]string, 0, len(ctx.Config.Policy.RequestHeadersPolicy.Remove))
+		requestHeadersPolicy.Remove = append(requestHeadersPolicy.Remove, ctx.Config.Policy.RequestHeadersPolicy.Remove...)
+	}
+
+	var responseHeadersPolicy dag.HeadersPolicy
+	if ctx.Config.Policy.ResponseHeadersPolicy.Set != nil {
+		responseHeadersPolicy.Set = make(map[string]string)
+		for k, v := range ctx.Config.Policy.ResponseHeadersPolicy.Set {
+			responseHeadersPolicy.Set[k] = v
+		}
+	}
+	if ctx.Config.Policy.ResponseHeadersPolicy.Remove != nil {
+		responseHeadersPolicy.Remove = make([]string, 0, len(ctx.Config.Policy.ResponseHeadersPolicy.Remove))
+		responseHeadersPolicy.Remove = append(responseHeadersPolicy.Remove, ctx.Config.Policy.ResponseHeadersPolicy.Remove...)
+	}
+
 	listenerConfig := xdscache_v3.ListenerConfig{
-		UseProxyProto:                 ctx.useProxyProto,
-		HTTPAddress:                   ctx.httpAddr,
-		HTTPPort:                      ctx.httpPort,
+		UseProxyProto: ctx.useProxyProto,
+		HTTPListeners: map[string]xdscache_v3.Listener{
+			"ingress_http": {
+				Name:    "ingress_http",
+				Address: ctx.httpAddr,
+				Port:    ctx.httpPort,
+			},
+		},
+		HTTPSListeners: map[string]xdscache_v3.Listener{
+			"ingress_https": {
+				Name:    "ingress_https",
+				Address: ctx.httpsAddr,
+				Port:    ctx.httpsPort,
+			},
+		},
 		HTTPAccessLog:                 ctx.httpAccessLog,
-		HTTPSAddress:                  ctx.httpsAddr,
-		HTTPSPort:                     ctx.httpsPort,
 		HTTPSAccessLog:                ctx.httpsAccessLog,
 		AccessLogType:                 ctx.Config.AccessLogFormat,
 		AccessLogFields:               ctx.Config.AccessLogFields,
@@ -326,40 +360,11 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 		}
 
 		listenerConfig.RateLimitConfig = &xdscache_v3.RateLimitConfig{
-			ExtensionService: namespacedName,
-			Domain:           ctx.Config.RateLimitService.Domain,
-			Timeout:          responseTimeout,
-			FailOpen:         ctx.Config.RateLimitService.FailOpen,
-		}
-	}
-
-	if ctx.Config.RateLimitService.ExtensionService != "" {
-		namespacedName := k8s.NamespacedNameFrom(ctx.Config.RateLimitService.ExtensionService)
-		client := clients.DynamicClient().Resource(contour_api_v1alpha1.ExtensionServiceGVR).Namespace(namespacedName.Namespace)
-
-		// ensure the specified ExtensionService exists
-		res, err := client.Get(context.Background(), namespacedName.Name, metav1.GetOptions{})
-		if err != nil {
-			return fmt.Errorf("error getting rate limit extension service %s: %v", namespacedName, err)
-		}
-		var extensionSvc contour_api_v1alpha1.ExtensionService
-		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(res.Object, &extensionSvc); err != nil {
-			return fmt.Errorf("error converting rate limit extension service %s: %v", namespacedName, err)
-		}
-		// get the response timeout from the ExtensionService
-		var responseTimeout timeout.Setting
-		if tp := extensionSvc.Spec.TimeoutPolicy; tp != nil {
-			responseTimeout, err = timeout.Parse(tp.Response)
-			if err != nil {
-				return fmt.Errorf("error parsing rate limit extension service %s response timeout: %v", namespacedName, err)
-			}
-		}
-
-		listenerConfig.RateLimitConfig = &xdscache_v3.RateLimitConfig{
-			ExtensionService: namespacedName,
-			Domain:           ctx.Config.RateLimitService.Domain,
-			Timeout:          responseTimeout,
-			FailOpen:         ctx.Config.RateLimitService.FailOpen,
+			ExtensionService:        namespacedName,
+			Domain:                  ctx.Config.RateLimitService.Domain,
+			Timeout:                 responseTimeout,
+			FailOpen:                ctx.Config.RateLimitService.FailOpen,
+			EnableXRateLimitHeaders: ctx.Config.RateLimitService.EnableXRateLimitHeaders,
 		}
 	}
 
@@ -383,44 +388,24 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 	// register observer for endpoints updates.
 	endpointHandler.Observer = contour.ComposeObservers(snapshotHandler)
 
-	// Build the core Kubernetes event handler.
-	eventHandler := &contour.EventHandler{
-		HoldoffDelay:    100 * time.Millisecond,
-		HoldoffMaxDelay: 500 * time.Millisecond,
-		Observer:        dag.ComposeObservers(append(xdscache.ObserversOf(resources), snapshotHandler)...),
-		Builder: dag.Builder{
-			Source: dag.KubernetesCache{
-				RootNamespaces: ctx.proxyRootNamespaces(),
-				IngressClass:   ctx.ingressClass,
-				Gateway: types.NamespacedName{
-					Name:      ctx.Config.GatewayConfig.Name,
-					Namespace: ctx.Config.GatewayConfig.Namespace,
-				},
-				ConfiguredSecretRefs: configuredSecretRefs,
-				FieldLogger:          log.WithField("context", "KubernetesCache"),
-			},
-			Processors: []dag.Processor{
-				&dag.IngressProcessor{
-					FieldLogger:       log.WithField("context", "IngressProcessor"),
-					ClientCertificate: clientCert,
-				},
-				&dag.ExtensionServiceProcessor{
-					FieldLogger:       log.WithField("context", "ExtensionServiceProcessor"),
-					ClientCertificate: clientCert,
-				},
-				&dag.HTTPProxyProcessor{
-					DisablePermitInsecure: ctx.Config.DisablePermitInsecure,
-					FallbackCertificate:   fallbackCert,
-					DNSLookupFamily:       ctx.Config.Cluster.DNSLookupFamily,
-					ClientCertificate:     clientCert,
-				},
-				&dag.GatewayAPIProcessor{
-					FieldLogger: log.WithField("context", "GatewayAPIProcessor"),
-				},
-				&dag.ListenerProcessor{},
-			},
+	// Get the appropriate DAG processors.
+	dagProcessors := []dag.Processor{
+		&dag.IngressProcessor{
+			FieldLogger:       log.WithField("context", "IngressProcessor"),
+			ClientCertificate: clientCert,
 		},
-		FieldLogger: log.WithField("context", "contourEventHandler"),
+		&dag.ExtensionServiceProcessor{
+			FieldLogger:       log.WithField("context", "ExtensionServiceProcessor"),
+			ClientCertificate: clientCert,
+		},
+		&dag.HTTPProxyProcessor{
+			DisablePermitInsecure: ctx.Config.DisablePermitInsecure,
+			FallbackCertificate:   fallbackCert,
+			DNSLookupFamily:       ctx.Config.Cluster.DNSLookupFamily,
+			ClientCertificate:     clientCert,
+			RequestHeadersPolicy:  &requestHeadersPolicy,
+			ResponseHeadersPolicy: &responseHeadersPolicy,
+		},
 	}
 
 	// Log that we're using the fallback certificate if configured.
@@ -430,6 +415,42 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 
 	if clientCert != nil {
 		log.WithField("context", "envoy-client-certificate").Infof("enabled client certificate with secret: %q", clientCert)
+	}
+
+	if clients.ResourcesExist(k8s.GatewayAPIResources()...) {
+		if ctx.Config.GatewayConfig != nil {
+			dagProcessors = append(dagProcessors, &dag.GatewayAPIProcessor{
+				FieldLogger: log.WithField("context", "GatewayAPIProcessor"),
+			})
+		}
+	}
+
+	// The listener processor has to go last since it looks at
+	// the output of the other processors.
+	dagProcessors = append(dagProcessors, &dag.ListenerProcessor{})
+
+	// Build the core Kubernetes event handler.
+	eventHandler := &contour.EventHandler{
+		HoldoffDelay:    100 * time.Millisecond,
+		HoldoffMaxDelay: 500 * time.Millisecond,
+		Observer:        dag.ComposeObservers(append(xdscache.ObserversOf(resources), snapshotHandler)...),
+		Builder: dag.Builder{
+			Source: dag.KubernetesCache{
+				RootNamespaces:       ctx.proxyRootNamespaces(),
+				IngressClassName:     ctx.ingressClassName,
+				ConfiguredSecretRefs: configuredSecretRefs,
+				FieldLogger:          log.WithField("context", "KubernetesCache"),
+			},
+			Processors: dagProcessors,
+		},
+		FieldLogger: log.WithField("context", "contourEventHandler"),
+	}
+
+	if ctx.Config.GatewayConfig != nil {
+		eventHandler.Builder.Source.ConfiguredGateway = types.NamespacedName{
+			Name:      ctx.Config.GatewayConfig.Name,
+			Namespace: ctx.Config.GatewayConfig.Namespace,
+		}
 	}
 
 	// Wrap eventHandler in a converter for objects from the dynamic client.
@@ -471,14 +492,21 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 	if ctx.UseExperimentalServiceAPITypes {
 		log.Warn("DEPRECATED: The flag '--experimental-service-apis' is deprecated and should not be used. Please configure the gateway.name & gateway.namespace in the configuration file to specify which Gateway Contour will be watching.")
 	}
-	for _, r := range k8s.GatewayAPIResources() {
-		if !clients.ResourcesExist(r) {
-			log.WithField("resource", r).Warn("resource type not present on API server")
-			continue
-		}
 
-		if err := informOnResource(clients, r, &dynamicHandler); err != nil {
-			log.WithError(err).WithField("resource", r).Fatal("failed to create informer")
+	// Only inform on GatewayAPI resources if Gateway API is found.
+	if ctx.Config.GatewayConfig != nil {
+		if clients.ResourcesExist(k8s.GatewayAPIResources()...) {
+			for _, r := range k8s.GatewayAPIResources() {
+				if err := informOnResource(clients, r, &dynamicHandler); err != nil {
+					log.WithError(err).WithField("resource", r).Fatal("failed to create informer")
+				}
+			}
+			// Inform on Namespaces.
+			if err := informOnResource(clients, k8s.NamespacesResource(), &dynamicHandler); err != nil {
+				log.WithError(err).WithField("resource", k8s.NamespacesResource()).Fatal("failed to create informer")
+			}
+		} else {
+			log.Fatalf("GatewayAPI Gateway configured but APIs not installed in cluster.")
 		}
 	}
 
@@ -604,13 +632,13 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 
 	// Set up ingress load balancer status writer.
 	lbsw := loadBalancerStatusWriter{
-		log:           log.WithField("context", "loadBalancerStatusWriter"),
-		clients:       clients,
-		isLeader:      eventHandler.IsLeader,
-		lbStatus:      make(chan corev1.LoadBalancerStatus, 1),
-		ingressClass:  ctx.ingressClass,
-		statusUpdater: sh.Writer(),
-		Converter:     converter,
+		log:              log.WithField("context", "loadBalancerStatusWriter"),
+		clients:          clients,
+		isLeader:         eventHandler.IsLeader,
+		lbStatus:         make(chan corev1.LoadBalancerStatus, 1),
+		ingressClassName: ctx.ingressClassName,
+		statusUpdater:    sh.Writer(),
+		Converter:        converter,
 	}
 	g.Add(lbsw.Start)
 
