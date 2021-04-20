@@ -874,10 +874,10 @@ type Cluster struct {
 	// If users desire custom connection pool or upstream behavior, for example terminating
 	// CONNECT only if a custom filter indicates it is appropriate, the custom factories
 	// can be registered and configured here.
+	// [#extension-category: envoy.upstreams]
 	UpstreamConfig *v32.TypedExtensionConfig `protobuf:"bytes,48,opt,name=upstream_config,json=upstreamConfig,proto3" json:"upstream_config,omitempty"`
 	// Configuration to track optional cluster stats.
 	TrackClusterStats *TrackClusterStats `protobuf:"bytes,49,opt,name=track_cluster_stats,json=trackClusterStats,proto3" json:"track_cluster_stats,omitempty"`
-	// [#not-implemented-hide:]
 	// Preconnect configuration for this cluster.
 	PreconnectPolicy *Cluster_PreconnectPolicy `protobuf:"bytes,50,opt,name=preconnect_policy,json=preconnectPolicy,proto3" json:"preconnect_policy,omitempty"`
 	// If `connection_pool_per_downstream_connection` is true, the cluster will use a separate
@@ -1593,6 +1593,7 @@ type Cluster_TransportSocketMatch struct {
 	// against the values specified in this field.
 	Match *_struct.Struct `protobuf:"bytes,2,opt,name=match,proto3" json:"match,omitempty"`
 	// The configuration of the transport socket.
+	// [#extension-category: envoy.transport_sockets.upstream]
 	TransportSocket *v32.TransportSocket `protobuf:"bytes,3,opt,name=transport_socket,json=transportSocket,proto3" json:"transport_socket,omitempty"`
 }
 
@@ -1659,6 +1660,7 @@ type Cluster_CustomClusterType struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// Cluster specific configuration which depends on the cluster being instantiated.
 	// See the supported cluster for further documentation.
+	// [#extension-category: envoy.clusters]
 	TypedConfig *any.Any `protobuf:"bytes,2,opt,name=typed_config,json=typedConfig,proto3" json:"typed_config,omitempty"`
 }
 
@@ -2218,25 +2220,9 @@ type Cluster_CommonLbConfig struct {
 	// because merging those updates isn't currently safe. See
 	// https://github.com/envoyproxy/envoy/pull/3941.
 	UpdateMergeWindow *duration.Duration `protobuf:"bytes,4,opt,name=update_merge_window,json=updateMergeWindow,proto3" json:"update_merge_window,omitempty"`
-	// If set to true, Envoy will not consider new hosts when computing load balancing weights until
-	// they have been health checked for the first time. This will have no effect unless
-	// active health checking is also configured.
-	//
-	// Ignoring a host means that for any load balancing calculations that adjust weights based
-	// on the ratio of eligible hosts and total hosts (priority spillover, locality weighting and
-	// panic mode) Envoy will exclude these hosts in the denominator.
-	//
-	// For example, with hosts in two priorities P0 and P1, where P0 looks like
-	// {healthy, unhealthy (new), unhealthy (new)}
-	// and where P1 looks like
-	// {healthy, healthy}
-	// all traffic will still hit P0, as 1 / (3 - 2) = 1.
-	//
-	// Enabling this will allow scaling up the number of hosts for a given cluster without entering
-	// panic mode or triggering priority spillover, assuming the hosts pass the first health check.
-	//
-	// If panic mode is triggered, new hosts are still eligible for traffic; they simply do not
-	// contribute to the calculation when deciding whether panic mode is enabled or not.
+	// If set to true, Envoy will :ref:`exclude <arch_overview_load_balancing_excluded>` new hosts
+	// when computing load balancing weights until they have been health checked for the first time.
+	// This will have no effect unless active health checking is also configured.
 	IgnoreNewHostsUntilFirstHc bool `protobuf:"varint,5,opt,name=ignore_new_hosts_until_first_hc,json=ignoreNewHostsUntilFirstHc,proto3" json:"ignore_new_hosts_until_first_hc,omitempty"`
 	// If set to `true`, the cluster manager will drain all existing
 	// connections to upstream hosts whenever hosts are added or removed from the cluster.
@@ -2413,7 +2399,6 @@ func (x *Cluster_RefreshRate) GetMaxInterval() *duration.Duration {
 	return nil
 }
 
-// [#not-implemented-hide:]
 type Cluster_PreconnectPolicy struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2421,7 +2406,7 @@ type Cluster_PreconnectPolicy struct {
 
 	// Indicates how many streams (rounded up) can be anticipated per-upstream for each
 	// incoming stream. This is useful for high-QPS or latency-sensitive services. Preconnecting
-	// will only be done if the upstream is healthy.
+	// will only be done if the upstream is healthy and the cluster has traffic.
 	//
 	// For example if this is 2, for an incoming HTTP/1.1 stream, 2 connections will be
 	// established, one for the new incoming stream, and one for a presumed follow-up stream. For
@@ -2439,8 +2424,7 @@ type Cluster_PreconnectPolicy struct {
 	//
 	// If this value is not set, or set explicitly to one, Envoy will fetch as many connections
 	// as needed to serve streams in flight. This means in steady state if a connection is torn down,
-	// a subsequent streams will pay an upstream-rtt latency penalty waiting for streams to be
-	// preconnected.
+	// a subsequent streams will pay an upstream-rtt latency penalty waiting for a new connection.
 	//
 	// This is limited somewhat arbitrarily to 3 because preconnecting too aggressively can
 	// harm latency more than the preconnecting helps.
@@ -2448,15 +2432,16 @@ type Cluster_PreconnectPolicy struct {
 	// Indicates how many many streams (rounded up) can be anticipated across a cluster for each
 	// stream, useful for low QPS services. This is currently supported for a subset of
 	// deterministic non-hash-based load-balancing algorithms (weighted round robin, random).
-	// Unlike per_upstream_preconnect_ratio this preconnects across the upstream instances in a
+	// Unlike *per_upstream_preconnect_ratio* this preconnects across the upstream instances in a
 	// cluster, doing best effort predictions of what upstream would be picked next and
 	// pre-establishing a connection.
+	//
+	// Preconnecting will be limited to one preconnect per configured upstream in the cluster and will
+	// only be done if there are healthy upstreams and the cluster has traffic.
 	//
 	// For example if preconnecting is set to 2 for a round robin HTTP/2 cluster, on the first
 	// incoming stream, 2 connections will be preconnected - one to the first upstream for this
 	// cluster, one to the second on the assumption there will be a follow-up stream.
-	//
-	// Preconnecting will be limited to one preconnect per configured upstream in the cluster.
 	//
 	// If this value is not set, or set explicitly to one, Envoy will fetch as many connections
 	// as needed to serve streams in flight, so during warm up and in steady state if a connection
@@ -2464,8 +2449,8 @@ type Cluster_PreconnectPolicy struct {
 	// connection establishment.
 	//
 	// If both this and preconnect_ratio are set, Envoy will make sure both predicted needs are met,
-	// basically preconnecting max(predictive-preconnect, per-upstream-preconnect), for each upstream.
-	// TODO(alyssawilk) per LB docs and LB overview docs when unhiding.
+	// basically preconnecting max(predictive-preconnect, per-upstream-preconnect), for each
+	// upstream.
 	PredictivePreconnectRatio *wrappers.DoubleValue `protobuf:"bytes,2,opt,name=predictive_preconnect_ratio,json=predictivePreconnectRatio,proto3" json:"predictive_preconnect_ratio,omitempty"`
 }
 
@@ -2920,8 +2905,6 @@ var file_envoy_config_cluster_v3_cluster_proto_rawDesc = []byte{
 	0x63, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x65, 0x6e, 0x74, 0x72, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x1a, 0x23, 0x65, 0x6e, 0x76, 0x6f, 0x79, 0x2f, 0x61, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74,
 	0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x64, 0x65, 0x70, 0x72, 0x65, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x75, 0x64, 0x70, 0x61, 0x2f, 0x61, 0x6e, 0x6e,
-	0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x6d, 0x69, 0x67, 0x72, 0x61, 0x74, 0x65,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x75, 0x64, 0x70, 0x61, 0x2f, 0x61, 0x6e, 0x6e,
 	0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x73, 0x65, 0x63, 0x75, 0x72, 0x69, 0x74,
 	0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1d, 0x75, 0x64, 0x70, 0x61, 0x2f, 0x61, 0x6e,
