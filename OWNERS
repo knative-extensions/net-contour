@@ -1,0 +1,9 @@
+approvers:
+- technical-oversight-committee
+- knative-release-leads
+- networking-wg-leads
+- net-contour-approvers
+
+reviewers:
+- networking-wg-leads
+- net-contour-approvers
