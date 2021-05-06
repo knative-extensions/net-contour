@@ -1812,7 +1812,7 @@ spec:
       containers:
         - name: contour
           image: ko://github.com/projectcontour/contour/cmd/contour
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           command:
             - contour
             - certgen
