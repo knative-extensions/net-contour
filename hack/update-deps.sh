@@ -56,6 +56,10 @@ function rewrite_image() {
   sed -E $'s@docker.io/projectcontour/contour:.+@ko://github.com/projectcontour/contour/cmd/contour@g'
 }
 
+function rewrite_image_pull_policy() {
+  sed -E $'s@imagePullPolicy: Always@imagePullPolicy: IfNotPresent@g'
+}
+
 function rewrite_command() {
   sed -e $'s@/bin/contour@contour@g'
 }
@@ -104,7 +108,7 @@ contour_yaml \
   | delete_contour_cluster_role_bindings \
   | rewrite_contour_namespace contour-internal \
   | rewrite_serve_args contour-internal | rewrite_user \
-  | rewrite_image | rewrite_command | disable_hostport | privatize_loadbalancer \
+  | rewrite_image | rewrite_image_pull_policy | rewrite_command | disable_hostport | privatize_loadbalancer \
   | add_ingress_provider_labels  >> config/contour/internal.yaml
 
 # We do this manually because it's challenging to rewrite
@@ -131,5 +135,5 @@ contour_yaml \
   | delete_contour_cluster_role_bindings \
   | rewrite_contour_namespace contour-external \
   | rewrite_serve_args contour-external | rewrite_user \
-  | rewrite_image | rewrite_command | disable_hostport \
+  | rewrite_image | rewrite_image_pull_policy | rewrite_command | disable_hostport \
   | add_ingress_provider_labels >> config/contour/external.yaml
