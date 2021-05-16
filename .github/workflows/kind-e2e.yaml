@@ -156,7 +156,7 @@ jobs:
         EOF
 
     - name: Install Knative net-contour (non operator)
-      if: matrix.intall == 'yaml'
+      if: matrix.install == 'yaml'
       run: |
         set -o pipefail
 
