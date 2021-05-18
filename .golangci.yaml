@@ -20,9 +20,9 @@ linters:
   enable:
     - asciicheck
     - errorlint
-    - golint
     - gosec
     - prealloc
+    - revive
     - stylecheck
     - tparallel
     - unconvert
