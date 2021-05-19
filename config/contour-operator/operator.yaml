@@ -6101,8 +6101,8 @@ spec:
         - --metrics-addr=127.0.0.1:8080
         - --enable-leader-election
         command:
-        - /ko-app/cmd
-        image: ko://github.com/projectcontour/contour-operator/cmd
+        - /contour-operator
+        image: docker.io/projectcontour/contour-operator:v1.14.0
         imagePullPolicy: IfNotPresent
         name: contour-operator
         resources:

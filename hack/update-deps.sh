@@ -67,16 +67,8 @@ function rewrite_image_pull_policy() {
   sed -E $'s@imagePullPolicy: Always@imagePullPolicy: IfNotPresent@g'
 }
 
-function rewrite_operator_image() {
-  sed -E $'s@docker.io/projectcontour/contour-operator:.+@ko://github.com/projectcontour/contour-operator/cmd@g'
-}
-
 function rewrite_command() {
   sed -e $'s@/bin/contour@contour@g'
-}
-
-function rewrite_operator_command() {
-  sed -e $'s@ /contour-operator@ /ko-app/cmd@g'
 }
 
 function disable_hostport() {
@@ -162,5 +154,4 @@ contour_yaml \
 rm -rf config/contour-operator/operator.yaml
 
 contour_operator_yaml \
-  | rewrite_operator_image | rewrite_operator_command \
   >> config/contour-operator/operator.yaml

@@ -6,7 +6,6 @@ require (
 	github.com/google/go-cmp v0.5.5
 	github.com/mikefarah/yq/v3 v3.0.0-20200601230220-721dd57ed41b
 	github.com/projectcontour/contour v1.14.0
-	github.com/projectcontour/contour-operator v1.14.0
 	go.uber.org/zap v1.16.0
 	k8s.io/api v0.20.2
 	k8s.io/apimachinery v0.20.2
