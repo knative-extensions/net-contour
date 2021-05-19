@@ -22,6 +22,8 @@ source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 
 CONTOUR_VERSION="v1.14.0" # This is for controlling which version of contour we want to use.
 
+CLUSTER_ROLE_NAME=knative-contour
+
 FLOATING_DEPS=(
   "github.com/projectcontour/contour@${CONTOUR_VERSION}"
 )
@@ -41,6 +43,10 @@ function add_ingress_provider_labels() {
 
 function delete_contour_cluster_role_bindings() {
   sed -e '/apiVersion: rbac.authorization.k8s.io/{' -e ':a' -e '${' -e 'p' -e 'd'  -e '}' -e 'N' -e '/---/!ba' -e '/kind: ClusterRoleBinding/d' -e '}'
+}
+
+function rename_cluster_role() {
+  sed -e "/apiVersion: rbac.authorization.k8s.io/{N;/kind: ClusterRole\b/{N;N;N;s/name: contour/name: $1/}}"
 }
 
 function rewrite_contour_namespace() {
@@ -90,13 +96,13 @@ cat > config/contour/internal.yaml <<EOF
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: contour-internal
+  name: knative-contour-internal
   labels:
     networking.knative.dev/ingress-provider: contour
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: contour
+  name: $CLUSTER_ROLE_NAME
 subjects:
 - kind: ServiceAccount
   name: contour
@@ -105,6 +111,7 @@ subjects:
 EOF
 
 contour_yaml \
+  | rename_cluster_role $CLUSTER_ROLE_NAME \
   | delete_contour_cluster_role_bindings \
   | rewrite_contour_namespace contour-internal \
   | rewrite_serve_args contour-internal | rewrite_user \
@@ -117,13 +124,13 @@ cat > config/contour/external.yaml <<EOF
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: contour-external
+  name: knative-contour-external
   labels:
     networking.knative.dev/ingress-provider: contour
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: contour
+  name: $CLUSTER_ROLE_NAME
 subjects:
 - kind: ServiceAccount
   name: contour
@@ -132,6 +139,7 @@ subjects:
 EOF
 
 contour_yaml \
+  | rename_cluster_role $CLUSTER_ROLE_NAME \
   | delete_contour_cluster_role_bindings \
   | rewrite_contour_namespace contour-external \
   | rewrite_serve_args contour-external | rewrite_user \

@@ -1,13 +1,13 @@
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: contour-external
+  name: knative-contour-external
   labels:
     networking.knative.dev/ingress-provider: contour
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: contour
+  name: knative-contour
 subjects:
 - kind: ServiceAccount
   name: contour
@@ -1840,7 +1840,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: contour
+  name: knative-contour
   labels:
     networking.knative.dev/ingress-provider: contour
 rules:
