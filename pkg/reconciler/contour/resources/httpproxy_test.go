@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
-	networkingpkg "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/ptr"
@@ -47,7 +46,6 @@ func TestMakeProxies(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		sec          networkingpkg.HTTPProtocol
 		ing          *v1alpha1.Ingress
 		want         []*v1.HTTPProxy
 		modifyConfig func(*config.Config)
@@ -59,6 +57,7 @@ func TestMakeProxies(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
+				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -137,7 +136,7 @@ func TestMakeProxies(t *testing.T) {
 							Value: "bar",
 						}, {
 							Name:  "K-Network-Hash",
-							Value: "99dbaae65d712842149f0be3a930d0e229226f86fadddd36bb7b87b0a38ffd3e",
+							Value: "418ee51d5bf437558dd840aa1566207fdb00ef57619ed17c0941e4b91d35b63e",
 						}},
 					},
 					Services: []v1.Service{{
@@ -217,6 +216,7 @@ func TestMakeProxies(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
+				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{network.GetServiceHostname("foo", "bar")},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -276,7 +276,7 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "fb6afb0467a7a36edf6d1144ed747e9942a57b82f425e6571113bef5081978b5",
+							Value: "2896c1ae04b8417b5b126af0c6402504b9dc2f5c1da745403ef3fb8f6499dd73",
 						}},
 					},
 					Services: []v1.Service{{
@@ -346,7 +346,7 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "fb6afb0467a7a36edf6d1144ed747e9942a57b82f425e6571113bef5081978b5",
+							Value: "2896c1ae04b8417b5b126af0c6402504b9dc2f5c1da745403ef3fb8f6499dd73",
 						}},
 					},
 					Services: []v1.Service{{
@@ -416,7 +416,7 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "fb6afb0467a7a36edf6d1144ed747e9942a57b82f425e6571113bef5081978b5",
+							Value: "2896c1ae04b8417b5b126af0c6402504b9dc2f5c1da745403ef3fb8f6499dd73",
 						}},
 					},
 					Services: []v1.Service{{
@@ -453,6 +453,7 @@ func TestMakeProxies(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
+				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -539,7 +540,7 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "c464aab77f2a40e9bf60890d0b57471049d2cd5377f99e36d3a0e3906a84ff70",
+							Value: "dad77757456e5dbbdffc726e056d8515b1216fbd660348b760433559de682061",
 						}},
 					},
 					Services: []v1.Service{{
@@ -572,7 +573,7 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "c464aab77f2a40e9bf60890d0b57471049d2cd5377f99e36d3a0e3906a84ff70",
+							Value: "dad77757456e5dbbdffc726e056d8515b1216fbd660348b760433559de682061",
 						}},
 					},
 					Services: []v1.Service{{
@@ -634,13 +635,13 @@ func TestMakeProxies(t *testing.T) {
 		}},
 	}, {
 		name: "single external domain with TLS, and only TLS",
-		sec:  networkingpkg.HTTPRedirected,
 		ing: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
+				HTTPOption: v1alpha1.HTTPOptionRedirected,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -726,7 +727,7 @@ func TestMakeProxies(t *testing.T) {
 							Value: "bar",
 						}, {
 							Name:  "K-Network-Hash",
-							Value: "7b03a20b9872f4e43fb6ab07c484ba4f6701d838bccfea40e49c02ac074ecf33",
+							Value: "eb7c779b7255f1e762100926308e388803f45a8deb1fa17451c87dd56c098ba0",
 						}},
 					},
 					Services: []v1.Service{{
@@ -792,13 +793,13 @@ func TestMakeProxies(t *testing.T) {
 		}},
 	}, {
 		name: "single external domain with TLS, but allowing non-TLS",
-		sec:  networkingpkg.HTTPEnabled,
 		ing: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
+				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -884,7 +885,7 @@ func TestMakeProxies(t *testing.T) {
 							Value: "bar",
 						}, {
 							Name:  "K-Network-Hash",
-							Value: "7b03a20b9872f4e43fb6ab07c484ba4f6701d838bccfea40e49c02ac074ecf33",
+							Value: "f234b5bd0c1a9d0cf485037cf836602e16448cf7b93315f24edc63fd1498e350",
 						}},
 					},
 					Services: []v1.Service{{
@@ -962,6 +963,7 @@ func TestMakeProxies(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
+				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -1027,7 +1029,7 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "f87d6dc22c28a3558c40fc7c774c8656f79011ca70d21103d469c310ac5c0bc7",
+							Value: "225764a7e90e21a05c0591ed9ec9f82f7014ce34f3293ecee049ed44c3ab9eb1",
 						}},
 					},
 					Services: []v1.Service{{
@@ -1080,6 +1082,7 @@ func TestMakeProxies(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
+				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -1142,7 +1145,7 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "f87d6dc22c28a3558c40fc7c774c8656f79011ca70d21103d469c310ac5c0bc7",
+							Value: "225764a7e90e21a05c0591ed9ec9f82f7014ce34f3293ecee049ed44c3ab9eb1",
 						}},
 					},
 					Services: []v1.Service{{
@@ -1191,6 +1194,7 @@ func TestMakeProxies(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
+				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -1257,7 +1261,7 @@ func TestMakeProxies(t *testing.T) {
 							Value: "www.example.com",
 						}, {
 							Name:  "K-Network-Hash",
-							Value: "87932ef9e248f82b2d0dadaa5060d7d900429461ac54ad1823780f94cbd9db9e",
+							Value: "a1d5a1b1e57ab613ff0be8a20021df58150e814d4eb94488cd51802a46aca3dd",
 						}},
 					},
 					Services: []v1.Service{{
@@ -1305,11 +1309,6 @@ func TestMakeProxies(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			sec := test.sec
-			if sec == "" {
-				sec = networkingpkg.HTTPEnabled
-			}
-
 			config := &config.Config{
 				Contour: &config.Contour{
 					VisibilityClasses: map[v1alpha1.IngressVisibility]string{
@@ -1318,9 +1317,6 @@ func TestMakeProxies(t *testing.T) {
 					},
 					TimeoutPolicyResponse: "infinity",
 					TimeoutPolicyIdle:     "infinity",
-				},
-				Network: &networkingpkg.Config{
-					HTTPProtocol: sec,
 				},
 			}
 
