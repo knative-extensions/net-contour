@@ -3,7 +3,7 @@ module knative.dev/net-contour
 go 1.15
 
 require (
-	github.com/google/go-cmp v0.5.5
+	github.com/google/go-cmp v0.5.6
 	github.com/mikefarah/yq/v3 v3.0.0-20200601230220-721dd57ed41b
 	github.com/projectcontour/contour v1.14.0
 	go.uber.org/zap v1.16.0
@@ -11,7 +11,7 @@ require (
 	k8s.io/apimachinery v0.20.2
 	k8s.io/client-go v0.20.2
 	knative.dev/hack v0.0.0-20210428122153-93ad9129c268
-	knative.dev/networking v0.0.0-20210519080815-4a780203e35b
-	knative.dev/pkg v0.0.0-20210518131015-67897f4ec290
+	knative.dev/networking v0.0.0-20210520062317-b2552eca09f7
+	knative.dev/pkg v0.0.0-20210525142738-ea766de6bdd1
 	sigs.k8s.io/yaml v1.2.0
 )
