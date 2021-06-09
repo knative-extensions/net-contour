@@ -46,9 +46,7 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 			}),
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 		},
-		Spec: v1alpha1.IngressSpec{
-			DeprecatedVisibility: ing.Spec.DeprecatedVisibility, // Copy the top-level visibility.
-		},
+		Spec: v1alpha1.IngressSpec{},
 	}
 
 	sns := ServiceNames(ctx, ing)

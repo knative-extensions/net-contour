@@ -62,7 +62,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Generation: 123,
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -112,7 +111,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"doo.gen-123.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -157,7 +155,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Generation: 432,
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{network.GetServiceHostname("foo", "bar")},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -191,7 +188,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"goo.gen-432.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -218,7 +214,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityClusterLocal,
@@ -256,7 +251,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"goo.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityClusterLocal,
@@ -283,7 +277,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -336,7 +329,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"goo.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -363,7 +355,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -482,7 +473,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"doo.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -524,7 +514,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -652,7 +641,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"doo.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -724,7 +712,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -853,7 +840,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				// want ingress only from valid HTTPProxy.
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"doo.gen-0.bar.foo.net-contour.invalid"},
@@ -896,7 +882,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				Name:      "bar",
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"example.com"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -931,7 +916,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				}},
 			},
 			Spec: v1alpha1.IngressSpec{
-				DeprecatedVisibility: v1alpha1.IngressVisibilityExternalIP,
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      []string{"goo.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
