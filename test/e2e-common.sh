@@ -49,7 +49,7 @@ function test_setup() {
   echo ">> Bringing up net-contour"
   ko apply --platform=all -f config/ || return 1
 
-  scale_controlplane contour-ingress-controller
+  scale_controlplane net-contour-controller
 
   # Wait for pods to be running.
   echo ">> Waiting for Serving components to be running..."

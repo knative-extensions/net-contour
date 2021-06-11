@@ -15,7 +15,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: contour-ingress-controller
+  name: net-contour-controller
   namespace: knative-serving
   labels:
     networking.knative.dev/ingress-provider: contour
@@ -23,11 +23,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: contour-ingress-controller
+      app: net-contour-controller
   template:
     metadata:
       labels:
-        app: contour-ingress-controller
+        app: net-contour-controller
     spec:
       serviceAccountName: controller
       containers:
