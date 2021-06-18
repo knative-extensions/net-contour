@@ -98,7 +98,7 @@ rm -rf config/contour/*
 # We do this manually because it's challenging to rewrite
 # the ClusterRoleBinding without collateral damage.
 cat > config/contour/internal.yaml <<EOF
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: knative-contour-internal
@@ -126,7 +126,7 @@ contour_yaml \
 # We do this manually because it's challenging to rewrite
 # the ClusterRoleBinding without collateral damage.
 cat > config/contour/external.yaml <<EOF
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: knative-contour-external
