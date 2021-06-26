@@ -1,0 +1,14 @@
+#@ load("@ytt:overlay", "overlay")
+#! rewrite command
+
+#@overlay/match by=overlay.subset({"kind":"Deployment","metadata":{"name": "contour"}})
+---
+spec:
+  template:
+    spec:
+      containers:
+        #@overlay/match by=overlay.all
+        - args:
+            #@overlay/match by=overlay.subset("serve")
+            #@overlay/insert after=True
+            - --ingress-class-name=contour-internal

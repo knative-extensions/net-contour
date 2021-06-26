@@ -1,0 +1,24 @@
+#@ load("@ytt:overlay", "overlay")
+#! rewrite user
+
+#@overlay/match by=overlay.subset({"kind":"Deployment"})
+---
+spec:
+  template:
+    spec:
+      securityContext:
+        #@overlay/match
+        runAsUser: 65532
+        #@overlay/match
+        runAsGroup: 65532
+
+#@overlay/match by=overlay.subset({"kind":"Job"})
+---
+spec:
+  template:
+    spec:
+      securityContext:
+        #@overlay/match
+        runAsUser: 65532
+        #@overlay/match
+        runAsGroup: 65532

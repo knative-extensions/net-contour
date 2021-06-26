@@ -1,0 +1,9 @@
+#@ load("@ytt:overlay", "overlay")
+#! add ingress provider labels
+
+#@overlay/match by=overlay.all,expects=16
+#@overlay/match-child-defaults missing_ok=True
+---
+metadata:
+  labels:
+    networking.knative.dev/ingress-provider: contour

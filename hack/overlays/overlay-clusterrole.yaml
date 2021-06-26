@@ -1,0 +1,8 @@
+#@ load("@ytt:overlay", "overlay")
+#! rename cluster role
+
+#@overlay/match by=overlay.subset({"kind":"ClusterRole", "metadata": {"name": "contour"}})
+---
+metadata:
+  #@overlay/replace
+  name: knative-contour
