@@ -1,4 +1,6 @@
 #@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
 #! rewrite command
 
 #@overlay/match by=overlay.subset({"kind":"Deployment","metadata":{"name": "contour"}})
@@ -11,4 +13,5 @@ spec:
         - args:
             #@overlay/match by=overlay.subset("serve")
             #@overlay/insert after=True
-            - --ingress-class-name=contour-internal
+            #@yaml/text-templated-strings
+            - --ingress-class-name=(@= data.values.namespace @)

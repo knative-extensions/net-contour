@@ -1,9 +1,9 @@
 #@ load("@ytt:overlay", "overlay")
-#! @ load("@ytt:data", "data")
+#@ load("@ytt:data", "data")
 
 #! privatize loadbalancer, disable hostport and rewrite command
 
-#! @ if data.values.namespace == "contour-internal":
+#@ if data.values.namespace == "contour-internal":
 #@overlay/match by=overlay.subset({"kind":"Service","metadata":{"name": "envoy"}})
 ---
 spec:
@@ -11,7 +11,7 @@ spec:
   externalTrafficPolicy: Local
   #@overlay/match
   type: ClusterIP
-#! @ end
+#@ end
 
 #@overlay/match by=overlay.subset({"kind":"DaemonSet","metadata":{"name": "envoy"}})
 #@overlay/match-child-defaults when=1

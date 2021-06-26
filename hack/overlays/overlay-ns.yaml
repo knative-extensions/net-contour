@@ -1,17 +1,18 @@
 #@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
 #! rewrite contour namespace
 
 #@overlay/match by=overlay.subset({"metadata":{"namespace":"projectcontour"}}),expects=11
 ---
 metadata:
   #@overlay/replace
-  namespace: contour-internal
+  namespace: #@ data.values.namespace
 
 #@overlay/match by=overlay.subset({"kind":"Namespace","metadata":{"name":"projectcontour"}})
 ---
 metadata:
   #@overlay/replace
-  name: contour-internal
+  name: #@ data.values.namespace
 
 #@overlay/match by=overlay.subset({"kind":"RoleBinding"})
 ---
@@ -19,4 +20,4 @@ subjects:
   #@overlay/match by=overlay.subset({"namespace":"projectcontour"})
   - kind: ServiceAccount
     #@overlay/replace
-    namespace: contour-internal
+    namespace: #@ data.values.namespace
