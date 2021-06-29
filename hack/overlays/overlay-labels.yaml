@@ -1,7 +1,7 @@
 #@ load("@ytt:overlay", "overlay")
 #! add ingress provider labels
 
-#@overlay/match by=overlay.all,expects=16
+#@overlay/match by=overlay.all,expects=17
 #@overlay/match-child-defaults missing_ok=True
 ---
 metadata:

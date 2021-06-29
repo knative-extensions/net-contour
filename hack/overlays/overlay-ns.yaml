@@ -21,3 +21,10 @@ subjects:
   - kind: ServiceAccount
     #@overlay/replace
     namespace: #@ data.values.namespace
+
+#@overlay/match by=overlay.subset({"kind":"ConfigMap","metadata":{"name":"contour"}})
+---
+data:
+  #@overlay/replace via=lambda left, right: left.replace("namespace: projectcontour", right)
+  #@yaml/text-templated-strings
+  contour.yaml: "namespace: (@= data.values.namespace@)"
