@@ -38,6 +38,10 @@ rm -rf $(find vendor/ -path '*/e2e/*_test.go')
 # Add permission for shell scripts
 chmod +x $(find vendor -type f -name '*.sh')
 
+function run_ytt() {
+  run_go_tool github.com/k14s/ytt/cmd/ytt ytt "$@"
+}
+
 function contour_yaml() {
   # Used to be: KO_DOCKER_REPO=ko.local ko resolve -f ./vendor/github.com/projectcontour/contour/examples/contour/
   curl "https://raw.githubusercontent.com/projectcontour/contour/${CONTOUR_VERSION}/examples/render/contour.yaml"
@@ -49,5 +53,5 @@ function contour_operator_yaml() {
 
 rm -rf config/contour/*
 
-contour_yaml | ytt --ignore-unknown-comments --data-value namespace=contour-internal --data-value clusterrole.name=$CLUSTER_ROLE_NAME -f hack/overlays -f - >> config/contour/internal.yaml
-contour_yaml | ytt --ignore-unknown-comments --data-value namespace=contour-external --data-value clusterrole.name=$CLUSTER_ROLE_NAME -f hack/overlays -f - >> config/contour/external.yaml
+contour_yaml | run_ytt --ignore-unknown-comments --data-value namespace=contour-internal --data-value clusterrole.name=$CLUSTER_ROLE_NAME -f hack/overlays -f - >> config/contour/internal.yaml
+contour_yaml | run_ytt --ignore-unknown-comments --data-value namespace=contour-external --data-value clusterrole.name=$CLUSTER_ROLE_NAME -f hack/overlays -f - >> config/contour/external.yaml
