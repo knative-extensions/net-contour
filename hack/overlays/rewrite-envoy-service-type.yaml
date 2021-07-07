@@ -1,0 +1,14 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+#! privatize loadbalancer
+
+#@ if data.values.namespace == "contour-internal":
+#@overlay/match by=overlay.subset({"kind":"Service","metadata":{"name": "envoy"}})
+---
+spec:
+  #@overlay/remove
+  externalTrafficPolicy: Local
+  #@overlay/match
+  type: ClusterIP
+#@ end

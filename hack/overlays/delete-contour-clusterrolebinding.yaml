@@ -1,5 +1,4 @@
 #@ load("@ytt:overlay", "overlay")
-#! delete contour cluster role bindings
 
 #@overlay/match by=overlay.subset({"kind":"ClusterRoleBinding","metadata":{"name":"contour"}})
 #@overlay/remove

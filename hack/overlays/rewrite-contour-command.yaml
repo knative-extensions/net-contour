@@ -1,8 +1,6 @@
 #@ load("@ytt:overlay", "overlay")
 #@ load("@ytt:data", "data")
 
-#! rewrite command
-
 #@overlay/match by=overlay.subset({"kind":"Deployment","metadata":{"name": "contour"}})
 ---
 spec:

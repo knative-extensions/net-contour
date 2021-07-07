@@ -1,6 +1,5 @@
 #@ load("@ytt:overlay", "overlay")
 #@ load("@ytt:data", "data")
-#! rewrite contour namespace
 
 #@overlay/match by=overlay.subset({"metadata":{"namespace":"projectcontour"}}),expects=11
 ---
