@@ -1,9 +1,7 @@
 #@ load("@ytt:overlay", "overlay")
 #! rewrite image and image pull policy
 
-#@ ko_import_path = "ko://github.com/projectcontour/contour/cmd/contour"
-
-#@overlay/match by=overlay.all,expects=17
+#@overlay/match by=overlay.all,expects="1+"
 #@overlay/match-child-defaults when=1
 ---
 spec:
@@ -12,16 +10,16 @@ spec:
       containers:
         #@overlay/match by="name"
         - name: contour
-          #@overlay/replace via=lambda left, right: left.replace(left, ko_import_path)
-          image:
+          #@overlay/replace
+          image: ko://github.com/projectcontour/contour/cmd/contour
           imagePullPolicy: IfNotPresent
         #@overlay/match by="name"
         - name: shutdown-manager
-          #@overlay/replace via=lambda left, right: left.replace(left, ko_import_path)
-          image:
+          #@overlay/replace
+          image: ko://github.com/projectcontour/contour/cmd/contour
           imagePullPolicy: IfNotPresent
 
-#@overlay/match by=overlay.all,expects=17
+#@overlay/match by=overlay.all,expects="1+"
 #@overlay/match-child-defaults when=1
 ---
 spec:

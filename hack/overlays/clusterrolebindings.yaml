@@ -7,8 +7,6 @@ kind: ClusterRoleBinding
 metadata:
   #@yaml/text-templated-strings
   name: knative-(@= data.values.namespace @)
-  labels:
-    networking.knative.dev/ingress-provider: contour
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

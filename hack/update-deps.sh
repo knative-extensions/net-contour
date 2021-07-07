@@ -59,4 +59,10 @@ contour_yaml | \
     --data-value clusterrole.name=$CLUSTER_ROLE_NAME \
     -f hack/overlays \
     -f - >> config/contour/internal.yaml
-contour_yaml | run_ytt --ignore-unknown-comments --data-value namespace=contour-external --data-value clusterrole.name=$CLUSTER_ROLE_NAME -f hack/overlays -f - >> config/contour/external.yaml
+
+contour_yaml | \
+  run_ytt --ignore-unknown-comments \
+    --data-value namespace=contour-external \
+    --data-value clusterrole.name=$CLUSTER_ROLE_NAME \
+    -f hack/overlays \
+    -f - >> config/contour/external.yaml

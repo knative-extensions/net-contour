@@ -14,7 +14,6 @@ spec:
 #@ end
 
 #@overlay/match by=overlay.subset({"kind":"DaemonSet","metadata":{"name": "envoy"}})
-#@overlay/match-child-defaults when=1
 ---
 spec:
   template:
@@ -33,7 +32,6 @@ spec:
               hostPort: 443
 
 #@overlay/match by=overlay.subset({"kind":"DaemonSet","metadata":{"name": "envoy"}})
-#@overlay/match-child-defaults when=1
 ---
 spec:
   template:
