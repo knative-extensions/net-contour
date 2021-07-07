@@ -1,7 +1,7 @@
 #@ load("@ytt:overlay", "overlay")
 #@ load("@ytt:data", "data")
 
-#@overlay/match by=overlay.subset({"metadata":{"namespace":"projectcontour"}}),expects=11
+#@overlay/match by=overlay.subset({"metadata":{"namespace":"projectcontour"}}),expects="1+"
 ---
 metadata:
   #@overlay/replace
