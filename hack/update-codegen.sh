@@ -27,7 +27,7 @@ echo "=== Update Codegen for ${MODULE_NAME}"
 
 group "Kubernetes Codegen"
 
-# Generate our own client for istio (otherwise injection won't work)
+# Generate our own client for contour (otherwise injection won't work)
 ${CODEGEN_PKG}/generate-groups.sh "client,informer,lister" \
   knative.dev/net-contour/pkg/client github.com/projectcontour/contour/apis \
   "projectcontour:v1" \
@@ -35,7 +35,7 @@ ${CODEGEN_PKG}/generate-groups.sh "client,informer,lister" \
 
 group "Knative Codegen"
 
-# Knative Injection (for istio)
+# Knative Injection (for contour)
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/net-contour/pkg/client github.com/projectcontour/contour/apis \
   "projectcontour:v1" \
