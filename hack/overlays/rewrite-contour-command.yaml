@@ -1,0 +1,15 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+#@overlay/match by=overlay.subset({"kind":"Deployment","metadata":{"name": "contour"}})
+---
+spec:
+  template:
+    spec:
+      containers:
+        #@overlay/match by=overlay.all
+        - args:
+            #@overlay/match by=overlay.subset("serve")
+            #@overlay/insert after=True
+            #@yaml/text-templated-strings
+            - --ingress-class-name=(@= data.values.namespace @)

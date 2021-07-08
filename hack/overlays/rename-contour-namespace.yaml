@@ -1,0 +1,29 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+#@overlay/match by=overlay.subset({"metadata":{"namespace":"projectcontour"}}),expects="1+"
+---
+metadata:
+  #@overlay/replace
+  namespace: #@ data.values.namespace
+
+#@overlay/match by=overlay.subset({"kind":"Namespace","metadata":{"name":"projectcontour"}})
+---
+metadata:
+  #@overlay/replace
+  name: #@ data.values.namespace
+
+#@overlay/match by=overlay.subset({"kind":"RoleBinding"})
+---
+subjects:
+  #@overlay/match by=overlay.subset({"namespace":"projectcontour"})
+  - kind: ServiceAccount
+    #@overlay/replace
+    namespace: #@ data.values.namespace
+
+#@overlay/match by=overlay.subset({"kind":"ConfigMap","metadata":{"name":"contour"}})
+---
+data:
+  #@overlay/replace via=lambda left, right: left.replace("namespace: projectcontour", right)
+  #@yaml/text-templated-strings
+  contour.yaml: "namespace: (@= data.values.namespace@)"

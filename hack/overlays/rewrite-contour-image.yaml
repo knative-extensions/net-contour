@@ -1,0 +1,32 @@
+#@ load("@ytt:overlay", "overlay")
+#! rewrite image and image pull policy
+
+#@overlay/match by=overlay.all,expects="1+"
+#@overlay/match-child-defaults when=1
+---
+spec:
+  template:
+    spec:
+      containers:
+        #@overlay/match by="name"
+        - name: contour
+          #@overlay/replace
+          image: ko://github.com/projectcontour/contour/cmd/contour
+          imagePullPolicy: IfNotPresent
+        #@overlay/match by="name"
+        - name: shutdown-manager
+          #@overlay/replace
+          image: ko://github.com/projectcontour/contour/cmd/contour
+          imagePullPolicy: IfNotPresent
+
+#@overlay/match by=overlay.all,expects="1+"
+#@overlay/match-child-defaults when=1
+---
+spec:
+  template:
+    spec:
+      initContainers:
+        #@overlay/match by=overlay.all
+        - #@overlay/merge
+          imagePullPolicy: IfNotPresent
+          image: ko://github.com/projectcontour/contour/cmd/contour

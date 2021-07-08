@@ -1,0 +1,17 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  #@yaml/text-templated-strings
+  name: knative-(@= data.values.namespace @)
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: #@ data.values.clusterrole.name
+subjects:
+- kind: ServiceAccount
+  name: contour
+  namespace: #@ data.values.namespace

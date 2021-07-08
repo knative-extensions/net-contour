@@ -38,50 +38,8 @@ rm -rf $(find vendor/ -path '*/e2e/*_test.go')
 # Add permission for shell scripts
 chmod +x $(find vendor -type f -name '*.sh')
 
-function add_ingress_provider_labels() {
-  sed '${/---/d;}' | go run ${REPO_ROOT_DIR}/vendor/github.com/mikefarah/yq/v3 m - ./hack/labels.yaml -d "*"
-}
-
-function delete_contour_cluster_role_bindings() {
-  sed -e '/apiVersion: rbac.authorization.k8s.io/{' -e ':a' -e '${' -e 'p' -e 'd'  -e '}' -e 'N' -e '/---/!ba' -e '/kind: ClusterRoleBinding/d' -e '}'
-}
-
-function rename_cluster_role() {
-  sed -e "/apiVersion: rbac.authorization.k8s.io/{N;/kind: ClusterRole\b/{N;N;N;s/name: contour/name: $1/}}"
-}
-
-function rewrite_contour_namespace() {
-  sed "s@namespace: projectcontour@namespace: $1@g" \
-      | sed "s@name: projectcontour@name: $1@g"
-}
-
-function rewrite_serve_args() {
-  sed -e $'s@        - serve@        - serve\\\n        - --ingress-class-name='$1'@g'
-}
-
-function rewrite_image() {
-  sed -E $'s@docker.io/projectcontour/contour:.+@ko://github.com/projectcontour/contour/cmd/contour@g'
-}
-
-function rewrite_image_pull_policy() {
-  sed -E $'s@imagePullPolicy: Always@imagePullPolicy: IfNotPresent@g'
-}
-
-function rewrite_command() {
-  sed -e $'s@/bin/contour@contour@g'
-}
-
-function disable_hostport() {
-  sed -e $'s@hostPort:@# hostPort:@g'
-}
-
-function rewrite_user() {
-  sed -e $'s@65534@65532@g'
-}
-
-function privatize_loadbalancer() {
-  sed "s@type: LoadBalancer@type: ClusterIP@g" \
-    | sed "s@externalTrafficPolicy: Local@# externalTrafficPolicy: Local@g"
+function run_ytt() {
+  run_go_tool github.com/k14s/ytt/cmd/ytt ytt "$@"
 }
 
 function contour_yaml() {
@@ -95,63 +53,16 @@ function contour_operator_yaml() {
 
 rm -rf config/contour/*
 
-# We do this manually because it's challenging to rewrite
-# the ClusterRoleBinding without collateral damage.
-cat > config/contour/internal.yaml <<EOF
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: knative-contour-internal
-  labels:
-    networking.knative.dev/ingress-provider: contour
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: $CLUSTER_ROLE_NAME
-subjects:
-- kind: ServiceAccount
-  name: contour
-  namespace: contour-internal
----
-EOF
+contour_yaml | \
+  run_ytt --ignore-unknown-comments \
+    --data-value namespace=contour-internal \
+    --data-value clusterrole.name=$CLUSTER_ROLE_NAME \
+    -f hack/overlays \
+    -f - >> config/contour/internal.yaml
 
-contour_yaml \
-  | rename_cluster_role $CLUSTER_ROLE_NAME \
-  | delete_contour_cluster_role_bindings \
-  | rewrite_contour_namespace contour-internal \
-  | rewrite_serve_args contour-internal | rewrite_user \
-  | rewrite_image | rewrite_image_pull_policy | rewrite_command | disable_hostport | privatize_loadbalancer \
-  | add_ingress_provider_labels  >> config/contour/internal.yaml
-
-# We do this manually because it's challenging to rewrite
-# the ClusterRoleBinding without collateral damage.
-cat > config/contour/external.yaml <<EOF
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: knative-contour-external
-  labels:
-    networking.knative.dev/ingress-provider: contour
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: $CLUSTER_ROLE_NAME
-subjects:
-- kind: ServiceAccount
-  name: contour
-  namespace: contour-external
----
-EOF
-
-contour_yaml \
-  | rename_cluster_role $CLUSTER_ROLE_NAME \
-  | delete_contour_cluster_role_bindings \
-  | rewrite_contour_namespace contour-external \
-  | rewrite_serve_args contour-external | rewrite_user \
-  | rewrite_image | rewrite_image_pull_policy | rewrite_command | disable_hostport \
-  | add_ingress_provider_labels >> config/contour/external.yaml
-
-rm -rf config/contour-operator/operator.yaml
-
-contour_operator_yaml \
-  >> config/contour-operator/operator.yaml
+contour_yaml | \
+  run_ytt --ignore-unknown-comments \
+    --data-value namespace=contour-external \
+    --data-value clusterrole.name=$CLUSTER_ROLE_NAME \
+    -f hack/overlays \
+    -f - >> config/contour/external.yaml
