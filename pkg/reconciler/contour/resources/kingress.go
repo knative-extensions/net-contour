@@ -63,7 +63,7 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 		// Establish the visibility based on the class annotation.
 		var vis v1alpha1.IngressVisibility
 		for v, class := range config.FromContext(ctx).Contour.VisibilityClasses {
-			if class == proxy.Annotations["projectcontour.io/ingress.class"] {
+			if class == proxy.Annotations[ClassKey] {
 				vis = v
 			}
 		}
