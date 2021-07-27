@@ -57,6 +57,11 @@ func (dag *DAG) EnsureService(meta types.NamespacedName, port intstr.IntOrString
 		return nil, err
 	}
 
+	err = validateExternalName(svc, false)
+	if err != nil {
+		return nil, err
+	}
+
 	if dagSvc := dag.GetService(k8s.NamespacedNameOf(svc), svcPort.Port); dagSvc != nil {
 		return dagSvc, nil
 	}
@@ -77,6 +82,39 @@ func (dag *DAG) EnsureService(meta types.NamespacedName, port intstr.IntOrString
 	}
 	return dagSvc, nil
 }
+
+func validateExternalName(svc *v1.Service, enableExternalNameSvc bool) error {
+
+	// If this isn't an ExternalName Service, we're all good here.
+	en := externalName(svc)
+	if en == "" {
+		return nil
+	}
+
+	// If ExternalNames are disabled, then we don't want to add this to the DAG.
+	if !enableExternalNameSvc {
+		return fmt.Errorf("%s/%s is an ExternalName service, these are not currently enabled. See the config.enableExternalNameService config file setting", svc.Namespace, svc.Name)
+	}
+
+	// Check against a list of known localhost names, using a map to approximate a set.
+	// TODO(youngnick) This is a very porous hack, and we should probably look into doing a DNS
+	// lookup to check what the externalName resolves to, but I'm worried about the
+	// performance impact of doing one or more DNS lookups per DAG run, so we're
+	// going to go with a specific blocklist for now.
+	localhostNames := map[string]struct{}{
+		"localhost":               {},
+		"localhost.localdomain":   {},
+		"local.projectcontour.io": {},
+	}
+
+	_, localhost := localhostNames[en]
+	if localhost {
+		return fmt.Errorf("%s/%s is an ExternalName service that points to localhost, this is not allowed", svc.Namespace, svc.Name)
+	}
+
+	return nil
+}
+
 
 func upstreamProtocol(svc *v1.Service, port v1.ServicePort) string {
 	up := annotation.ParseUpstreamProtocols(svc.Annotations)
