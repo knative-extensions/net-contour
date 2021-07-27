@@ -16,3 +16,5 @@ require (
 	knative.dev/pkg v0.0.0-20210216013737-584933f8280b
 	sigs.k8s.io/yaml v1.2.0
 )
+
+replace github.com/projectcontour/contour => github.com/evankanderson/contour v1.12.0-CVE-32783
