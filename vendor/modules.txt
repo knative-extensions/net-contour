@@ -231,7 +231,7 @@ github.com/modern-go/reflect2
 github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
-# github.com/projectcontour/contour v1.14.0
+# github.com/projectcontour/contour v1.14.0 => github.com/evankanderson/contour v1.14.1-0.20210727041602-27605333c317
 ## explicit
 github.com/projectcontour/contour/apis/projectcontour/v1
 github.com/projectcontour/contour/apis/projectcontour/v1alpha1
@@ -1038,3 +1038,4 @@ sigs.k8s.io/structured-merge-diff/v4/value
 # sigs.k8s.io/yaml v1.2.0
 ## explicit
 sigs.k8s.io/yaml
+# github.com/projectcontour/contour => github.com/evankanderson/contour v1.14.1-0.20210727041602-27605333c317
