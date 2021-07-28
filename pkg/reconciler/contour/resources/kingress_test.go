@@ -19,7 +19,6 @@ package resources
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
@@ -207,7 +206,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			},
 		},
 	}, {
-		name: "cluster local visibility with retry policy and timeout",
+		name: "cluster local visibility",
 		ing: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
@@ -219,10 +218,6 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 					Visibility: v1alpha1.IngressVisibilityClusterLocal,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
-							DeprecatedRetries: &v1alpha1.HTTPRetry{
-								Attempts:      34,
-								PerTryTimeout: &metav1.Duration{Duration: 14 * time.Minute},
-							},
 							Splits: []v1alpha1.IngressBackendSplit{{
 								IngressBackend: v1alpha1.IngressBackend{
 									ServiceName: "goo",
