@@ -7,7 +7,7 @@
 package envoy_type_tracing_v3
 
 import (
-	_ "github.com/cncf/udpa/go/udpa/annotations"
+	_ "github.com/cncf/xds/go/udpa/annotations"
 	v3 "github.com/envoyproxy/go-control-plane/envoy/type/metadata/v3"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	proto "github.com/golang/protobuf/proto"
@@ -323,8 +323,8 @@ func (x *CustomTag_Header) GetDefaultValue() string {
 }
 
 // Metadata type custom tag using
-// :ref:`MetadataKey <envoy_api_msg_type.metadata.v3.MetadataKey>` to retrieve the protobuf value
-// from :ref:`Metadata <envoy_api_msg_config.core.v3.Metadata>`, and populate the tag value with
+// :ref:`MetadataKey <envoy_v3_api_msg_type.metadata.v3.MetadataKey>` to retrieve the protobuf value
+// from :ref:`Metadata <envoy_v3_api_msg_config.core.v3.Metadata>`, and populate the tag value with
 // `the canonical JSON <https://developers.google.com/protocol-buffers/docs/proto3#json>`_
 // representation of it.
 type CustomTag_Metadata struct {
