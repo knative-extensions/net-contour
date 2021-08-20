@@ -21,8 +21,15 @@ package tlscertificatedelegation
 import (
 	context "context"
 
+	apisprojectcontourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	cache "k8s.io/client-go/tools/cache"
+	versioned "knative.dev/net-contour/pkg/client/clientset/versioned"
 	v1 "knative.dev/net-contour/pkg/client/informers/externalversions/projectcontour/v1"
+	client "knative.dev/net-contour/pkg/client/injection/client"
 	factory "knative.dev/net-contour/pkg/client/injection/informers/factory"
+	projectcontourv1 "knative.dev/net-contour/pkg/client/listers/projectcontour/v1"
 	controller "knative.dev/pkg/controller"
 	injection "knative.dev/pkg/injection"
 	logging "knative.dev/pkg/logging"
@@ -30,6 +37,7 @@ import (
 
 func init() {
 	injection.Default.RegisterInformer(withInformer)
+	injection.Dynamic.RegisterDynamicInformer(withDynamicInformer)
 }
 
 // Key is used for associating the Informer inside the context.Context.
@@ -41,6 +49,11 @@ func withInformer(ctx context.Context) (context.Context, controller.Informer) {
 	return context.WithValue(ctx, Key{}, inf), inf.Informer()
 }
 
+func withDynamicInformer(ctx context.Context) context.Context {
+	inf := &wrapper{client: client.Get(ctx)}
+	return context.WithValue(ctx, Key{}, inf)
+}
+
 // Get extracts the typed informer from the context.
 func Get(ctx context.Context) v1.TLSCertificateDelegationInformer {
 	untyped := ctx.Value(Key{})
@@ -49,4 +62,45 @@ func Get(ctx context.Context) v1.TLSCertificateDelegationInformer {
 			"Unable to fetch knative.dev/net-contour/pkg/client/informers/externalversions/projectcontour/v1.TLSCertificateDelegationInformer from context.")
 	}
 	return untyped.(v1.TLSCertificateDelegationInformer)
+}
+
+type wrapper struct {
+	client versioned.Interface
+
+	namespace string
+}
+
+var _ v1.TLSCertificateDelegationInformer = (*wrapper)(nil)
+var _ projectcontourv1.TLSCertificateDelegationLister = (*wrapper)(nil)
+
+func (w *wrapper) Informer() cache.SharedIndexInformer {
+	return cache.NewSharedIndexInformer(nil, &apisprojectcontourv1.TLSCertificateDelegation{}, 0, nil)
+}
+
+func (w *wrapper) Lister() projectcontourv1.TLSCertificateDelegationLister {
+	return w
+}
+
+func (w *wrapper) TLSCertificateDelegations(namespace string) projectcontourv1.TLSCertificateDelegationNamespaceLister {
+	return &wrapper{client: w.client, namespace: namespace}
+}
+
+func (w *wrapper) List(selector labels.Selector) (ret []*apisprojectcontourv1.TLSCertificateDelegation, err error) {
+	lo, err := w.client.ProjectcontourV1().TLSCertificateDelegations(w.namespace).List(context.TODO(), metav1.ListOptions{
+		LabelSelector: selector.String(),
+		// TODO(mattmoor): Incorporate resourceVersion bounds based on staleness criteria.
+	})
+	if err != nil {
+		return nil, err
+	}
+	for idx := range lo.Items {
+		ret = append(ret, &lo.Items[idx])
+	}
+	return ret, nil
+}
+
+func (w *wrapper) Get(name string) (*apisprojectcontourv1.TLSCertificateDelegation, error) {
+	return w.client.ProjectcontourV1().TLSCertificateDelegations(w.namespace).Get(context.TODO(), name, metav1.GetOptions{
+		// TODO(mattmoor): Incorporate resourceVersion bounds based on staleness criteria.
+	})
 }
