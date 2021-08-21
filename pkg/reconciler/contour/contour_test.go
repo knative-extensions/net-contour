@@ -127,9 +127,11 @@ func TestReconcile(t *testing.T) {
 				i.Status.MarkLoadBalancerReady(
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: publicSvc,
+						IP:             publicSvcIP,
 					}},
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: privateSvc,
+						IP:             privateSvcIP,
 					}})
 			}),
 		}},
@@ -160,9 +162,11 @@ func TestReconcile(t *testing.T) {
 				i.Status.MarkLoadBalancerReady(
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: publicSvc,
+						IP:             publicSvcIP,
 					}},
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: privateSvc,
+						IP:             privateSvcIP,
 					}})
 			}),
 		}},
@@ -283,9 +287,11 @@ func TestReconcile(t *testing.T) {
 				i.Status.MarkLoadBalancerReady(
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: publicSvc,
+						IP:             publicSvcIP,
 					}},
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: privateSvc,
+						IP:             privateSvcIP,
 					}})
 				// The rest would likely have carried over from the previous reconcile,
 				// but omitting it from the input object is less verbose.  The salient
@@ -309,9 +315,11 @@ func TestReconcile(t *testing.T) {
 				i.Status.MarkLoadBalancerReady(
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: publicSvc,
+						IP:             publicSvcIP,
 					}},
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: privateSvc,
+						IP:             privateSvcIP,
 					}})
 			}),
 		}},
@@ -424,9 +432,11 @@ func TestReconcile(t *testing.T) {
 				i.Status.MarkLoadBalancerReady(
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: publicSvc,
+						IP:             publicSvcIP,
 					}},
 					[]v1alpha1.LoadBalancerIngressStatus{{
 						DomainInternal: privateSvc,
+						IP:             privateSvcIP,
 					}})
 			}),
 		}},
@@ -585,10 +595,12 @@ var (
 	publicName    = "envoy-stuff"
 	publicKey     = fmt.Sprintf("%s/%s", publicNS, publicName)
 	publicSvc     = network.GetServiceHostname(publicName, publicNS)
+	publicSvcIP   = "1.2.3.4"
 	privateNS     = "crouching-cont0ur"
 	privateName   = "hidden-envoy"
 	privateKey    = fmt.Sprintf("%s/%s", privateNS, privateName)
 	privateSvc    = network.GetServiceHostname(privateName, privateNS)
+	privateSvcIP  = "5.6.7.8"
 	defaultConfig = &config.Config{
 		Contour: &config.Contour{
 			VisibilityKeys: map[v1alpha1.IngressVisibility]sets.String{
@@ -621,6 +633,25 @@ var (
 				Ports: []corev1.ServicePort{{
 					Name: "http2",
 				}},
+			},
+		},
+		// Contour Control Plane Services
+		&corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      publicName,
+				Namespace: publicNS,
+			},
+			Spec: corev1.ServiceSpec{
+				ClusterIP: publicSvcIP,
+			},
+		},
+		&corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      privateName,
+				Namespace: privateNS,
+			},
+			Spec: corev1.ServiceSpec{
+				ClusterIP: privateSvcIP,
 			},
 		},
 	}
@@ -708,9 +739,11 @@ func makeItReady(i *v1alpha1.Ingress) {
 	i.Status.MarkLoadBalancerReady(
 		[]v1alpha1.LoadBalancerIngressStatus{{
 			DomainInternal: publicSvc,
+			IP:             publicSvcIP,
 		}},
 		[]v1alpha1.LoadBalancerIngressStatus{{
 			DomainInternal: privateSvc,
+			IP:             privateSvcIP,
 		}})
 }
 

@@ -249,7 +249,9 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 	}
 	ing.Status.MarkNetworkConfigured()
 
-	if ing.IsReady() {
+	ready := ing.IsReady()
+
+	if ready {
 		// When the kingress has already been marked Ready for this generation,
 		// then it must have been successfully probed.  The status manager has
 		// caching built-in, which makes this exception unnecessary for the case
@@ -261,18 +263,20 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		// about the steady state.
 		logger.Debug("kingress is ready, skipping probe.")
 	} else {
-		ready, err := r.statusManager.IsReady(ctx, ing)
+		var err error
+		ready, err = r.statusManager.IsReady(ctx, ing)
 		if err != nil {
 			return fmt.Errorf("failed to probe Ingress %s/%s: %w", ing.GetNamespace(), ing.GetName(), err)
 		}
 		logger.Debugf("Status prober returned %v.", ready)
-		if ready {
-			ing.Status.MarkLoadBalancerReady(
-				lbStatus(ctx, v1alpha1.IngressVisibilityExternalIP),
-				lbStatus(ctx, v1alpha1.IngressVisibilityClusterLocal))
-		} else {
-			ing.Status.MarkLoadBalancerNotReady()
-		}
+	}
+
+	if ready {
+		ing.Status.MarkLoadBalancerReady(
+			r.lbStatus(ctx, v1alpha1.IngressVisibilityExternalIP),
+			r.lbStatus(ctx, v1alpha1.IngressVisibilityClusterLocal))
+	} else {
+		ing.Status.MarkLoadBalancerNotReady()
 	}
 
 	// Having fully reflected our status, set this before checking
@@ -295,11 +299,22 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 	return nil
 }
 
-func lbStatus(ctx context.Context, vis v1alpha1.IngressVisibility) (lbs []v1alpha1.LoadBalancerIngressStatus) {
+func (r *Reconciler) lbStatus(ctx context.Context, vis v1alpha1.IngressVisibility) (lbs []v1alpha1.LoadBalancerIngressStatus) {
+	logger := logging.FromContext(ctx)
+
 	if keys, ok := config.FromContext(ctx).Contour.VisibilityKeys[vis]; ok {
 		for _, key := range keys.List() {
 			namespace, name, _ := cache.SplitMetaNamespaceKey(key)
+			clusterIP := ""
+
+			if service, err := r.serviceLister.Services(namespace).Get(name); err == nil {
+				clusterIP = service.Spec.ClusterIP
+			} else {
+				logger.Infof("failed to get service to determine cluster IP %s", err)
+			}
+
 			lbs = append(lbs, v1alpha1.LoadBalancerIngressStatus{
+				IP:             clusterIP,
 				DomainInternal: network.GetServiceHostname(name, namespace),
 			})
 		}
