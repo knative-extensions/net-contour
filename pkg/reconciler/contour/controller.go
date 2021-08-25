@@ -66,7 +66,6 @@ func NewController(
 	myFilterFunc := reconciler.AnnotationFilterFunc(networking.IngressClassAnnotationKey, ContourIngressClassName, false)
 	impl := ingressreconciler.NewImpl(ctx, c, ContourIngressClassName,
 		func(impl *controller.Impl) controller.Options {
-			logger.Info("Setting up ConfigMap receivers")
 			configsToResync := []interface{}{
 				&config.Contour{},
 				&network.Config{},
@@ -77,16 +76,16 @@ func NewController(
 			})
 			configStore := config.NewStore(logger.Named("config-store"), resyncIngressesOnConfigChange)
 			configStore.WatchConfigs(cmw)
-			return controller.Options{ConfigStore: configStore}
+			return controller.Options{
+				ConfigStore:       configStore,
+				PromoteFilterFunc: myFilterFunc,
+			}
 		})
 
-	logger.Info("Setting up event handlers")
-
-	ingressHandler := cache.FilteringResourceEventHandler{
+	ingressInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: myFilterFunc,
 		Handler:    controller.HandleAll(impl.Enqueue),
-	}
-	ingressInformer.Informer().AddEventHandler(ingressHandler)
+	})
 
 	// Enqueue us if any of our children kingress resources change.
 	ingressInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
