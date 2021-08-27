@@ -46,7 +46,11 @@ func WriteBootstrap(c *envoy.BootstrapConfig) error {
 	}
 
 	if c.ResourcesDir != "" {
-		if err := os.MkdirAll(path.Join(c.ResourcesDir, "sds"), 0750); err != nil {
+		// Setting permissions to 0777 explicitly.
+		// Refer Issue: https://github.com/projectcontour/contour/issues/3264
+		// The secrets in this directory are "pointers" to actual secrets
+		// mounted from Kubernetes secrets; that means the actual secrets aren't 0777
+		if err := os.MkdirAll(path.Join(c.ResourcesDir, "sds"), 0777); err != nil {
 			return err
 		}
 	}
@@ -194,19 +198,19 @@ func bootstrapConfig(c *envoy.BootstrapConfig) *envoy_bootstrap_v3.Bootstrap {
 				Name:                 "service-stats",
 				AltStatName:          strings.Join([]string{c.Namespace, "service-stats", strconv.Itoa(c.GetAdminPort())}, "_"),
 				ConnectTimeout:       protobuf.Duration(250 * time.Millisecond),
-				ClusterDiscoveryType: ClusterDiscoveryType(envoy_cluster_v3.Cluster_LOGICAL_DNS),
+				ClusterDiscoveryType: ClusterDiscoveryType(envoy_cluster_v3.Cluster_STATIC),
 				LbPolicy:             envoy_cluster_v3.Cluster_ROUND_ROBIN,
 				LoadAssignment: &envoy_endpoint_v3.ClusterLoadAssignment{
 					ClusterName: "service-stats",
 					Endpoints: Endpoints(
-						SocketAddress(c.GetAdminAddress(), c.GetAdminPort()),
+						UnixSocketAddress(c.GetAdminAddress(), c.GetAdminPort()),
 					),
 				},
 			}},
 		},
 		Admin: &envoy_bootstrap_v3.Admin{
 			AccessLogPath: c.GetAdminAccessLogPath(),
-			Address:       SocketAddress(c.GetAdminAddress(), c.GetAdminPort()),
+			Address:       UnixSocketAddress(c.GetAdminAddress(), c.GetAdminPort()),
 		},
 	}
 }

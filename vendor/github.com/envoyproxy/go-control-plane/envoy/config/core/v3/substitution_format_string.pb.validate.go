@@ -33,9 +33,6 @@ var (
 	_ = ptypes.DynamicAny{}
 )
 
-// define the regex for a UUID once up-front
-var _substitution_format_string_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
-
 // Validate checks the field values on SubstitutionFormatString with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -51,13 +48,7 @@ func (m *SubstitutionFormatString) Validate() error {
 	switch m.Format.(type) {
 
 	case *SubstitutionFormatString_TextFormat:
-
-		if utf8.RuneCountInString(m.GetTextFormat()) < 1 {
-			return SubstitutionFormatStringValidationError{
-				field:  "TextFormat",
-				reason: "value length must be at least 1 runes",
-			}
-		}
+		// no validation rules for TextFormat
 
 	case *SubstitutionFormatString_JsonFormat:
 
@@ -72,6 +63,18 @@ func (m *SubstitutionFormatString) Validate() error {
 			if err := v.Validate(); err != nil {
 				return SubstitutionFormatStringValidationError{
 					field:  "JsonFormat",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *SubstitutionFormatString_TextFormatSource:
+
+		if v, ok := interface{}(m.GetTextFormatSource()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SubstitutionFormatStringValidationError{
+					field:  "TextFormatSource",
 					reason: "embedded message failed validation",
 					cause:  err,
 				}

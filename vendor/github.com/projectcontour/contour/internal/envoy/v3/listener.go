@@ -389,6 +389,14 @@ func (b *httpConnectionManagerBuilder) Get() *envoy_listener_v3.Filter {
 		UseRemoteAddress: protobuf.Bool(true),
 		NormalizePath:    protobuf.Bool(true),
 
+		// We can ignore any port number supplied in the Host/:authority header
+		// before processing by filters or routing.
+		// Note that the port a listener is bound to will already be selected
+		// and that the port is stripped from the header sent upstream as well.
+		StripPortMode: &http.HttpConnectionManager_StripAnyHostPort{
+			StripAnyHostPort: true,
+		},
+
 		// issue #1487 pass through X-Request-Id if provided.
 		PreserveExternalRequestId: true,
 		MergeSlashes:              true,
@@ -500,6 +508,18 @@ func TCPProxy(statPrefix string, proxy *dag.TCPProxy, accesslogger []*accesslog.
 	}
 }
 
+// UnixSocketAddress creates a new Unix Socket envoy_core_v3.Address.
+func UnixSocketAddress(address string, port int) *envoy_core_v3.Address {
+	return &envoy_core_v3.Address{
+		Address: &envoy_core_v3.Address_Pipe{
+			Pipe: &envoy_core_v3.Pipe{
+				Path: address,
+				Mode: 0644,
+			},
+		},
+	}
+}
+
 // SocketAddress creates a new TCP envoy_core_v3.Address.
 func SocketAddress(address string, port int) *envoy_core_v3.Address {
 	if address == "::" {
@@ -568,17 +588,10 @@ function envoy_on_request(request_handle)
 	local target = "%s"
 
 	if host ~= target then
-		s, e = string.find(host, ":", 1, true)
-		if s ~= nil then
-			host = string.sub(host, 1, s - 1)
-		end
-
-		if host ~= target then
-			request_handle:respond(
-				{[":status"] = "421"},
-				string.format("misdirected request to %%q", headers:get(":authority"))
-			)
-		end
+		request_handle:respond(
+			{[":status"] = "421"},
+			string.format("misdirected request to %%q", host)
+		)
 	end
 end
 	`

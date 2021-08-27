@@ -33,9 +33,6 @@ var (
 	_ = ptypes.DynamicAny{}
 )
 
-// define the regex for a UUID once up-front
-var _bootstrap_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
-
 // Validate checks the field values on Bootstrap with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
 func (m *Bootstrap) Validate() error {
@@ -300,6 +297,19 @@ func (m *Bootstrap) Validate() error {
 				cause:  err,
 			}
 		}
+	}
+
+	switch m.StatsFlush.(type) {
+
+	case *Bootstrap_StatsFlushOnAdmin:
+
+		if m.GetStatsFlushOnAdmin() != true {
+			return BootstrapValidationError{
+				field:  "StatsFlushOnAdmin",
+				reason: "value must equal true",
+			}
+		}
+
 	}
 
 	return nil
