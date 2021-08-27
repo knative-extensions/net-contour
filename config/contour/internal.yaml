@@ -160,6 +160,8 @@ data:
     #   Configure the number of additional ingress proxy hops from the
     #   right side of the x-forwarded-for HTTP header to trust.
     #   num-trusted-hops: 0
+    #   Configure the port used to access the Envoy Admin interface.
+    #   admin-port: 9001
     #
     # Configure an optional global rate limit service.
     # rateLimitService:
@@ -174,6 +176,28 @@ data:
     #   service fails to respond with a valid rate limit decision within
     #   the timeout defined on the extension service.
     #   failOpen: false
+    #   Defines whether to include the X-RateLimit headers X-RateLimit-Limit,
+    #   X-RateLimit-Remaining, and X-RateLimit-Reset (as defined by the IETF
+    #   Internet-Draft linked below), on responses to clients when the Rate
+    #   Limit Service is consulted for a request.
+    #   ref. https://tools.ietf.org/id/draft-polli-ratelimit-headers-03.html
+    #   enableXRateLimitHeaders: false
+    #
+    # Global Policy settings.
+    # policy:
+    #   # Default headers to set on all requests (unless set/removed on the HTTPProxy object itself)
+    #   request-headers:
+    #     set:
+    #       # example: the hostname of the Envoy instance that proxied the request
+    #       X-Envoy-Hostname: %HOSTNAME%
+    #       # example: add a l5d-dst-override header to instruct Linkerd what service the request is destined for
+    #       l5d-dst-override: %CONTOUR_SERVICE_NAME%.%CONTOUR_NAMESPACE%.svc.cluster.local:%CONTOUR_SERVICE_PORT%
+    #   # default headers to set on all responses (unless set/removed on the HTTPProxy object itself)
+    #   response-headers:
+    #     set:
+    #       # example: Envoy flags that provide additional details about the response or connection
+    #       X-Envoy-Response-Flags: %RESPONSE_FLAGS%
+    #
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -239,7 +263,7 @@ spec:
                       type: string
                   type: object
                 protocol:
-                  description: Protocol may be used to specify (or override) the protocol used to reach this Service. Values may be tls, h2, h2c. If omitted, protocol-selection falls back on Service annotations.
+                  description: Protocol may be used to specify (or override) the protocol used to reach this Service. Values may be h2 or h2c. If omitted, protocol-selection falls back on Service annotations.
                   enum:
                     - h2
                     - h2c
@@ -1776,7 +1800,7 @@ rules:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: contour-certgen-v1.13.1
+  name: contour-certgen-v1.14.2
   namespace: contour-internal
   labels:
     networking.knative.dev/ingress-provider: contour
@@ -1834,6 +1858,14 @@ rules:
       - ""
     resources:
       - endpoints
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
     verbs:
       - get
       - list
@@ -1967,9 +1999,11 @@ spec:
     - port: 80
       name: http
       protocol: TCP
+      targetPort: 8080
     - port: 443
       name: https
       protocol: TCP
+      targetPort: 8443
   selector:
     app: envoy
   type: ClusterIP
@@ -2017,8 +2051,6 @@ spec:
             - --incluster
             - --xds-address=0.0.0.0
             - --xds-port=8001
-            - --envoy-service-http-port=80
-            - --envoy-service-https-port=443
             - --contour-cafile=/certs/ca.crt
             - --contour-cert-file=/certs/tls.crt
             - --contour-key-file=/certs/tls.key
@@ -2129,6 +2161,9 @@ spec:
             initialDelaySeconds: 3
             periodSeconds: 10
           name: shutdown-manager
+          volumeMounts:
+            - name: envoy-admin
+              mountPath: /admin
         - args:
             - -c
             - /config/envoy.json
@@ -2137,7 +2172,7 @@ spec:
             - --log-level info
           command:
             - envoy
-          image: docker.io/envoyproxy/envoy:v1.17.1
+          image: docker.io/envoyproxy/envoy:v1.17.4
           imagePullPolicy: IfNotPresent
           name: envoy
           env:
@@ -2152,11 +2187,11 @@ spec:
                   apiVersion: v1
                   fieldPath: metadata.name
           ports:
-            - containerPort: 80
+            - containerPort: 8080
               # hostPort: 80
               name: http
               protocol: TCP
-            - containerPort: 443
+            - containerPort: 8443
               # hostPort: 443
               name: https
               protocol: TCP
@@ -2173,6 +2208,8 @@ spec:
             - name: envoycert
               mountPath: /certs
               readOnly: true
+            - name: envoy-admin
+              mountPath: /admin
           lifecycle:
             preStop:
               httpGet:
@@ -2210,6 +2247,8 @@ spec:
       serviceAccountName: envoy
       terminationGracePeriodSeconds: 300
       volumes:
+        - name: envoy-admin
+          emptyDir: {}
         - name: envoy-config
           emptyDir: {}
         - name: envoycert

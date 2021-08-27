@@ -33,9 +33,6 @@ var (
 	_ = ptypes.DynamicAny{}
 )
 
-// define the regex for a UUID once up-front
-var _http_protocol_options_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
-
 // Validate checks the field values on HttpProtocolOptions with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -88,6 +85,24 @@ func (m *HttpProtocolOptions) Validate() error {
 					cause:  err,
 				}
 			}
+		}
+
+	case *HttpProtocolOptions_AutoConfig:
+
+		if v, ok := interface{}(m.GetAutoConfig()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return HttpProtocolOptionsValidationError{
+					field:  "AutoConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	default:
+		return HttpProtocolOptionsValidationError{
+			field:  "UpstreamProtocolOptions",
+			reason: "value is required",
 		}
 
 	}
@@ -183,6 +198,12 @@ func (m *HttpProtocolOptions_ExplicitHttpConfig) Validate() error {
 					cause:  err,
 				}
 			}
+		}
+
+	default:
+		return HttpProtocolOptions_ExplicitHttpConfigValidationError{
+			field:  "ProtocolConfig",
+			reason: "value is required",
 		}
 
 	}
@@ -334,3 +355,91 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = HttpProtocolOptions_UseDownstreamHttpConfigValidationError{}
+
+// Validate checks the field values on HttpProtocolOptions_AutoHttpConfig with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *HttpProtocolOptions_AutoHttpConfig) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if v, ok := interface{}(m.GetHttpProtocolOptions()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return HttpProtocolOptions_AutoHttpConfigValidationError{
+				field:  "HttpProtocolOptions",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetHttp2ProtocolOptions()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return HttpProtocolOptions_AutoHttpConfigValidationError{
+				field:  "Http2ProtocolOptions",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// HttpProtocolOptions_AutoHttpConfigValidationError is the validation error
+// returned by HttpProtocolOptions_AutoHttpConfig.Validate if the designated
+// constraints aren't met.
+type HttpProtocolOptions_AutoHttpConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e HttpProtocolOptions_AutoHttpConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e HttpProtocolOptions_AutoHttpConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e HttpProtocolOptions_AutoHttpConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e HttpProtocolOptions_AutoHttpConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e HttpProtocolOptions_AutoHttpConfigValidationError) ErrorName() string {
+	return "HttpProtocolOptions_AutoHttpConfigValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e HttpProtocolOptions_AutoHttpConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sHttpProtocolOptions_AutoHttpConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = HttpProtocolOptions_AutoHttpConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = HttpProtocolOptions_AutoHttpConfigValidationError{}

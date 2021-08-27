@@ -56,6 +56,10 @@ func RouteAuthzContext(settings map[string]string) *any.Any {
 	)
 }
 
+const prefixPathMatchSegmentRegex = `((\/).*)?`
+
+var _ = regexp.MustCompile(prefixPathMatchSegmentRegex)
+
 // RouteMatch creates a *envoy_route_v3.RouteMatch for the supplied *dag.Route.
 func RouteMatch(route *dag.Route) *envoy_route_v3.RouteMatch {
 	switch c := route.PathMatchCondition.(type) {
@@ -67,9 +71,28 @@ func RouteMatch(route *dag.Route) *envoy_route_v3.RouteMatch {
 			Headers: headerMatcher(route.HeaderMatchConditions),
 		}
 	case *dag.PrefixMatchCondition:
+		switch c.PrefixMatchType {
+		case dag.PrefixMatchSegment:
+			return &envoy_route_v3.RouteMatch{
+				PathSpecifier: &envoy_route_v3.RouteMatch_SafeRegex{
+					SafeRegex: SafeRegexMatch(regexp.QuoteMeta(c.Prefix) + prefixPathMatchSegmentRegex),
+				},
+				Headers: headerMatcher(route.HeaderMatchConditions),
+			}
+		case dag.PrefixMatchString:
+			fallthrough
+		default:
+			return &envoy_route_v3.RouteMatch{
+				PathSpecifier: &envoy_route_v3.RouteMatch_Prefix{
+					Prefix: c.Prefix,
+				},
+				Headers: headerMatcher(route.HeaderMatchConditions),
+			}
+		}
+	case *dag.ExactMatchCondition:
 		return &envoy_route_v3.RouteMatch{
-			PathSpecifier: &envoy_route_v3.RouteMatch_Prefix{
-				Prefix: c.Prefix,
+			PathSpecifier: &envoy_route_v3.RouteMatch_Path{
+				Path: c.Path,
 			},
 			Headers: headerMatcher(route.HeaderMatchConditions),
 		}
@@ -259,15 +282,9 @@ func weightedClusters(clusters []*dag.Cluster) *envoy_route_v3.WeightedCluster {
 
 // VirtualHost creates a new route.VirtualHost.
 func VirtualHost(hostname string, routes ...*envoy_route_v3.Route) *envoy_route_v3.VirtualHost {
-	domains := []string{hostname}
-	if hostname != "*" {
-		// NOTE(jpeach) see also envoy.FilterMisdirectedRequests().
-		domains = append(domains, hostname+":*")
-	}
-
 	return &envoy_route_v3.VirtualHost{
 		Name:    envoy.Hashname(60, hostname),
-		Domains: domains,
+		Domains: []string{hostname},
 		Routes:  routes,
 	}
 }
@@ -346,11 +363,11 @@ func headerMatcher(headers []dag.HeaderMatchCondition) []*envoy_route_v3.HeaderM
 		}
 
 		switch h.MatchType {
-		case "exact":
+		case dag.HeaderMatchTypeExact:
 			header.HeaderMatchSpecifier = &envoy_route_v3.HeaderMatcher_ExactMatch{ExactMatch: h.Value}
-		case "contains":
+		case dag.HeaderMatchTypeContains:
 			header.HeaderMatchSpecifier = containsMatch(h.Value)
-		case "present":
+		case dag.HeaderMatchTypePresent:
 			header.HeaderMatchSpecifier = &envoy_route_v3.HeaderMatcher_PresentMatch{PresentMatch: true}
 		}
 		envoyHeaders = append(envoyHeaders, header)
