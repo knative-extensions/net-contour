@@ -9,12 +9,14 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: backendpolicies.networking.x-k8s.io
 spec:
   group: networking.x-k8s.io
   names:
+    categories:
+    - gateway-api
     kind: BackendPolicy
     listKind: BackendPolicyList
     plural: backendpolicies
@@ -23,7 +25,11 @@ spec:
     singular: backendpolicy
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: BackendPolicy defines policies associated with backends. For
@@ -88,16 +94,19 @@ spec:
                   Support: Extended"
                 properties:
                   certificateAuthorityRef:
-                    description: "CertificateAuthorityRef is a reference to a resource
-                      that includes trusted CA certificates for the associated backends.
-                      If an entry in this list omits or specifies the empty string
-                      for both the group and the resource, the resource defaults to
-                      \"secrets\". An implementation may support other resources (for
-                      example, resource \"mycertificates\" in group \"networking.acme.io\").
-                      \n When stored in a Secret, certificates must be PEM encoded
-                      and specified within the \"ca.crt\" data field of the Secret.
-                      Multiple certificates can be specified, concatenated by new
-                      lines. \n Support: Extended"
+                    description: "CertificateAuthorityRef is a reference to a Kubernetes
+                      object that contains one or more trusted CA certificates. The
+                      CA certificates are used to establish a TLS handshake to backends
+                      listed in BackendRefs. The referenced object MUST reside in
+                      the same namespace as BackendPolicy. \n CertificateAuthorityRef
+                      can reference a standard Kubernetes resource, i.e. ConfigMap,
+                      or an implementation-specific custom resource. \n When stored
+                      in a Secret, certificates must be PEM encoded and specified
+                      within the \"ca.crt\" data field of the Secret. When multiple
+                      certificates are specified, the certificates MUST be concatenated
+                      by new lines. \n CertificateAuthorityRef can also reference
+                      a standard Kubernetes resource, i.e. ConfigMap, or an implementation-specific
+                      custom resource. \n Support: Extended"
                     properties:
                       group:
                         description: Group is the group of the referent.
@@ -223,7 +232,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: contours.operator.projectcontour.io
 spec:
@@ -383,20 +392,122 @@ spec:
                           providerParameters:
                             type: AWS
                           scope: External
-                        description: "loadBalancer holds parameters for the load balancer.
+                        description: "LoadBalancer holds parameters for the load balancer.
                           Present only if type is LoadBalancerService. \n If unspecified,
                           defaults to an external Classic AWS ELB."
                         properties:
                           providerParameters:
                             default:
                               type: AWS
-                            description: providerParameters contains load balancer
+                            description: ProviderParameters contains load balancer
                               information specific to the underlying infrastructure
                               provider.
                             properties:
+                              aws:
+                                description: "AWS provides configuration settings
+                                  that are specific to AWS load balancers. \n If empty,
+                                  defaults will be applied. See specific aws fields
+                                  for details about their defaults."
+                                properties:
+                                  allocationIds:
+                                    description: "AllocationIDs is a list of Allocation
+                                      IDs of Elastic IP addresses that are to be assigned
+                                      to the Network Load Balancer. Works only with
+                                      type NLB. If you are using Amazon EKS 1.16 or
+                                      later, you can assign Elastic IP addresses to
+                                      Network Load Balancer with AllocationIDs. The
+                                      number of Allocation IDs must match the number
+                                      of subnets used for the load balancer. \n Example:
+                                      \"eipalloc-<xxxxxxxxxxxxxxxxx>\" \n See: https://docs.aws.amazon.com/eks/latest/userguide/load-balancing.html"
+                                    items:
+                                      type: string
+                                    type: array
+                                  type:
+                                    default: Classic
+                                    description: "Type is the type of AWS load balancer
+                                      to manage. \n Valid values are: \n * \"Classic\":
+                                      A Classic load balancer makes routing decisions
+                                      at either the   transport layer (TCP/SSL) or
+                                      the application layer (HTTP/HTTPS). See   the
+                                      following for additional details: \n     https://docs.aws.amazon.com/AmazonECS/latest/developerguide/load-balancer-types.html#clb
+                                      \n * \"NLB\": A Network load balancer makes
+                                      routing decisions at the transport   layer (TCP/SSL).
+                                      See the following for additional details: \n
+                                      \    https://docs.aws.amazon.com/AmazonECS/latest/developerguide/load-balancer-types.html#nlb
+                                      \n If unset, defaults to \"Classic\"."
+                                    enum:
+                                    - Classic
+                                    - NLB
+                                    type: string
+                                type: object
+                              azure:
+                                description: "Azure provides configuration settings
+                                  that are specific to Azure load balancers. \n If
+                                  empty, defaults will be applied. See specific azure
+                                  fields for details about their defaults."
+                                properties:
+                                  address:
+                                    description: "Address is the desired load balancer
+                                      IP address. If scope is \"Internal\", address
+                                      must reside in same virtual network as AKS and
+                                      must not already be assigned to a resource.
+                                      If address does not reside in same subnet as
+                                      AKS, the subnet parameter is also required.
+                                      \n Address must already exist (e.g. `az network
+                                      public-ip create`). \n See: \t https://docs.microsoft.com/en-us/azure/aks/static-ip#create-a-service-using-the-static-ip-address
+                                      \t https://docs.microsoft.com/en-us/azure/aks/internal-lb#specify-an-ip-address"
+                                    maxLength: 253
+                                    minLength: 1
+                                    type: string
+                                  resourceGroup:
+                                    description: "ResourceGroup is the resource group
+                                      name where the \"address\" resides. Relevant
+                                      only if scope is \"External\". \n Omit if desired
+                                      IP is created in same resource group as AKS
+                                      cluster."
+                                    maxLength: 90
+                                    minLength: 1
+                                    type: string
+                                  subnet:
+                                    description: "Subnet is the subnet name where
+                                      the \"address\" resides. Relevant only if scope
+                                      is \"Internal\" and desired IP does not reside
+                                      in same subnet as AKS. \n Omit if desired IP
+                                      is in same subnet as AKS cluster. \n See: https://docs.microsoft.com/en-us/azure/aks/internal-lb#specify-an-ip-address"
+                                    maxLength: 80
+                                    minLength: 1
+                                    type: string
+                                type: object
+                              gcp:
+                                description: "GCP provides configuration settings
+                                  that are specific to GCP load balancers. \n If empty,
+                                  defaults will be applied. See specific gcp fields
+                                  for details about their defaults."
+                                properties:
+                                  address:
+                                    description: "Address is the desired load balancer
+                                      IP address. If scope is \"Internal\", the address
+                                      must reside in same subnet as the GKE cluster
+                                      or \"subnet\" has to be provided. \n See: \t
+                                      https://cloud.google.com/kubernetes-engine/docs/tutorials/configuring-domain-name-static-ip#use_a_service
+                                      \t https://cloud.google.com/kubernetes-engine/docs/how-to/internal-load-balancing#lb_subnet"
+                                    maxLength: 253
+                                    minLength: 1
+                                    type: string
+                                  subnet:
+                                    description: "Subnet is the subnet name where
+                                      the \"address\" resides. Relevant only if scope
+                                      is \"Internal\" and desired IP does not reside
+                                      in same subnet as GKE cluster. \n Omit if desired
+                                      IP is in same subnet as GKE cluster. \n See:
+                                      https://cloud.google.com/kubernetes-engine/docs/how-to/internal-load-balancing#lb_subnet"
+                                    maxLength: 63
+                                    minLength: 1
+                                    type: string
+                                type: object
                               type:
                                 default: AWS
-                                description: type is the underlying infrastructure
+                                description: Type is the underlying infrastructure
                                   provider for the load balancer. Allowed values are
                                   "AWS", "Azure", and "GCP".
                                 enum:
@@ -415,6 +526,53 @@ spec:
                             - External
                             type: string
                         type: object
+                      nodePorts:
+                        description: "NodePorts is a list of network ports to expose
+                          on each node's IP at a static port number using a NodePort
+                          Service. Present only if type is NodePortService. A ClusterIP
+                          Service, which the NodePort Service routes to, is automatically
+                          created. You'll be able to contact the NodePort Service,
+                          from outside the cluster, by requesting <NodeIP>:<NodePort>.
+                          \n If type is NodePortService and nodePorts is unspecified,
+                          two nodeports will be created, one named \"http\" and the
+                          other named \"https\", with port numbers auto assigned by
+                          Kubernetes API server. For additional information on the
+                          NodePort Service, see: \n  https://kubernetes.io/docs/concepts/services-networking/service/#nodeport
+                          \n Names and port numbers must be unique in the list. Two
+                          ports must be specified, one named \"http\" for Envoy's
+                          insecure service and one named \"https\" for Envoy's secure
+                          service."
+                        items:
+                          description: NodePort is the schema to specify a network
+                            port for a NodePort Service.
+                          properties:
+                            name:
+                              description: Name is an IANA_SVC_NAME within the NodePort
+                                Service.
+                              maxLength: 253
+                              minLength: 1
+                              type: string
+                            portNumber:
+                              description: "PortNumber is the network port number
+                                to expose for the NodePort Service. If unspecified,
+                                a port number will be assigned from the the cluster's
+                                nodeport service range, i.e. --service-node-port-range
+                                flag (default: 30000-32767). \n If specified, the
+                                number must: \n 1. Not be used by another NodePort
+                                Service. 2. Be within the cluster's nodeport service
+                                range, i.e. --service-node-port-range    flag (default:
+                                30000-32767). 3. Be a valid network port number, i.e.
+                                greater than 0 and less than 65536."
+                              format: int32
+                              maximum: 65535
+                              minimum: 1
+                              type: integer
+                          required:
+                          - name
+                          type: object
+                        maxItems: 2
+                        minItems: 2
+                        type: array
                       type:
                         default: LoadBalancerService
                         description: "Type is the type of publishing strategy to use.
@@ -439,6 +597,137 @@ spec:
                         - NodePortService
                         - ClusterIPService
                         type: string
+                    type: object
+                type: object
+              nodePlacement:
+                description: "NodePlacement enables scheduling of Contour and Envoy
+                  pods onto specific nodes. \n See each field for additional details."
+                properties:
+                  contour:
+                    description: Contour describes node scheduling configuration of
+                      Contour pods.
+                    properties:
+                      nodeSelector:
+                        additionalProperties:
+                          type: string
+                        description: "NodeSelector is the simplest recommended form
+                          of node selection constraint and specifies a map of key-value
+                          pairs. For the Contour pod to be eligible to run on a node,
+                          the node must have each of the indicated key-value pairs
+                          as labels (it can have additional labels as well). \n If
+                          unset, the Contour pod(s) will be scheduled to any available
+                          node."
+                        type: object
+                      tolerations:
+                        description: "Tolerations work with taints to ensure that
+                          Envoy pods are not scheduled onto inappropriate nodes. One
+                          or more taints are applied to a node; this marks that the
+                          node should not accept any pods that do not tolerate the
+                          taints. \n The default is an empty list. \n See https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+                          for additional details."
+                        items:
+                          description: The pod this Toleration is attached to tolerates
+                            any taint that matches the triple <key,value,effect> using
+                            the matching operator <operator>.
+                          properties:
+                            effect:
+                              description: Effect indicates the taint effect to match.
+                                Empty means match all taint effects. When specified,
+                                allowed values are NoSchedule, PreferNoSchedule and
+                                NoExecute.
+                              type: string
+                            key:
+                              description: Key is the taint key that the toleration
+                                applies to. Empty means match all taint keys. If the
+                                key is empty, operator must be Exists; this combination
+                                means to match all values and all keys.
+                              type: string
+                            operator:
+                              description: Operator represents a key's relationship
+                                to the value. Valid operators are Exists and Equal.
+                                Defaults to Equal. Exists is equivalent to wildcard
+                                for value, so that a pod can tolerate all taints of
+                                a particular category.
+                              type: string
+                            tolerationSeconds:
+                              description: TolerationSeconds represents the period
+                                of time the toleration (which must be of effect NoExecute,
+                                otherwise this field is ignored) tolerates the taint.
+                                By default, it is not set, which means tolerate the
+                                taint forever (do not evict). Zero and negative values
+                                will be treated as 0 (evict immediately) by the system.
+                              format: int64
+                              type: integer
+                            value:
+                              description: Value is the taint value the toleration
+                                matches to. If the operator is Exists, the value should
+                                be empty, otherwise just a regular string.
+                              type: string
+                          type: object
+                        type: array
+                    type: object
+                  envoy:
+                    description: Envoy describes node scheduling configuration of
+                      Envoy pods.
+                    properties:
+                      nodeSelector:
+                        additionalProperties:
+                          type: string
+                        description: "NodeSelector is the simplest recommended form
+                          of node selection constraint and specifies a map of key-value
+                          pairs. For the Envoy pod to be eligible to run on a node,
+                          the node must have each of the indicated key-value pairs
+                          as labels (it can have additional labels as well). \n If
+                          unset, the Envoy pod(s) will be scheduled to any available
+                          node."
+                        type: object
+                      tolerations:
+                        description: "Tolerations work with taints to ensure that
+                          Envoy pods are not scheduled onto inappropriate nodes. One
+                          or more taints are applied to a node; this marks that the
+                          node should not accept any pods that do not tolerate the
+                          taints. \n The default is an empty list. \n See https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+                          for additional details."
+                        items:
+                          description: The pod this Toleration is attached to tolerates
+                            any taint that matches the triple <key,value,effect> using
+                            the matching operator <operator>.
+                          properties:
+                            effect:
+                              description: Effect indicates the taint effect to match.
+                                Empty means match all taint effects. When specified,
+                                allowed values are NoSchedule, PreferNoSchedule and
+                                NoExecute.
+                              type: string
+                            key:
+                              description: Key is the taint key that the toleration
+                                applies to. Empty means match all taint keys. If the
+                                key is empty, operator must be Exists; this combination
+                                means to match all values and all keys.
+                              type: string
+                            operator:
+                              description: Operator represents a key's relationship
+                                to the value. Valid operators are Exists and Equal.
+                                Defaults to Equal. Exists is equivalent to wildcard
+                                for value, so that a pod can tolerate all taints of
+                                a particular category.
+                              type: string
+                            tolerationSeconds:
+                              description: TolerationSeconds represents the period
+                                of time the toleration (which must be of effect NoExecute,
+                                otherwise this field is ignored) tolerates the taint.
+                                By default, it is not set, which means tolerate the
+                                taint forever (do not evict). Zero and negative values
+                                will be treated as 0 (evict immediately) by the system.
+                              format: int64
+                              type: integer
+                            value:
+                              description: Value is the taint value the toleration
+                                matches to. If the operator is Exists, the value should
+                                be empty, otherwise just a regular string.
+                              type: string
+                          type: object
+                        type: array
                     type: object
                 type: object
               replicas:
@@ -466,10 +755,9 @@ spec:
                 format: int32
                 type: integer
               conditions:
-                description: "Conditions represent the observations of a contour's
-                  current state. Known condition types are \"Available\". Reference
-                  the condition type for additional details. \n TODO [danehans]: Add
-                  support for \"Progressing\" and \"Degraded\" condition types."
+                description: Conditions represent the observations of a contour's
+                  current state. Known condition types are "Available". Reference
+                  the condition type for additional details.
                 items:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
@@ -561,7 +849,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: extensionservices.projectcontour.io
 spec:
@@ -718,8 +1006,8 @@ spec:
                   service's certificate
                 properties:
                   caSecret:
-                    description: Name of the Kubernetes secret be used to validate
-                      the certificate presented by the backend
+                    description: Name or namespaced name of the Kubernetes secret
+                      used to validate the certificate presented by the backend
                     type: string
                   subjectName:
                     description: Key which is expected to be present in the 'subjectAltName'
@@ -961,12 +1249,14 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: gatewayclasses.networking.x-k8s.io
 spec:
   group: networking.x-k8s.io
   names:
+    categories:
+    - gateway-api
     kind: GatewayClass
     listKind: GatewayClassList
     plural: gatewayclasses
@@ -979,6 +1269,9 @@ spec:
     - jsonPath: .spec.controller
       name: Controller
       type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -1167,12 +1460,14 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: gateways.networking.x-k8s.io
 spec:
   group: networking.x-k8s.io
   names:
+    categories:
+    - gateway-api
     kind: Gateway
     listKind: GatewayList
     plural: gateways
@@ -1185,6 +1480,9 @@ spec:
     - jsonPath: .spec.gatewayClassName
       name: Class
       type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -1506,18 +1804,17 @@ spec:
                         for any TLS handshake. \n Support: Core"
                       properties:
                         certificateRef:
-                          description: "CertificateRef is the reference to Kubernetes
-                            object that contain a TLS certificate and private key.
-                            This certificate MUST be used for TLS handshakes for the
-                            domain this GatewayTLSConfig is associated with. \n This
-                            field is required when mode is set to \"Terminate\" (default)
-                            and optional otherwise. \n If an entry in this list omits
-                            or specifies the empty string for both the group and the
-                            resource, the resource defaults to \"secrets\". An implementation
-                            may support other resources (for example, resource \"mycertificates\"
-                            in group \"networking.acme.io\"). \n Support: Core (Kubernetes
-                            Secrets) \n Support: Implementation-specific (Other resource
-                            types)"
+                          description: "CertificateRef is a reference to a Kubernetes
+                            object that contains a TLS certificate and private key.
+                            This certificate is used to establish a TLS handshake
+                            for requests that match the hostname of the associated
+                            listener. The referenced object MUST reside in the same
+                            namespace as Gateway. \n This field is required when mode
+                            is set to \"Terminate\" (default) and optional otherwise.
+                            \n CertificateRef can reference a standard Kubernetes
+                            resource, i.e. Secret, or an implementation-specific custom
+                            resource. \n Support: Core (Kubernetes Secrets) \n Support:
+                            Implementation-specific (Other resource types)"
                           properties:
                             group:
                               description: Group is the group of the referent.
@@ -1851,7 +2148,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: httpproxies.projectcontour.io
 spec:
@@ -1949,6 +2246,12 @@ spec:
                                   value must not be equal to. The condition is true
                                   if the header has any other value.
                                 type: string
+                              notpresent:
+                                description: NotPresent specifies that condition is
+                                  true when the named header is not present. Note
+                                  that setting NotPresent to false does not make the
+                                  condition true if the named header is present.
+                                type: boolean
                               present:
                                 description: Present specifies that condition is true
                                   when the named header is present, regardless of
@@ -1975,6 +2278,12 @@ spec:
                   - name
                   type: object
                 type: array
+              ingressClassName:
+                description: IngressClassName optionally specifies the ingress class
+                  to use for this HTTPProxy. This replaces the deprecated `kubernetes.io/ingress.class`
+                  annotation. For backwards compatibility, when that annotation is
+                  set, it is given precedence over this field.
+                type: string
               routes:
                 description: Routes are the ingress routes. If TCPProxy is present,
                   Routes is ignored.
@@ -2036,6 +2345,12 @@ spec:
                                   value must not be equal to. The condition is true
                                   if the header has any other value.
                                 type: string
+                              notpresent:
+                                description: NotPresent specifies that condition is
+                                  true when the named header is not present. Note
+                                  that setting NotPresent to false does not make the
+                                  condition true if the named header is present.
+                                type: boolean
                               present:
                                 description: Present specifies that condition is true
                                   when the named header is present, regardless of
@@ -2239,6 +2554,94 @@ spec:
                                               description: HeaderName defines the
                                                 name of the header to look for on
                                                 the request.
+                                              minLength: 1
+                                              type: string
+                                          type: object
+                                        requestHeaderValueMatch:
+                                          description: RequestHeaderValueMatch defines
+                                            a descriptor entry that's populated if
+                                            the request's headers match a set of 1+
+                                            match criteria. The descriptor key is
+                                            "header_match", and the descriptor value
+                                            is static.
+                                          properties:
+                                            expectMatch:
+                                              default: true
+                                              description: ExpectMatch defines whether
+                                                the request must positively match
+                                                the match criteria in order to generate
+                                                a descriptor entry (i.e. true), or
+                                                not match the match criteria in order
+                                                to generate a descriptor entry (i.e.
+                                                false). The default is true.
+                                              type: boolean
+                                            headers:
+                                              description: Headers is a list of 1+
+                                                match criteria to apply against the
+                                                request to determine whether to populate
+                                                the descriptor entry or not.
+                                              items:
+                                                description: HeaderMatchCondition
+                                                  specifies how to conditionally match
+                                                  against HTTP headers. The Name field
+                                                  is required, but only one of the
+                                                  remaining fields should be be provided.
+                                                properties:
+                                                  contains:
+                                                    description: Contains specifies
+                                                      a substring that must be present
+                                                      in the header value.
+                                                    type: string
+                                                  exact:
+                                                    description: Exact specifies a
+                                                      string that the header value
+                                                      must be equal to.
+                                                    type: string
+                                                  name:
+                                                    description: Name is the name
+                                                      of the header to match against.
+                                                      Name is required. Header names
+                                                      are case insensitive.
+                                                    type: string
+                                                  notcontains:
+                                                    description: NotContains specifies
+                                                      a substring that must not be
+                                                      present in the header value.
+                                                    type: string
+                                                  notexact:
+                                                    description: NoExact specifies
+                                                      a string that the header value
+                                                      must not be equal to. The condition
+                                                      is true if the header has any
+                                                      other value.
+                                                    type: string
+                                                  notpresent:
+                                                    description: NotPresent specifies
+                                                      that condition is true when
+                                                      the named header is not present.
+                                                      Note that setting NotPresent
+                                                      to false does not make the condition
+                                                      true if the named header is
+                                                      present.
+                                                    type: boolean
+                                                  present:
+                                                    description: Present specifies
+                                                      that condition is true when
+                                                      the named header is present,
+                                                      regardless of its value. Note
+                                                      that setting Present to false
+                                                      does not make the condition
+                                                      true if the named header is
+                                                      absent.
+                                                    type: boolean
+                                                required:
+                                                - name
+                                                type: object
+                                              minItems: 1
+                                              type: array
+                                            value:
+                                              description: Value defines the value
+                                                of the descriptor entry.
                                               minLength: 1
                                               type: string
                                           type: object
@@ -2537,8 +2940,9 @@ spec:
                               the backend service's certificate
                             properties:
                               caSecret:
-                                description: Name of the Kubernetes secret be used
-                                  to validate the certificate presented by the backend
+                                description: Name or namespaced name of the Kubernetes
+                                  secret used to validate the certificate presented
+                                  by the backend
                                 type: string
                               subjectName:
                                 description: Key which is expected to be present in
@@ -2793,8 +3197,9 @@ spec:
                             backend service's certificate
                           properties:
                             caSecret:
-                              description: Name of the Kubernetes secret be used to
-                                validate the certificate presented by the backend
+                              description: Name or namespaced name of the Kubernetes
+                                secret used to validate the certificate presented
+                                by the backend
                               type: string
                             subjectName:
                               description: Key which is expected to be present in
@@ -2824,7 +3229,7 @@ spec:
                     description: This field configures an extension service to perform
                       authorization for this virtual host. Authorization can only
                       be configured on virtual hosts that have TLS enabled. If the
-                      TLS configuration requires client certificate /validation, the
+                      TLS configuration requires client certificate validation, the
                       client certificate is always included in the authentication
                       check request.
                     properties:
@@ -3009,6 +3414,91 @@ spec:
                                             minLength: 1
                                             type: string
                                         type: object
+                                      requestHeaderValueMatch:
+                                        description: RequestHeaderValueMatch defines
+                                          a descriptor entry that's populated if the
+                                          request's headers match a set of 1+ match
+                                          criteria. The descriptor key is "header_match",
+                                          and the descriptor value is static.
+                                        properties:
+                                          expectMatch:
+                                            default: true
+                                            description: ExpectMatch defines whether
+                                              the request must positively match the
+                                              match criteria in order to generate
+                                              a descriptor entry (i.e. true), or not
+                                              match the match criteria in order to
+                                              generate a descriptor entry (i.e. false).
+                                              The default is true.
+                                            type: boolean
+                                          headers:
+                                            description: Headers is a list of 1+ match
+                                              criteria to apply against the request
+                                              to determine whether to populate the
+                                              descriptor entry or not.
+                                            items:
+                                              description: HeaderMatchCondition specifies
+                                                how to conditionally match against
+                                                HTTP headers. The Name field is required,
+                                                but only one of the remaining fields
+                                                should be be provided.
+                                              properties:
+                                                contains:
+                                                  description: Contains specifies
+                                                    a substring that must be present
+                                                    in the header value.
+                                                  type: string
+                                                exact:
+                                                  description: Exact specifies a string
+                                                    that the header value must be
+                                                    equal to.
+                                                  type: string
+                                                name:
+                                                  description: Name is the name of
+                                                    the header to match against. Name
+                                                    is required. Header names are
+                                                    case insensitive.
+                                                  type: string
+                                                notcontains:
+                                                  description: NotContains specifies
+                                                    a substring that must not be present
+                                                    in the header value.
+                                                  type: string
+                                                notexact:
+                                                  description: NoExact specifies a
+                                                    string that the header value must
+                                                    not be equal to. The condition
+                                                    is true if the header has any
+                                                    other value.
+                                                  type: string
+                                                notpresent:
+                                                  description: NotPresent specifies
+                                                    that condition is true when the
+                                                    named header is not present. Note
+                                                    that setting NotPresent to false
+                                                    does not make the condition true
+                                                    if the named header is present.
+                                                  type: boolean
+                                                present:
+                                                  description: Present specifies that
+                                                    condition is true when the named
+                                                    header is present, regardless
+                                                    of its value. Note that setting
+                                                    Present to false does not make
+                                                    the condition true if the named
+                                                    header is absent.
+                                                  type: boolean
+                                              required:
+                                              - name
+                                              type: object
+                                            minItems: 1
+                                            type: array
+                                          value:
+                                            description: Value defines the value of
+                                              the descriptor entry.
+                                            minLength: 1
+                                            type: string
+                                        type: object
                                     type: object
                                   minItems: 1
                                   type: array
@@ -3087,18 +3577,33 @@ spec:
                         description: "ClientValidation defines how to verify the client
                           certificate when an external client establishes a TLS connection
                           to Envoy. \n This setting: \n 1. Enables TLS client certificate
-                          validation. 2. Requires clients to present a TLS certificate
-                          (i.e. not optional validation). 3. Specifies how the client
-                          certificate will be validated."
+                          validation. 2. Specifies how the client certificate will
+                          be validated (i.e.    validation required or skipped). \n
+                          Note: Setting client certificate validation to be skipped
+                          should be only used in conjunction with an external authorization
+                          server that performs client validation as Contour will ensure
+                          client certificates are passed along."
                         properties:
                           caSecret:
                             description: Name of a Kubernetes secret that contains
                               a CA certificate bundle. The client certificate must
-                              validate against the certificates in the bundle.
+                              validate against the certificates in the bundle. If
+                              specified and SkipClientCertValidation is true, client
+                              certificates will be required on requests.
                             minLength: 1
                             type: string
-                        required:
-                        - caSecret
+                          skipClientCertValidation:
+                            description: SkipClientCertValidation disables downstream
+                              client certificate validation. Defaults to false. This
+                              field is intended to be used in conjunction with external
+                              authorization in order to enable the external authorization
+                              server to validate client certificates. When this field
+                              is set to true, client certificates are requested but
+                              not verified by Envoy. If CACertificate is specified,
+                              client certificates are required on requests, but not
+                              verified. If external authorization is in use, they
+                              are presented to the external authorization server.
+                            type: boolean
                         type: object
                       enableFallbackCertificate:
                         description: EnableFallbackCertificate defines if the vhost
@@ -3427,12 +3932,14 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: httproutes.networking.x-k8s.io
 spec:
   group: networking.x-k8s.io
   names:
+    categories:
+    - gateway-api
     kind: HTTPRoute
     listKind: HTTPRouteList
     plural: httproutes
@@ -3443,6 +3950,9 @@ spec:
     - jsonPath: .spec.hostnames
       name: Hostnames
       type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -4027,16 +4537,22 @@ spec:
                         how to specify multiple match conditions that should be ANDed
                         together. \n If no matches are specified, the default is a
                         prefix path match on \"/\", which has the effect of matching
-                        every HTTP request. \n A client request may match multiple
-                        HTTP route rules. Matching precedence MUST be determined in
-                        order of the following criteria, continuing on ties: \n *
-                        The longest matching hostname. * The longest matching path.
-                        * The largest number of header matches * The oldest Route
-                        based on creation timestamp. For example, a Route with   a
-                        creation timestamp of \"2020-09-08 01:02:03\" is given precedence
-                        over   a Route with a creation timestamp of \"2020-09-08 01:02:04\".
-                        * The Route appearing first in alphabetical order (namespace/name)
-                        for   example, foo/bar is given precedence over foo/baz."
+                        every HTTP request. \n Each client request MUST map to a maximum
+                        of one route rule. If a request matches multiple rules, matching
+                        precedence MUST be determined in order of the following criteria,
+                        continuing on ties: \n * The longest matching hostname. *
+                        The longest matching path. * The largest number of header
+                        matches. \n If ties still exist across multiple Routes, matching
+                        precedence MUST be determined in order of the following criteria,
+                        continuing on ties: \n * The oldest Route based on creation
+                        timestamp. For example, a Route with   a creation timestamp
+                        of \"2020-09-08 01:02:03\" is given precedence over   a Route
+                        with a creation timestamp of \"2020-09-08 01:02:04\". * The
+                        Route appearing first in alphabetical order by   \"<namespace>/<name>\".
+                        For example, foo/bar is given precedence over   foo/baz. \n
+                        If ties still exist within the Route that has been given precedence,
+                        matching precedence MUST be granted to the first matching
+                        rule meeting the above criteria."
                       items:
                         description: "HTTPRouteMatch defines the predicate used to
                           match requests to a given action. Multiple match types are
@@ -4137,11 +4653,46 @@ spec:
                                 - ImplementationSpecific
                                 type: string
                               value:
+                                default: /
                                 description: Value of the HTTP path to match against.
-                                minLength: 1
                                 type: string
+                            type: object
+                          queryParams:
+                            description: QueryParams specifies a HTTP query parameter
+                              matcher.
+                            properties:
+                              type:
+                                default: Exact
+                                description: "Type specifies how to match against
+                                  the value of the query parameter. \n Support: Extended
+                                  (Exact) \n Support: Custom (RegularExpression, ImplementationSpecific)
+                                  \n Since RegularExpression QueryParamMatchType has
+                                  custom conformance, implementations can support
+                                  POSIX, PCRE or any other dialects of regular expressions.
+                                  Please read the implementation's documentation to
+                                  determine the supported dialect."
+                                enum:
+                                - Exact
+                                - RegularExpression
+                                - ImplementationSpecific
+                                type: string
+                              values:
+                                additionalProperties:
+                                  type: string
+                                description: "Values is a map of HTTP query parameters
+                                  to be matched. It MUST contain at least one entry.
+                                  \n The query parameter name to match is the map
+                                  key, and the value of the query parameter is the
+                                  map value. \n Multiple match values are ANDed together,
+                                  meaning, a request must match all the specified
+                                  query parameters to select the route. \n HTTP query
+                                  parameter matching MUST be case-sensitive for both
+                                  keys and values. (See https://tools.ietf.org/html/rfc7230#section-2.7.3).
+                                  \n Note that the query parameter key MUST always
+                                  be an exact match by string comparison."
+                                type: object
                             required:
-                            - value
+                            - values
                             type: object
                         type: object
                       maxItems: 8
@@ -4164,15 +4715,17 @@ spec:
                   share the same hostname). \n Support: Core"
                 properties:
                   certificateRef:
-                    description: "CertificateRef refers to a Kubernetes object that
-                      contains a TLS certificate and private key. This certificate
-                      MUST be used for TLS handshakes for the domain this RouteTLSConfig
-                      is associated with. If an entry in this list omits or specifies
-                      the empty string for both the group and kind, the resource defaults
-                      to \"secrets\". An implementation may support other resources
-                      (for example, resource \"mycertificates\" in group \"networking.acme.io\").
-                      \n Support: Core (Kubernetes Secrets) \n Support: Implementation-specific
-                      (Other resource types)"
+                    description: "CertificateRef is a reference to a Kubernetes object
+                      that contains a TLS certificate and private key. This certificate
+                      is used to establish a TLS handshake for requests that match
+                      the hostname of the associated HTTPRoute. The referenced object
+                      MUST reside in the same namespace as HTTPRoute. \n This field
+                      is required when the TLS configuration mode of the associated
+                      Gateway listener is set to \"Passthrough\". \n CertificateRef
+                      can reference a standard Kubernetes resource, i.e. Secret, or
+                      an implementation-specific custom resource. \n Support: Core
+                      (Kubernetes Secrets) \n Support: Implementation-specific (Other
+                      resource types)"
                     properties:
                       group:
                         description: Group is the group of the referent.
@@ -4302,6 +4855,15 @@ spec:
                       description: GatewayRef is a reference to a Gateway object that
                         is associated with the route.
                       properties:
+                        controller:
+                          description: "Controller is a domain/path string that indicates
+                            the controller implementing the Gateway. This corresponds
+                            with the controller field on GatewayClass. \n Example:
+                            \"acme.io/gateway-controller\". \n The format of this
+                            field is DOMAIN \"/\" PATH, where DOMAIN and PATH are
+                            valid Kubernetes names (https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names)."
+                          maxLength: 253
+                          type: string
                         name:
                           description: Name is the name of the referent.
                           maxLength: 253
@@ -4340,19 +4902,25 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: tcproutes.networking.x-k8s.io
 spec:
   group: networking.x-k8s.io
   names:
+    categories:
+    - gateway-api
     kind: TCPRoute
     listKind: TCPRouteList
     plural: tcproutes
     singular: tcproute
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: TCPRoute is the Schema for the TCPRoute resource.
@@ -4514,11 +5082,28 @@ spec:
                       minItems: 1
                       type: array
                     matches:
-                      description: Matches define conditions used for matching the
+                      description: "Matches define conditions used for matching the
                         rule against incoming TCP connections. Each match is independent,
                         i.e. this rule will be matched if **any** one of the matches
-                        is satisfied. If unspecified, all requests from the associated
-                        gateway TCP listener will match.
+                        is satisfied. If unspecified (i.e. empty), this Rule will
+                        match all requests for the associated Listener. \n Each client
+                        request MUST map to a maximum of one route rule. If a request
+                        matches multiple rules, matching precedence MUST be determined
+                        in order of the following criteria, continuing on ties: \n
+                        * The most specific match specified by ExtensionRef. Each
+                        implementation   that supports ExtensionRef may have different
+                        ways of determining the   specificity of the referenced extension.
+                        \n If ties still exist across multiple Routes, matching precedence
+                        MUST be determined in order of the following criteria, continuing
+                        on ties: \n * The oldest Route based on creation timestamp.
+                        For example, a Route with   a creation timestamp of \"2020-09-08
+                        01:02:03\" is given precedence over   a Route with a creation
+                        timestamp of \"2020-09-08 01:02:04\". * The Route appearing
+                        first in alphabetical order by   \"<namespace>/<name>\". For
+                        example, foo/bar is given precedence over   foo/baz. \n If
+                        ties still exist within the Route that has been given precedence,
+                        matching precedence MUST be granted to the first matching
+                        rule meeting the above criteria."
                       items:
                         description: TCPRouteMatch defines the predicate used to match
                           connections to a given action.
@@ -4670,6 +5255,15 @@ spec:
                       description: GatewayRef is a reference to a Gateway object that
                         is associated with the route.
                       properties:
+                        controller:
+                          description: "Controller is a domain/path string that indicates
+                            the controller implementing the Gateway. This corresponds
+                            with the controller field on GatewayClass. \n Example:
+                            \"acme.io/gateway-controller\". \n The format of this
+                            field is DOMAIN \"/\" PATH, where DOMAIN and PATH are
+                            valid Kubernetes names (https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names)."
+                          maxLength: 253
+                          type: string
                         name:
                           description: Name is the name of the referent.
                           maxLength: 253
@@ -4708,7 +5302,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: tlscertificatedelegations.projectcontour.io
 spec:
@@ -5005,19 +5599,25 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: tlsroutes.networking.x-k8s.io
 spec:
   group: networking.x-k8s.io
   names:
+    categories:
+    - gateway-api
     kind: TLSRoute
     listKind: TLSRouteList
     plural: tlsroutes
     singular: tlsroute
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: "The TLSRoute resource is similar to TCPRoute, but can be configured
@@ -5183,11 +5783,31 @@ spec:
                       minItems: 1
                       type: array
                     matches:
-                      description: Matches define conditions used for matching the
-                        rule against an incoming TLS handshake. Each match is independent,
+                      description: "Matches define conditions used for matching the
+                        rule against incoming TLS connections. Each match is independent,
                         i.e. this rule will be matched if **any** one of the matches
-                        is satisfied. If unspecified, all requests from the associated
-                        gateway TLS listener will match.
+                        is satisfied. If unspecified (i.e. empty), this Rule will
+                        match all requests for the associated Listener. \n Each client
+                        request MUST map to a maximum of one route rule. If a request
+                        matches multiple rules, matching precedence MUST be determined
+                        in order of the following criteria, continuing on ties: \n
+                        * The longest matching SNI. * The longest matching precise
+                        SNI (without a wildcard). This means that   \"b.example.com\"
+                        should be given precedence over \"*.example.com\". * The most
+                        specific match specified by ExtensionRef. Each implementation
+                        \  that supports ExtensionRef may have different ways of determining
+                        the   specificity of the referenced extension. \n If ties
+                        still exist across multiple Routes, matching precedence MUST
+                        be determined in order of the following criteria, continuing
+                        on ties: \n * The oldest Route based on creation timestamp.
+                        For example, a Route with   a creation timestamp of \"2020-09-08
+                        01:02:03\" is given precedence over   a Route with a creation
+                        timestamp of \"2020-09-08 01:02:04\". * The Route appearing
+                        first in alphabetical order by   \"<namespace>/<name>\". For
+                        example, foo/bar is given precedence over   foo/baz. \n If
+                        ties still exist within the Route that has been given precedence,
+                        matching precedence MUST be granted to the first matching
+                        rule meeting the above criteria."
                       items:
                         description: TLSRouteMatch defines the predicate used to match
                           connections to a given action.
@@ -5368,6 +5988,15 @@ spec:
                       description: GatewayRef is a reference to a Gateway object that
                         is associated with the route.
                       properties:
+                        controller:
+                          description: "Controller is a domain/path string that indicates
+                            the controller implementing the Gateway. This corresponds
+                            with the controller field on GatewayClass. \n Example:
+                            \"acme.io/gateway-controller\". \n The format of this
+                            field is DOMAIN \"/\" PATH, where DOMAIN and PATH are
+                            valid Kubernetes names (https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names)."
+                          maxLength: 253
+                          type: string
                         name:
                           description: Name is the name of the referent.
                           maxLength: 253
@@ -5406,19 +6035,25 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.5.0
   creationTimestamp: null
   name: udproutes.networking.x-k8s.io
 spec:
   group: networking.x-k8s.io
   names:
+    categories:
+    - gateway-api
     kind: UDPRoute
     listKind: UDPRouteList
     plural: udproutes
     singular: udproute
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: UDPRoute is a resource that specifies how a Gateway should forward
@@ -5581,11 +6216,28 @@ spec:
                       minItems: 1
                       type: array
                     matches:
-                      description: Matches define conditions used for matching the
+                      description: "Matches define conditions used for matching the
                         rule against incoming UDP connections. Each match is independent,
                         i.e. this rule will be matched if **any** one of the matches
-                        is satisfied. If unspecified, all requests from the associated
-                        gateway UDP listener will match.
+                        is satisfied. If unspecified (i.e. empty), this Rule will
+                        match all requests for the associated Listener. \n Each client
+                        request MUST map to a maximum of one route rule. If a request
+                        matches multiple rules, matching precedence MUST be determined
+                        in order of the following criteria, continuing on ties: \n
+                        * The most specific match specified by ExtensionRef. Each
+                        implementation   that supports ExtensionRef may have different
+                        ways of determining the   specificity of the referenced extension.
+                        \n If ties still exist across multiple Routes, matching precedence
+                        MUST be determined in order of the following criteria, continuing
+                        on ties: \n * The oldest Route based on creation timestamp.
+                        For example, a Route with   a creation timestamp of \"2020-09-08
+                        01:02:03\" is given precedence over   a Route with a creation
+                        timestamp of \"2020-09-08 01:02:04\". * The Route appearing
+                        first in alphabetical order by   \"<namespace>/<name>\". For
+                        example, foo/bar is given precedence over   foo/baz. \n If
+                        ties still exist within the Route that has been given precedence,
+                        matching precedence MUST be granted to the first matching
+                        rule meeting the above criteria."
                       items:
                         description: UDPRouteMatch defines the predicate used to match
                           packets to a given action.
@@ -5737,6 +6389,15 @@ spec:
                       description: GatewayRef is a reference to a Gateway object that
                         is associated with the route.
                       properties:
+                        controller:
+                          description: "Controller is a domain/path string that indicates
+                            the controller implementing the Gateway. This corresponds
+                            with the controller field on GatewayClass. \n Example:
+                            \"acme.io/gateway-controller\". \n The format of this
+                            field is DOMAIN \"/\" PATH, where DOMAIN and PATH are
+                            valid Kubernetes names (https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names)."
+                          maxLength: 253
+                          type: string
                         name:
                           description: Name is the name of the referent.
                           maxLength: 253
@@ -5936,6 +6597,22 @@ rules:
   - get
   - update
 - apiGroups:
+  - networking.x-k8s.io
+  resources:
+  - tcproutes
+  - udproutes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networking.x-k8s.io
+  resources:
+  - tcproutes/status
+  - udproutes/status
+  verbs:
+  - update
+- apiGroups:
   - operator.projectcontour.io
   resources:
   - contours
@@ -6092,7 +6769,7 @@ spec:
         - --upstream=http://127.0.0.1:8080/
         - --logtostderr=true
         - --v=10
-        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.5.0
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
         name: kube-rbac-proxy
         ports:
         - containerPort: 8443
@@ -6102,7 +6779,7 @@ spec:
         - --enable-leader-election
         command:
         - /contour-operator
-        image: docker.io/projectcontour/contour-operator:v1.14.0
+        image: docker.io/projectcontour/contour-operator:v1.18.1
         imagePullPolicy: IfNotPresent
         name: contour-operator
         resources:

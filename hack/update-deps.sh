@@ -66,3 +66,8 @@ contour_yaml | \
     --data-value clusterrole.name=$CLUSTER_ROLE_NAME \
     -f hack/overlays \
     -f - >> config/contour/external.yaml
+
+rm -rf config/contour-operator/operator.yaml
+
+contour_operator_yaml \
+  >> config/contour-operator/operator.yaml
