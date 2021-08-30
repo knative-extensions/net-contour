@@ -18,7 +18,6 @@ import (
 	contour_api_v1alpha1 "github.com/projectcontour/contour/apis/projectcontour/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	networking_v1 "k8s.io/api/networking/v1"
-	networking_v1beta1 "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	gatewayapi_v1alpha1 "sigs.k8s.io/gateway-api/apis/v1alpha1"
 )
@@ -42,10 +41,6 @@ func DefaultResources() []schema.GroupVersionResource {
 	}
 }
 
-func IngressV1Beta1Resource() schema.GroupVersionResource {
-	return networking_v1beta1.SchemeGroupVersion.WithResource("ingresses")
-}
-
 func IngressV1Resources() []schema.GroupVersionResource {
 	return []schema.GroupVersionResource{
 		networking_v1.SchemeGroupVersion.WithResource("ingresses"),
@@ -53,11 +48,16 @@ func IngressV1Resources() []schema.GroupVersionResource {
 	}
 }
 
-// +kubebuilder:rbac:groups="networking.x-k8s.io",resources=gateways;httproutes;backendpolicies;tlsroutes,verbs=get;list;watch
+// +kubebuilder:rbac:groups="networking.x-k8s.io",resources=gatewayclasses;gateways;httproutes;backendpolicies;tlsroutes;tcproutes;udproutes,verbs=get;list;watch
+// +kubebuilder:rbac:groups="networking.x-k8s.io",resources=gatewayclasses/status;gateways/status;httproutes/status;backendpolicies/status;tlsroutes/status;tcproutes/status;udproutes/status,verbs=update
 
-// GatewayAPIResources ...
+// GatewayAPIResources returns a list of Gateway API group/version resources.
 func GatewayAPIResources() []schema.GroupVersionResource {
 	return []schema.GroupVersionResource{{
+		Group:    gatewayapi_v1alpha1.GroupVersion.Group,
+		Version:  gatewayapi_v1alpha1.GroupVersion.Version,
+		Resource: "gatewayclasses",
+	}, {
 		Group:    gatewayapi_v1alpha1.GroupVersion.Group,
 		Version:  gatewayapi_v1alpha1.GroupVersion.Version,
 		Resource: "gateways",
@@ -73,8 +73,15 @@ func GatewayAPIResources() []schema.GroupVersionResource {
 		Group:    gatewayapi_v1alpha1.GroupVersion.Group,
 		Version:  gatewayapi_v1alpha1.GroupVersion.Version,
 		Resource: "tlsroutes",
-	},
-	}
+	}, {
+		Group:    gatewayapi_v1alpha1.GroupVersion.Group,
+		Version:  gatewayapi_v1alpha1.GroupVersion.Version,
+		Resource: "tcproutes",
+	}, {
+		Group:    gatewayapi_v1alpha1.GroupVersion.Group,
+		Version:  gatewayapi_v1alpha1.GroupVersion.Version,
+		Resource: "udproutes",
+	}}
 }
 
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch

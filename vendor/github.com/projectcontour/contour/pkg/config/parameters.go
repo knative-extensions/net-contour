@@ -51,7 +51,7 @@ func (g *GatewayParameters) Validate() error {
 		return nil
 	}
 
-	if len(g.Name) == 0 && len(g.Namespace) == 0 {
+	if len(g.Name) == 0 && len(g.Namespace) == 0 && len(g.ControllerName) == 0 {
 		return nil
 	}
 
@@ -63,6 +63,12 @@ func (g *GatewayParameters) Validate() error {
 			errorString += ","
 		}
 		errorString = strings.TrimSpace(fmt.Sprintf("%s namespace required", errorString))
+	}
+	if len(g.ControllerName) == 0 {
+		if len(errorString) > 0 {
+			errorString += ","
+		}
+		errorString = strings.TrimSpace(fmt.Sprintf("%s controllerName required", errorString))
 	}
 
 	if len(errorString) > 0 {
@@ -121,15 +127,6 @@ const JSONAccessLog AccessLogType = "json"
 type AccessLogFields []string
 
 func (a AccessLogFields) Validate() error {
-	// Capture Groups:
-	// Given string "the start time is %START_TIME(%s):3% wow!"
-	//
-	//   0. Whole match "%START_TIME(%s):3%"
-	//   1. Full operator: "START_TIME(%s):3%"
-	//   2. Operator Name: "START_TIME"
-	//   3. Arguments: "(%s)"
-	//   4. Truncation length: ":3"
-	re := regexp.MustCompile(`%(([A-Z_]+)(\([^)]+\)(:[0-9]+)?)?%)?`)
 
 	for key, val := range a.AsFieldMap() {
 		if val == "" {
@@ -140,33 +137,9 @@ func (a AccessLogFields) Validate() error {
 			continue
 		}
 
-		// FindAllStringSubmatch will always return a slice with matches where every slice is a slice
-		// of submatches with length of 5 (number of capture groups + 1).
-		tokens := re.FindAllStringSubmatch(val, -1)
-		if len(tokens) == 0 {
-			continue
-		}
-
-		for _, f := range tokens {
-			op := f[2]
-			if op == "" {
-				return fmt.Errorf("invalid JSON field: %s, invalid Envoy format: %s", val, f)
-			}
-
-			_, okSimple := envoySimpleOperators[op]
-			_, okComplex := envoyComplexOperators[op]
-			if !okSimple && !okComplex {
-				return fmt.Errorf("invalid JSON field: %s, invalid Envoy format: %s, invalid Envoy operator: %s", val, f, op)
-			}
-
-			if (op == "REQ" || op == "RESP" || op == "TRAILER") && f[3] == "" {
-				return fmt.Errorf("invalid JSON field: %s, invalid Envoy format: %s, arguments required for operator: %s", val, f, op)
-			}
-
-			// START_TIME cannot not have truncation length.
-			if op == "START_TIME" && f[4] != "" {
-				return fmt.Errorf("invalid JSON field: %s, invalid Envoy format: %s, operator %s cannot have truncation length", val, f, op)
-			}
+		err := parseAccessLogFormat(val)
+		if err != nil {
+			return fmt.Errorf("invalid JSON field: %s", err)
 		}
 	}
 
@@ -200,6 +173,106 @@ func (a AccessLogFields) AsFieldMap() map[string]string {
 	}
 
 	return fieldMap
+}
+
+func validateAccessLogFormatString(format string) error {
+	// Empty format means use default format, defined by Envoy.
+	if format == "" {
+		return nil
+	}
+	err := parseAccessLogFormat(format)
+	if err != nil {
+		return fmt.Errorf("invalid access log format: %s", err)
+	}
+	if !strings.HasSuffix(format, "\n") {
+		return fmt.Errorf("invalid access log format: must end in newline")
+	}
+	return nil
+}
+
+// commandOperatorRegexp parses the command operators used in Envoy access log configuration
+//
+// Capture Groups:
+// Given string "the start time is %START_TIME(%s):3% wow!"
+//
+//   0. Whole match "%START_TIME(%s):3%"
+//   1. Full operator: "START_TIME(%s):3%"
+//   2. Operator Name: "START_TIME"
+//   3. Arguments: "(%s)"
+//   4. Truncation length: ":3"
+var commandOperatorRegexp = regexp.MustCompile(`%(([A-Z_]+)(\([^)]+\)(:[0-9]+)?)?%)?`)
+
+func parseAccessLogFormat(format string) error {
+
+	// FindAllStringSubmatch will always return a slice with matches where every slice is a slice
+	// of submatches with length of 5 (number of capture groups + 1).
+	tokens := commandOperatorRegexp.FindAllStringSubmatch(format, -1)
+	if len(tokens) == 0 {
+		return nil
+	}
+
+	for _, f := range tokens {
+		op := f[2]
+		if op == "" {
+			return fmt.Errorf("invalid Envoy format: %s", f)
+		}
+
+		_, okSimple := envoySimpleOperators[op]
+		_, okComplex := envoyComplexOperators[op]
+		if !okSimple && !okComplex {
+			return fmt.Errorf("invalid Envoy format: %s, invalid Envoy operator: %s", f, op)
+		}
+
+		if (op == "REQ" || op == "RESP" || op == "TRAILER" || op == "REQ_WITHOUT_QUERY") && f[3] == "" {
+			return fmt.Errorf("invalid Envoy format: %s, arguments required for operator: %s", f, op)
+		}
+
+		// START_TIME cannot not have truncation length.
+		if op == "START_TIME" && f[4] != "" {
+			return fmt.Errorf("invalid Envoy format: %s, operator %s cannot have truncation length", f, op)
+		}
+	}
+
+	return nil
+}
+
+// AccessLogFormatterExtensions returns a list of formatter extension names required by the access log format.
+//
+// Note: When adding support for new formatter, update the list of extensions here and
+// add corresponding configuration in internal/envoy/v3/accesslog.go extensionConfig().
+// Currently only one extension exist in Envoy.
+func (p Parameters) AccessLogFormatterExtensions() []string {
+	// Function that finds out if command operator is present in a format string.
+	contains := func(format, command string) bool {
+		tokens := commandOperatorRegexp.FindAllStringSubmatch(format, -1)
+		for _, t := range tokens {
+			if t[2] == command {
+				return true
+			}
+		}
+		return false
+	}
+
+	extensionsMap := make(map[string]bool)
+	switch p.AccessLogFormat {
+	case EnvoyAccessLog:
+		if contains(p.AccessLogFormatString, "REQ_WITHOUT_QUERY") {
+			extensionsMap["envoy.formatter.req_without_query"] = true
+		}
+	case JSONAccessLog:
+		for _, f := range p.AccessLogFields.AsFieldMap() {
+			if contains(f, "REQ_WITHOUT_QUERY") {
+				extensionsMap["envoy.formatter.req_without_query"] = true
+			}
+		}
+	}
+
+	var extensions []string
+	for k := range extensionsMap {
+		extensions = append(extensions, k)
+	}
+
+	return extensions
 }
 
 // HTTPVersionType is the name of a supported HTTP version.
@@ -288,10 +361,17 @@ type ServerParameters struct {
 	XDSServerType ServerType `yaml:"xds-server-type,omitempty"`
 }
 
-// GatewayParameters holds the configuration for what Gateway API Gateway
-// Contour will be configured to watch.
+// GatewayParameters holds the configuration for Gateway API controllers.
 type GatewayParameters struct {
-	Name      string `yaml:"name,omitempty"`
+	// ControllerName is used to determine whether Contour should reconcile a
+	// GatewayClass. The string takes the form of "projectcontour.io/<namespace>/contour".
+	// If unset, the gatewayclass controller will not be started.
+	ControllerName string `yaml:"controllerName,omitempty"`
+	// Name is the Gateway name that Contour should reconcile.
+	// Deprecated: Name is deprecated and will be removed in Contour v1.18. Configure "ControllerName" instead.
+	Name string `yaml:"name,omitempty"`
+	// Namespace is the Gateway namespace that Contour should reconcile.
+	// Deprecated: Namespace is deprecated will be removed in Contour v1.18. Configure "ControllerName" instead.
 	Namespace string `yaml:"namespace,omitempty"`
 }
 
@@ -437,10 +517,7 @@ func (h PolicyParameters) Validate() error {
 	if err := h.RequestHeadersPolicy.Validate(); err != nil {
 		return err
 	}
-	if err := h.ResponseHeadersPolicy.Validate(); err != nil {
-		return err
-	}
-	return nil
+	return h.ResponseHeadersPolicy.Validate()
 }
 
 // ClusterParameters holds various configurable cluster values.
@@ -467,7 +544,11 @@ type NetworkParameters struct {
 	//
 	// See https://www.envoyproxy.io/docs/envoy/v1.17.0/api-v3/extensions/filters/network/http_connection_manager/v3/http_connection_manager.proto?highlight=xff_num_trusted_hops
 	// for more information.
-	XffNumTrustedHops uint32 `yaml:"num-trusted-hops"`
+	XffNumTrustedHops uint32 `yaml:"num-trusted-hops,omitempty"`
+
+	// Configure the port used to access the Envoy Admin interface.
+	// If configured to port "0" then the admin interface is disabled.
+	EnvoyAdminPort int `yaml:"admin-port,omitempty"`
 }
 
 // ListenerParameters hold various configurable listener values.
@@ -504,6 +585,10 @@ type Parameters struct {
 	// Valid options are 'envoy' or 'json'
 	AccessLogFormat AccessLogType `yaml:"accesslog-format,omitempty"`
 
+	// AccessLogFormatString sets the access log format when format is set to `envoy`.
+	// When empty, Envoy's default format is used.
+	AccessLogFormatString string `yaml:"accesslog-format-string,omitempty"`
+
 	// AccessLogFields sets the fields that JSON logging will
 	// output when AccessLogFormat is json.
 	AccessLogFields AccessLogFields `yaml:"json-fields,omitempty"`
@@ -522,6 +607,11 @@ type Parameters struct {
 	// are encountered.
 	// See: https://github.com/projectcontour/contour/issues/3221
 	DisableAllowChunkedLength bool `yaml:"disableAllowChunkedLength,omitempty"`
+
+	// EnableExternalNameService allows processing of ExternalNameServices
+	// Defaults to disabled for security reasons.
+	// TODO(youngnick): put a link to the issue and CVE here.
+	EnableExternalNameService bool `yaml:"enableExternalNameService,omitempty"`
 
 	// LeaderElection contains leader election parameters.
 	LeaderElection LeaderElectionParameters `yaml:"leaderelection,omitempty"`
@@ -606,6 +696,10 @@ func (p *Parameters) Validate() error {
 		return err
 	}
 
+	if err := validateAccessLogFormatString(p.AccessLogFormatString); err != nil {
+		return err
+	}
+
 	if err := p.TLS.Validate(); err != nil {
 		return err
 	}
@@ -668,6 +762,7 @@ func Defaults() Parameters {
 		},
 		Network: NetworkParameters{
 			XffNumTrustedHops: 0,
+			EnvoyAdminPort:    9001,
 		},
 		Listener: ListenerParameters{
 			ConnectionBalancer: "",

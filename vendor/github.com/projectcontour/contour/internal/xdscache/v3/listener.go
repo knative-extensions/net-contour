@@ -34,7 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// nolint:golint
+// nolint:revive
 const (
 	ENVOY_HTTP_LISTENER            = "ingress_http"
 	ENVOY_FALLBACK_ROUTECONFIG     = "ingress_fallbackcert"
@@ -102,6 +102,13 @@ type ListenerConfig struct {
 	// Valid entries are the keys from internal/envoy/accesslog.go:jsonheaders
 	// Defaults to a particular set of fields.
 	AccessLogFields config.AccessLogFields
+
+	// AccessLogFormatString sets the format string to be used for text based access logs.
+	// Defaults to empty to defer to Envoy's default log format.
+	AccessLogFormatString string
+
+	// AccessLogFormatterExtensions defines the Envoy extensions to enable for access log.
+	AccessLogFormatterExtensions []string
 
 	// RequestTimeout configures the request_timeout for all Connection Managers.
 	RequestTimeout timeout.Setting
@@ -245,18 +252,18 @@ func (lvc *ListenerConfig) accesslogFields() config.AccessLogFields {
 func (lvc *ListenerConfig) newInsecureAccessLog() []*envoy_accesslog_v3.AccessLog {
 	switch lvc.accesslogType() {
 	case string(config.JSONAccessLog):
-		return envoy_v3.FileAccessLogJSON(lvc.httpAccessLog(), lvc.accesslogFields())
+		return envoy_v3.FileAccessLogJSON(lvc.httpAccessLog(), lvc.accesslogFields(), lvc.AccessLogFormatterExtensions)
 	default:
-		return envoy_v3.FileAccessLogEnvoy(lvc.httpAccessLog())
+		return envoy_v3.FileAccessLogEnvoy(lvc.httpAccessLog(), lvc.AccessLogFormatString, lvc.AccessLogFormatterExtensions)
 	}
 }
 
 func (lvc *ListenerConfig) newSecureAccessLog() []*envoy_accesslog_v3.AccessLog {
 	switch lvc.accesslogType() {
 	case "json":
-		return envoy_v3.FileAccessLogJSON(lvc.httpsAccessLog(), lvc.accesslogFields())
+		return envoy_v3.FileAccessLogJSON(lvc.httpsAccessLog(), lvc.accesslogFields(), lvc.AccessLogFormatterExtensions)
 	default:
-		return envoy_v3.FileAccessLogEnvoy(lvc.httpsAccessLog())
+		return envoy_v3.FileAccessLogEnvoy(lvc.httpsAccessLog(), lvc.AccessLogFormatString, lvc.AccessLogFormatterExtensions)
 	}
 }
 
@@ -281,14 +288,24 @@ type ListenerCache struct {
 }
 
 // NewListenerCache returns an instance of a ListenerCache
-func NewListenerCache(config ListenerConfig, address string, port int) *ListenerCache {
-	stats := envoy_v3.StatsListener(address, port)
-	return &ListenerCache{
+func NewListenerCache(config ListenerConfig, statsAddress string, statsPort, adminPort int) *ListenerCache {
+	stats := envoy_v3.StatsListener(statsAddress, statsPort)
+	admin := envoy_v3.AdminListener("127.0.0.1", adminPort)
+
+	listenerCache := &ListenerCache{
 		Config: config,
 		staticValues: map[string]*envoy_listener_v3.Listener{
 			stats.Name: stats,
 		},
 	}
+
+	// If the port is not zero, allow the read-only options from the
+	// Envoy admin webpage to be served.
+	if adminPort > 0 {
+		listenerCache.staticValues[admin.Name] = admin
+	}
+
+	return listenerCache
 }
 
 // Update replaces the contents of the cache with the supplied map.

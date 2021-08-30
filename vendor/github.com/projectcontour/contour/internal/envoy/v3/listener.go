@@ -34,7 +34,6 @@ import (
 	envoy_tls_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/projectcontour/contour/internal/dag"
 	"github.com/projectcontour/contour/internal/envoy"
@@ -311,7 +310,7 @@ func (b *httpConnectionManagerBuilder) AddFilter(f *http.HttpFilter) *httpConnec
 	lastIndex := len(b.filters) - 1
 	routerIndex := -1
 	for i, filter := range b.filters {
-		if ptypes.Is(filter.GetTypedConfig(), &envoy_extensions_filters_http_router_v3.Router{}) {
+		if filter.GetTypedConfig().MessageIs(&envoy_extensions_filters_http_router_v3.Router{}) {
 			routerIndex = i
 			break
 		}
@@ -321,7 +320,7 @@ func (b *httpConnectionManagerBuilder) AddFilter(f *http.HttpFilter) *httpConnec
 	// If this happens, it has to be programmer error, so we panic to tell them
 	// it needs to be fixed. Note that in hitting this case, it doesn't matter we added
 	// the second one earlier, because we're panicking anyway.
-	if routerIndex != -1 && ptypes.Is(f.GetTypedConfig(), &envoy_extensions_filters_http_router_v3.Router{}) {
+	if routerIndex != -1 && f.GetTypedConfig().MessageIs(&envoy_extensions_filters_http_router_v3.Router{}) {
 		panic("Can't add more than one router to a filter chain")
 	}
 
@@ -349,7 +348,7 @@ func (b *httpConnectionManagerBuilder) Validate() error {
 	// with typeUrl `type.googleapis.com/envoy.extensions.filters.http.router.v3.Router`,
 	// which in this case is the one of type Router.
 	lastIndex := len(b.filters) - 1
-	if !ptypes.Is(b.filters[lastIndex].GetTypedConfig(), &envoy_extensions_filters_http_router_v3.Router{}) {
+	if !b.filters[lastIndex].GetTypedConfig().MessageIs(&envoy_extensions_filters_http_router_v3.Router{}) {
 		return errors.New("last filter is not a Router filter")
 	}
 
@@ -450,6 +449,7 @@ func HTTPConnectionManager(routename string, accesslogger []*accesslog.AccessLog
 }
 
 // HTTPConnectionManagerBuilder creates a new HTTP connection manager builder.
+// nolint:revive
 func HTTPConnectionManagerBuilder() *httpConnectionManagerBuilder {
 	return &httpConnectionManagerBuilder{}
 }
@@ -508,6 +508,18 @@ func TCPProxy(statPrefix string, proxy *dag.TCPProxy, accesslogger []*accesslog.
 	}
 }
 
+// UnixSocketAddress creates a new Unix Socket envoy_core_v3.Address.
+func UnixSocketAddress(address string, port int) *envoy_core_v3.Address {
+	return &envoy_core_v3.Address{
+		Address: &envoy_core_v3.Address_Pipe{
+			Pipe: &envoy_core_v3.Pipe{
+				Path: address,
+				Mode: 0644,
+			},
+		},
+	}
+}
+
 // SocketAddress creates a new TCP envoy_core_v3.Address.
 func SocketAddress(address string, port int) *envoy_core_v3.Address {
 	if address == "::" {
@@ -563,17 +575,25 @@ func FilterChains(filters ...*envoy_listener_v3.Filter) []*envoy_listener_v3.Fil
 }
 
 func FilterMisdirectedRequests(fqdn string) *http.HttpFilter {
-	// When Envoy matches on the virtual host domain, we configure
-	// it to match any port specifier (see envoy.VirtualHost),
-	// so the Host header (authority) may contain a port that
-	// should be ignored. This means that if we don't have a match,
-	// we should try again after stripping the port specifier.
+	var target string
+
+	if strings.HasPrefix(fqdn, "*.") {
+		// When we have a wildcard hostname, we will have already matched
+		// the filter chain on an SNI that falls under the wildcard so we
+		// retrieve that and make sure the :authority header matches.
+		// See: https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/lua_filter#requestedservername
+		target = "request_handle:streamInfo():requestedServerName()"
+	} else {
+		// For specific hostnames we know the SNI we need to match the
+		// :authority header against so we can simplify the code.
+		target = `"` + strings.ToLower(fqdn) + `"`
+	}
 
 	code := `
 function envoy_on_request(request_handle)
 	local headers = request_handle:headers()
 	local host = string.lower(headers:get(":authority"))
-	local target = "%s"
+	local target = %s
 
 	if host ~= target then
 		request_handle:respond(
@@ -588,7 +608,7 @@ end
 		Name: "envoy.filters.http.lua",
 		ConfigType: &http.HttpFilter_TypedConfig{
 			TypedConfig: protobuf.MustMarshalAny(&lua.Lua{
-				InlineCode: fmt.Sprintf(code, strings.ToLower(fqdn)),
+				InlineCode: fmt.Sprintf(code, target),
 			}),
 		},
 	}
@@ -639,10 +659,21 @@ func FilterExternalAuthz(authzClusterName string, failOpen bool, timeout timeout
 func FilterChainTLS(domain string, downstream *envoy_tls_v3.DownstreamTlsContext, filters []*envoy_listener_v3.Filter) *envoy_listener_v3.FilterChain {
 	fc := &envoy_listener_v3.FilterChain{
 		Filters: filters,
-		FilterChainMatch: &envoy_listener_v3.FilterChainMatch{
-			ServerNames: []string{domain},
-		},
 	}
+
+	// If the domain doesn't have a specific SNI, Envoy can't filter
+	// on that, so change the Match to be on TransportProtocol which would
+	// match any request over TLS to this listener.
+	if domain == "*" {
+		fc.FilterChainMatch = &envoy_listener_v3.FilterChainMatch{
+			TransportProtocol: "tls",
+		}
+	} else {
+		fc.FilterChainMatch = &envoy_listener_v3.FilterChainMatch{
+			ServerNames: []string{domain},
+		}
+	}
+
 	// Attach TLS data to this listener if provided.
 	if downstream != nil {
 		fc.TransportSocket = DownstreamTLSTransportSocket(downstream)

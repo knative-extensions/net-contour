@@ -39,6 +39,7 @@ var DefaultFields = AccessLogFields([]string{
 })
 
 // DEFAULT_ACCESS_LOG_TYPE is the default access log format.
+// nolint:revive
 const DEFAULT_ACCESS_LOG_TYPE = EnvoyAccessLog
 
 // jsonFields is the canonical translation table for JSON fields to Envoy log template formats,
@@ -108,8 +109,9 @@ var envoySimpleOperators = map[string]struct{}{
 // envoyComplexOperators is the list of known Envoy log template keywords that require
 // arguments.
 var envoyComplexOperators = map[string]struct{}{
-	"REQ":        {},
-	"RESP":       {},
-	"START_TIME": {},
-	"TRAILER":    {},
+	"REQ":               {},
+	"RESP":              {},
+	"START_TIME":        {},
+	"TRAILER":           {},
+	"REQ_WITHOUT_QUERY": {},
 }
