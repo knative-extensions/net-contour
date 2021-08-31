@@ -21,12 +21,11 @@ import (
 	contour_api_v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	contour_api_v1alpha1 "github.com/projectcontour/contour/apis/projectcontour/v1alpha1"
 	"github.com/projectcontour/contour/internal/annotation"
+	"github.com/projectcontour/contour/internal/ingressclass"
 	"github.com/projectcontour/contour/internal/k8s"
-	ingress_validation "github.com/projectcontour/contour/internal/validation/ingress"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	networking_v1 "k8s.io/api/networking/v1"
-	"k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -60,9 +59,12 @@ type KubernetesCache struct {
 	tlscertificatedelegations map[types.NamespacedName]*contour_api_v1.TLSCertificateDelegation
 	services                  map[types.NamespacedName]*v1.Service
 	namespaces                map[string]*v1.Namespace
+	gatewayclass              *gatewayapi_v1alpha1.GatewayClass
 	gateway                   *gatewayapi_v1alpha1.Gateway
 	httproutes                map[types.NamespacedName]*gatewayapi_v1alpha1.HTTPRoute
 	tlsroutes                 map[types.NamespacedName]*gatewayapi_v1alpha1.TLSRoute
+	tcproutes                 map[types.NamespacedName]*gatewayapi_v1alpha1.TCPRoute
+	udproutes                 map[types.NamespacedName]*gatewayapi_v1alpha1.UDPRoute
 	backendpolicies           map[types.NamespacedName]*gatewayapi_v1alpha1.BackendPolicy
 	extensions                map[types.NamespacedName]*contour_api_v1alpha1.ExtensionService
 
@@ -80,6 +82,8 @@ func (kc *KubernetesCache) init() {
 	kc.services = make(map[types.NamespacedName]*v1.Service)
 	kc.namespaces = make(map[string]*v1.Namespace)
 	kc.httproutes = make(map[types.NamespacedName]*gatewayapi_v1alpha1.HTTPRoute)
+	kc.tcproutes = make(map[types.NamespacedName]*gatewayapi_v1alpha1.TCPRoute)
+	kc.udproutes = make(map[types.NamespacedName]*gatewayapi_v1alpha1.UDPRoute)
 	kc.tlsroutes = make(map[types.NamespacedName]*gatewayapi_v1alpha1.TLSRoute)
 	kc.backendpolicies = make(map[types.NamespacedName]*gatewayapi_v1alpha1.BackendPolicy)
 	kc.extensions = make(map[types.NamespacedName]*contour_api_v1alpha1.ExtensionService)
@@ -91,7 +95,7 @@ func (kc *KubernetesCache) matchesIngressClass(obj *networking_v1.IngressClass) 
 	// If no ingress class name set, we allow an ingress class that is named
 	// with the default Contour accepted name.
 	if kc.IngressClassName == "" {
-		return obj.Name == ingress_validation.DefaultClassName
+		return obj.Name == ingressclass.DefaultClassName
 	}
 	// Otherwise, the name of the ingress class must match what has been
 	// configured.
@@ -99,40 +103,6 @@ func (kc *KubernetesCache) matchesIngressClass(obj *networking_v1.IngressClass) 
 		return true
 	}
 	return false
-}
-
-// ingressMatchesIngressClass returns true if the given Ingress object matches
-// the configured ingress class name via annotation or Spec.IngressClassName
-// and emits a log message if there is no match.
-func (kc *KubernetesCache) ingressMatchesIngressClass(obj *networking_v1.Ingress) bool {
-	if !ingress_validation.MatchesIngressClassName(obj, kc.IngressClassName) {
-		// We didn't get a match so report this object is being ignored.
-		kc.WithField("name", obj.GetName()).
-			WithField("namespace", obj.GetNamespace()).
-			WithField("kind", k8s.KindOf(obj)).
-			WithField("ingress-class-annotation", annotation.IngressClass(obj)).
-			WithField("ingress-class-name", pointer.StringPtrDerefOr(obj.Spec.IngressClassName, "")).
-			WithField("target-ingress-class", kc.IngressClassName).
-			Debug("ignoring object with unmatched ingress class")
-		return false
-	}
-	return true
-}
-
-// matchesIngressClassAnnotation returns true if the given Kubernetes object
-// belongs to the Ingress class that this cache is using.
-func (kc *KubernetesCache) matchesIngressClassAnnotation(obj metav1.Object) bool {
-	if !annotation.MatchesIngressClass(obj, kc.IngressClassName) {
-		kc.WithField("name", obj.GetName()).
-			WithField("namespace", obj.GetNamespace()).
-			WithField("kind", k8s.KindOf(obj)).
-			WithField("ingress-class", annotation.IngressClass(obj)).
-			WithField("target-ingress-class", kc.IngressClassName).
-			Debug("ignoring object with unmatched ingress class")
-		return false
-	}
-
-	return true
 }
 
 // matchesGateway returns true if the given Kubernetes object
@@ -203,48 +173,62 @@ func (kc *KubernetesCache) Insert(obj interface{}) bool {
 	case *v1.Namespace:
 		kc.namespaces[obj.Name] = obj
 		return true
-	case *v1beta1.Ingress:
-		// Convert the v1beta1 object to v1 before adding to the
-		// local ingress cache for easier processing later on.
-		objV1 := toV1Ingress(obj)
-		if kc.ingressMatchesIngressClass(objV1) {
-			kc.ingresses[k8s.NamespacedNameOf(objV1)] = objV1
-			return true
-		}
 	case *networking_v1.Ingress:
-		if kc.ingressMatchesIngressClass(obj) {
-			kc.ingresses[k8s.NamespacedNameOf(obj)] = obj
-			return true
+		if !ingressclass.MatchesIngress(obj, kc.IngressClassName) {
+			// We didn't get a match so report this object is being ignored.
+			kc.WithField("name", obj.GetName()).
+				WithField("namespace", obj.GetNamespace()).
+				WithField("kind", k8s.KindOf(obj)).
+				WithField("ingress-class-annotation", annotation.IngressClass(obj)).
+				WithField("ingress-class-name", pointer.StringPtrDerefOr(obj.Spec.IngressClassName, "")).
+				WithField("target-ingress-class", kc.IngressClassName).
+				Debug("ignoring Ingress with unmatched ingress class")
+			return false
 		}
+
+		kc.ingresses[k8s.NamespacedNameOf(obj)] = obj
+		return true
 	case *networking_v1.IngressClass:
 		if kc.matchesIngressClass(obj) {
 			kc.ingressclass = obj
 			return true
 		}
 	case *contour_api_v1.HTTPProxy:
-		if kc.matchesIngressClassAnnotation(obj) {
-			kc.httpproxies[k8s.NamespacedNameOf(obj)] = obj
-			return true
+		if !ingressclass.MatchesHTTPProxy(obj, kc.IngressClassName) {
+			// We didn't get a match so report this object is being ignored.
+			kc.WithField("name", obj.GetName()).
+				WithField("namespace", obj.GetNamespace()).
+				WithField("kind", k8s.KindOf(obj)).
+				WithField("ingress-class-annotation", annotation.IngressClass(obj)).
+				WithField("ingress-class-name", obj.Spec.IngressClassName).
+				WithField("target-ingress-class", kc.IngressClassName).
+				Debug("ignoring HTTPProxy with unmatched ingress class")
+			return false
 		}
+
+		kc.httpproxies[k8s.NamespacedNameOf(obj)] = obj
+		return true
 	case *contour_api_v1.TLSCertificateDelegation:
 		kc.tlscertificatedelegations[k8s.NamespacedNameOf(obj)] = obj
 		return true
+	case *gatewayapi_v1alpha1.GatewayClass:
+		kc.gatewayclass = obj
+		return true
 	case *gatewayapi_v1alpha1.Gateway:
 		if kc.matchesGateway(obj) {
-			kc.WithField("experimental", "gateway-api").WithField("name", obj.Name).WithField("namespace", obj.Namespace).Debug("Adding Gateway")
 			kc.gateway = obj
 			return true
 		}
 	case *gatewayapi_v1alpha1.HTTPRoute:
-		m := k8s.NamespacedNameOf(obj)
-		kc.WithField("experimental", "gateway-api").WithField("name", m.Name).WithField("namespace", m.Namespace).Debug("Adding HTTPRoute")
 		kc.httproutes[k8s.NamespacedNameOf(obj)] = obj
 		return true
+	case *gatewayapi_v1alpha1.TCPRoute:
+		kc.tcproutes[k8s.NamespacedNameOf(obj)] = obj
+		return true
+	case *gatewayapi_v1alpha1.UDPRoute:
+		kc.udproutes[k8s.NamespacedNameOf(obj)] = obj
+		return true
 	case *gatewayapi_v1alpha1.TLSRoute:
-		m := k8s.NamespacedNameOf(obj)
-		// TODO(youngnick): Remove this once gateway-api actually have behavior
-		// other than being added to the cache.
-		kc.WithField("experimental", "gateway-api").WithField("name", m.Name).WithField("namespace", m.Namespace).Debug("Adding TLSRoute")
 		kc.tlsroutes[k8s.NamespacedNameOf(obj)] = obj
 		return true
 	case *gatewayapi_v1alpha1.BackendPolicy:
@@ -265,103 +249,6 @@ func (kc *KubernetesCache) Insert(obj interface{}) bool {
 	}
 
 	return false
-}
-
-func toV1Ingress(obj *v1beta1.Ingress) *networking_v1.Ingress {
-
-	if obj == nil {
-		return nil
-	}
-
-	var convertedTLS []networking_v1.IngressTLS
-	var convertedIngressRules []networking_v1.IngressRule
-	var convertedDefaultBackend *networking_v1.IngressBackend
-
-	for _, tls := range obj.Spec.TLS {
-		convertedTLS = append(convertedTLS, networking_v1.IngressTLS{
-			Hosts:      tls.Hosts,
-			SecretName: tls.SecretName,
-		})
-	}
-
-	for _, r := range obj.Spec.Rules {
-
-		rule := networking_v1.IngressRule{}
-
-		if r.Host != "" {
-			rule.Host = r.Host
-		}
-
-		if r.HTTP != nil {
-			var paths []networking_v1.HTTPIngressPath
-
-			for _, p := range r.HTTP.Paths {
-				// Default to implementation specific path type if not set.
-				// In practice this is mostly to ensure tests do not panic as a
-				// a real resource cannot be created without a path type set.
-				pathType := networking_v1.PathTypeImplementationSpecific
-				if p.PathType != nil {
-					switch *p.PathType {
-					case v1beta1.PathTypePrefix:
-						pathType = networking_v1.PathTypePrefix
-					case v1beta1.PathTypeExact:
-						pathType = networking_v1.PathTypeExact
-					case v1beta1.PathTypeImplementationSpecific:
-						pathType = networking_v1.PathTypeImplementationSpecific
-					}
-				}
-
-				paths = append(paths, networking_v1.HTTPIngressPath{
-					Path:     p.Path,
-					PathType: &pathType,
-					Backend: networking_v1.IngressBackend{
-						Service: &networking_v1.IngressServiceBackend{
-							Name: p.Backend.ServiceName,
-							Port: serviceBackendPort(p.Backend.ServicePort),
-						},
-					},
-				})
-			}
-
-			rule.IngressRuleValue = networking_v1.IngressRuleValue{
-				HTTP: &networking_v1.HTTPIngressRuleValue{
-					Paths: paths,
-				},
-			}
-		}
-
-		convertedIngressRules = append(convertedIngressRules, rule)
-	}
-
-	if obj.Spec.Backend != nil {
-		convertedDefaultBackend = &networking_v1.IngressBackend{
-			Service: &networking_v1.IngressServiceBackend{
-				Name: obj.Spec.Backend.ServiceName,
-				Port: serviceBackendPort(obj.Spec.Backend.ServicePort),
-			},
-		}
-	}
-
-	return &networking_v1.Ingress{
-		ObjectMeta: obj.ObjectMeta,
-		Spec: networking_v1.IngressSpec{
-			IngressClassName: obj.Spec.IngressClassName,
-			DefaultBackend:   convertedDefaultBackend,
-			TLS:              convertedTLS,
-			Rules:            convertedIngressRules,
-		},
-	}
-}
-
-func serviceBackendPort(port intstr.IntOrString) networking_v1.ServiceBackendPort {
-	if port.Type == intstr.String {
-		return networking_v1.ServiceBackendPort{
-			Name: port.StrVal,
-		}
-	}
-	return networking_v1.ServiceBackendPort{
-		Number: port.IntVal,
-	}
 }
 
 // Remove removes obj from the KubernetesCache.
@@ -393,11 +280,6 @@ func (kc *KubernetesCache) remove(obj interface{}) bool {
 		_, ok := kc.namespaces[obj.Name]
 		delete(kc.namespaces, obj.Name)
 		return ok
-	case *v1beta1.Ingress:
-		m := k8s.NamespacedNameOf(obj)
-		_, ok := kc.ingresses[m]
-		delete(kc.ingresses, m)
-		return ok
 	case *networking_v1.Ingress:
 		m := k8s.NamespacedNameOf(obj)
 		_, ok := kc.ingresses[m]
@@ -419,9 +301,11 @@ func (kc *KubernetesCache) remove(obj interface{}) bool {
 		_, ok := kc.tlscertificatedelegations[m]
 		delete(kc.tlscertificatedelegations, m)
 		return ok
+	case *gatewayapi_v1alpha1.GatewayClass:
+		kc.gatewayclass = nil
+		return true
 	case *gatewayapi_v1alpha1.Gateway:
 		if kc.matchesGateway(obj) {
-			kc.WithField("experimental", "gateway-api").WithField("name", obj.Name).WithField("namespace", obj.Namespace).Debug("Removing Gateway")
 			kc.gateway = nil
 			return true
 		}
@@ -429,15 +313,21 @@ func (kc *KubernetesCache) remove(obj interface{}) bool {
 	case *gatewayapi_v1alpha1.HTTPRoute:
 		m := k8s.NamespacedNameOf(obj)
 		_, ok := kc.httproutes[m]
-		kc.WithField("experimental", "gateway-api").WithField("name", m.Name).WithField("namespace", m.Namespace).Debug("Removing HTTPRoute")
 		delete(kc.httproutes, m)
+		return ok
+	case *gatewayapi_v1alpha1.TCPRoute:
+		m := k8s.NamespacedNameOf(obj)
+		_, ok := kc.tcproutes[m]
+		delete(kc.tcproutes, m)
+		return ok
+	case *gatewayapi_v1alpha1.UDPRoute:
+		m := k8s.NamespacedNameOf(obj)
+		_, ok := kc.udproutes[m]
+		delete(kc.udproutes, m)
 		return ok
 	case *gatewayapi_v1alpha1.TLSRoute:
 		m := k8s.NamespacedNameOf(obj)
 		_, ok := kc.tlsroutes[m]
-		// TODO(youngnick): Remove this once gateway-api actually have behavior
-		// other than being removed from the cache.
-		kc.WithField("experimental", "gateway-api").WithField("name", m.Name).WithField("namespace", m.Namespace).Debug("Removing TLSRoute")
 		delete(kc.tlsroutes, m)
 		return ok
 	case *gatewayapi_v1alpha1.BackendPolicy:
@@ -648,17 +538,16 @@ func (kc *KubernetesCache) LookupSecret(name types.NamespacedName, validate func
 	return s, nil
 }
 
-func (kc *KubernetesCache) LookupUpstreamValidation(uv *contour_api_v1.UpstreamValidation, namespace string) (*PeerValidationContext, error) {
+func (kc *KubernetesCache) LookupUpstreamValidation(uv *contour_api_v1.UpstreamValidation, caCertificate types.NamespacedName) (*PeerValidationContext, error) {
 	if uv == nil {
 		// no upstream validation requested, nothing to do
 		return nil, nil
 	}
 
-	secretName := types.NamespacedName{Name: uv.CACertificate, Namespace: namespace}
-	cacert, err := kc.LookupSecret(secretName, validCA)
+	cacert, err := kc.LookupSecret(caCertificate, validCA)
 	if err != nil {
 		// UpstreamValidation is requested, but cert is missing or not configured
-		return nil, fmt.Errorf("invalid CA Secret %q: %s", secretName, err)
+		return nil, fmt.Errorf("invalid CA Secret %q: %s", caCertificate, err)
 	}
 
 	if uv.SubjectName == "" {
@@ -669,19 +558,6 @@ func (kc *KubernetesCache) LookupUpstreamValidation(uv *contour_api_v1.UpstreamV
 	return &PeerValidationContext{
 		CACertificate: cacert,
 		SubjectName:   uv.SubjectName,
-	}, nil
-}
-
-func (kc *KubernetesCache) LookupDownstreamValidation(vc *contour_api_v1.DownstreamValidation, namespace string) (*PeerValidationContext, error) {
-	secretName := types.NamespacedName{Name: vc.CACertificate, Namespace: namespace}
-	cacert, err := kc.LookupSecret(secretName, validCA)
-	if err != nil {
-		// PeerValidationContext is requested, but cert is missing or not configured.
-		return nil, fmt.Errorf("invalid CA Secret %q: %s", secretName, err)
-	}
-
-	return &PeerValidationContext{
-		CACertificate: cacert,
 	}, nil
 }
 

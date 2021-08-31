@@ -103,6 +103,17 @@ func RouteMatch(route *dag.Route) *envoy_route_v3.RouteMatch {
 	}
 }
 
+// Route_DirectResponse creates a *envoy_route_v3.Route_DirectResponse for the
+// http status code supplied. This allows a direct response to a route request
+// with an HTTP status code without needing to route to a specific cluster.
+func RouteDirectResponse(response *dag.DirectResponse) *envoy_route_v3.Route_DirectResponse {
+	return &envoy_route_v3.Route_DirectResponse{
+		DirectResponse: &envoy_route_v3.DirectResponseAction{
+			Status: response.StatusCode,
+		},
+	}
+}
+
 // RouteRoute creates a *envoy_route_v3.Route_Route for the services supplied.
 // If len(services) is greater than one, the route's action will be a
 // weighted cluster.
@@ -258,7 +269,7 @@ func weightedClusters(clusters []*dag.Cluster) *envoy_route_v3.WeightedCluster {
 			Weight: protobuf.UInt32(cluster.Weight),
 		}
 		if cluster.RequestHeadersPolicy != nil {
-			c.RequestHeadersToAdd = HeaderValueList(cluster.RequestHeadersPolicy.Set, false)
+			c.RequestHeadersToAdd = append(HeaderValueList(cluster.RequestHeadersPolicy.Set, false), HeaderValueList(cluster.RequestHeadersPolicy.Add, true)...)
 			c.RequestHeadersToRemove = cluster.RequestHeadersPolicy.Remove
 		}
 		if cluster.ResponseHeadersPolicy != nil {
@@ -369,6 +380,10 @@ func headerMatcher(headers []dag.HeaderMatchCondition) []*envoy_route_v3.HeaderM
 			header.HeaderMatchSpecifier = containsMatch(h.Value)
 		case dag.HeaderMatchTypePresent:
 			header.HeaderMatchSpecifier = &envoy_route_v3.HeaderMatcher_PresentMatch{PresentMatch: true}
+		case dag.HeaderMatchTypeRegex:
+			header.HeaderMatchSpecifier = &envoy_route_v3.HeaderMatcher_SafeRegexMatch{
+				SafeRegexMatch: SafeRegexMatch(h.Value),
+			}
 		}
 		envoyHeaders = append(envoyHeaders, header)
 	}

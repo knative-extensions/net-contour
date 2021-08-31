@@ -25,6 +25,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/projectcontour/contour/internal/controller"
+
 	envoy_server_v3 "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	contour_api_v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	contour_api_v1alpha1 "github.com/projectcontour/contour/apis/projectcontour/v1alpha1"
@@ -44,6 +46,7 @@ import (
 	xdscache_v3 "github.com/projectcontour/contour/internal/xdscache/v3"
 	"github.com/projectcontour/contour/pkg/config"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 	corev1 "k8s.io/api/core/v1"
@@ -54,6 +57,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/cache"
+	controller_config "sigs.k8s.io/controller-runtime/pkg/client/config"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
+	gatewayapi_v1alpha1 "sigs.k8s.io/gateway-api/apis/v1alpha1"
 )
 
 // Add RBAC policy to support leader election.
@@ -136,7 +143,7 @@ func registerServe(app *kingpin.Application) (*kingpin.CmdClause, *serveContext)
 	serve.Flag("ingress-status-address", "Address to set in Ingress object status.").PlaceHolder("<address>").StringVar(&ctx.Config.IngressStatusAddress)
 	serve.Flag("envoy-http-access-log", "Envoy HTTP access log.").PlaceHolder("/path/to/file").StringVar(&ctx.httpAccessLog)
 	serve.Flag("envoy-https-access-log", "Envoy HTTPS access log.").PlaceHolder("/path/to/file").StringVar(&ctx.httpsAccessLog)
-	serve.Flag("envoy-service-http-address", "Kubernetes Service address for HTTP requests.").PlaceHolder("ipaddr").StringVar(&ctx.httpAddr)
+	serve.Flag("envoy-service-http-address", "Kubernetes Service address for HTTP requests.").PlaceHolder("<ipaddr>").StringVar(&ctx.httpAddr)
 	serve.Flag("envoy-service-https-address", "Kubernetes Service address for HTTPS requests.").PlaceHolder("<ipaddr>").StringVar(&ctx.httpsAddr)
 	serve.Flag("envoy-service-http-port", "Kubernetes Service port for HTTP requests.").PlaceHolder("<port>").IntVar(&ctx.httpPort)
 	serve.Flag("envoy-service-https-port", "Kubernetes Service port for HTTPS requests.").PlaceHolder("<port>").IntVar(&ctx.httpsPort)
@@ -149,7 +156,6 @@ func registerServe(app *kingpin.Application) (*kingpin.CmdClause, *serveContext)
 
 	serve.Flag("debug", "Enable debug logging.").Short('d').BoolVar(&ctx.Config.Debug)
 	serve.Flag("kubernetes-debug", "Enable Kubernetes client debug logging with log level.").PlaceHolder("<log level>").UintVar(&ctx.KubernetesDebug)
-	serve.Flag("experimental-service-apis", "DEPRECATED: Please configure the gateway.name & gateway.namespace in the configuration file.").BoolVar(&ctx.UseExperimentalServiceAPITypes)
 	return serve, ctx
 }
 
@@ -224,18 +230,10 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 		}
 	}
 
-	var configuredSecretRefs []*types.NamespacedName
-	if fallbackCert != nil {
-		configuredSecretRefs = append(configuredSecretRefs, fallbackCert)
-	}
-	if clientCert != nil {
-		configuredSecretRefs = append(configuredSecretRefs, clientCert)
-	}
-
 	// Set up Prometheus registry and register base metrics.
 	registry := prometheus.NewRegistry()
-	registry.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
-	registry.MustRegister(prometheus.NewGoCollector())
+	registry.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
+	registry.MustRegister(collectors.NewGoCollector())
 
 	// Before we can build the event handler, we need to initialize the converter we'll
 	// use to convert from Unstructured.
@@ -279,30 +277,6 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 		ctx.Config.Listener.ConnectionBalancer = ""
 	}
 
-	var requestHeadersPolicy dag.HeadersPolicy
-	if ctx.Config.Policy.RequestHeadersPolicy.Set != nil {
-		requestHeadersPolicy.Set = make(map[string]string)
-		for k, v := range ctx.Config.Policy.RequestHeadersPolicy.Set {
-			requestHeadersPolicy.Set[k] = v
-		}
-	}
-	if ctx.Config.Policy.RequestHeadersPolicy.Remove != nil {
-		requestHeadersPolicy.Remove = make([]string, 0, len(ctx.Config.Policy.RequestHeadersPolicy.Remove))
-		requestHeadersPolicy.Remove = append(requestHeadersPolicy.Remove, ctx.Config.Policy.RequestHeadersPolicy.Remove...)
-	}
-
-	var responseHeadersPolicy dag.HeadersPolicy
-	if ctx.Config.Policy.ResponseHeadersPolicy.Set != nil {
-		responseHeadersPolicy.Set = make(map[string]string)
-		for k, v := range ctx.Config.Policy.ResponseHeadersPolicy.Set {
-			responseHeadersPolicy.Set[k] = v
-		}
-	}
-	if ctx.Config.Policy.ResponseHeadersPolicy.Remove != nil {
-		responseHeadersPolicy.Remove = make([]string, 0, len(ctx.Config.Policy.ResponseHeadersPolicy.Remove))
-		responseHeadersPolicy.Remove = append(responseHeadersPolicy.Remove, ctx.Config.Policy.ResponseHeadersPolicy.Remove...)
-	}
-
 	listenerConfig := xdscache_v3.ListenerConfig{
 		UseProxyProto: ctx.useProxyProto,
 		HTTPListeners: map[string]xdscache_v3.Listener{
@@ -323,6 +297,8 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 		HTTPSAccessLog:                ctx.httpsAccessLog,
 		AccessLogType:                 ctx.Config.AccessLogFormat,
 		AccessLogFields:               ctx.Config.AccessLogFields,
+		AccessLogFormatString:         ctx.Config.AccessLogFormatString,
+		AccessLogFormatterExtensions:  ctx.Config.AccessLogFormatterExtensions(),
 		MinimumTLSVersion:             annotation.MinTLSVersion(ctx.Config.TLS.MinimumProtocolVersion, "1.2"),
 		CipherSuites:                  config.SanitizeCipherSuites(ctx.Config.TLS.CipherSuites),
 		RequestTimeout:                requestTimeout,
@@ -375,7 +351,7 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 	endpointHandler := xdscache_v3.NewEndpointsTranslator(log.WithField("context", "endpointstranslator"))
 
 	resources := []xdscache.ResourceCache{
-		xdscache_v3.NewListenerCache(listenerConfig, ctx.statsAddr, ctx.statsPort),
+		xdscache_v3.NewListenerCache(listenerConfig, ctx.statsAddr, ctx.statsPort, ctx.Config.Network.EnvoyAdminPort),
 		&xdscache_v3.SecretCache{},
 		&xdscache_v3.RouteCache{},
 		&xdscache_v3.ClusterCache{},
@@ -388,69 +364,21 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 	// register observer for endpoints updates.
 	endpointHandler.Observer = contour.ComposeObservers(snapshotHandler)
 
-	// Get the appropriate DAG processors.
-	dagProcessors := []dag.Processor{
-		&dag.IngressProcessor{
-			FieldLogger:       log.WithField("context", "IngressProcessor"),
-			ClientCertificate: clientCert,
-		},
-		&dag.ExtensionServiceProcessor{
-			FieldLogger:       log.WithField("context", "ExtensionServiceProcessor"),
-			ClientCertificate: clientCert,
-		},
-		&dag.HTTPProxyProcessor{
-			DisablePermitInsecure: ctx.Config.DisablePermitInsecure,
-			FallbackCertificate:   fallbackCert,
-			DNSLookupFamily:       ctx.Config.Cluster.DNSLookupFamily,
-			ClientCertificate:     clientCert,
-			RequestHeadersPolicy:  &requestHeadersPolicy,
-			ResponseHeadersPolicy: &responseHeadersPolicy,
-		},
-	}
-
 	// Log that we're using the fallback certificate if configured.
 	if fallbackCert != nil {
 		log.WithField("context", "fallback-certificate").Infof("enabled fallback certificate with secret: %q", fallbackCert)
 	}
-
 	if clientCert != nil {
 		log.WithField("context", "envoy-client-certificate").Infof("enabled client certificate with secret: %q", clientCert)
 	}
-
-	if clients.ResourcesExist(k8s.GatewayAPIResources()...) {
-		if ctx.Config.GatewayConfig != nil {
-			dagProcessors = append(dagProcessors, &dag.GatewayAPIProcessor{
-				FieldLogger: log.WithField("context", "GatewayAPIProcessor"),
-			})
-		}
-	}
-
-	// The listener processor has to go last since it looks at
-	// the output of the other processors.
-	dagProcessors = append(dagProcessors, &dag.ListenerProcessor{})
 
 	// Build the core Kubernetes event handler.
 	eventHandler := &contour.EventHandler{
 		HoldoffDelay:    100 * time.Millisecond,
 		HoldoffMaxDelay: 500 * time.Millisecond,
 		Observer:        dag.ComposeObservers(append(xdscache.ObserversOf(resources), snapshotHandler)...),
-		Builder: dag.Builder{
-			Source: dag.KubernetesCache{
-				RootNamespaces:       ctx.proxyRootNamespaces(),
-				IngressClassName:     ctx.ingressClassName,
-				ConfiguredSecretRefs: configuredSecretRefs,
-				FieldLogger:          log.WithField("context", "KubernetesCache"),
-			},
-			Processors: dagProcessors,
-		},
-		FieldLogger: log.WithField("context", "contourEventHandler"),
-	}
-
-	if ctx.Config.GatewayConfig != nil {
-		eventHandler.Builder.Source.ConfiguredGateway = types.NamespacedName{
-			Name:      ctx.Config.GatewayConfig.Name,
-			Namespace: ctx.Config.GatewayConfig.Namespace,
-		}
+		Builder:         getDAGBuilder(ctx, clients, clientCert, fallbackCert, log),
+		FieldLogger:     log.WithField("context", "contourEventHandler"),
 	}
 
 	// Wrap eventHandler in a converter for objects from the dynamic client.
@@ -474,39 +402,65 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 		inf.AddEventHandler(&dynamicHandler)
 	}
 
-	// If Ingress v1 resource exist, then add informers to watch, otherwise
-	// add Ingress v1beta1 informers.
-	if clients.ResourcesExist(k8s.IngressV1Resources()...) {
-		for _, r := range k8s.IngressV1Resources() {
-			if err := informOnResource(clients, r, &dynamicHandler); err != nil {
-				log.WithError(err).WithField("resource", r).Fatal("failed to create informer")
-			}
-		}
-	} else {
-		if err := informOnResource(clients, k8s.IngressV1Beta1Resource(), &dynamicHandler); err != nil {
-			log.WithError(err).WithField("resource", k8s.IngressV1Beta1Resource()).Fatal("failed to create informer")
+	for _, r := range k8s.IngressV1Resources() {
+		if err := informOnResource(clients, r, &dynamicHandler); err != nil {
+			log.WithError(err).WithField("resource", r).Fatal("failed to create informer")
 		}
 	}
 
-	// Inform on gateway-api types if they are present.
-	if ctx.UseExperimentalServiceAPITypes {
-		log.Warn("DEPRECATED: The flag '--experimental-service-apis' is deprecated and should not be used. Please configure the gateway.name & gateway.namespace in the configuration file to specify which Gateway Contour will be watching.")
-	}
+	// Set up workgroup runner and register informers.
+	var g workgroup.Group
 
-	// Only inform on GatewayAPI resources if Gateway API is found.
+	// Only inform on Gateway API resources if Gateway API is found.
 	if ctx.Config.GatewayConfig != nil {
 		if clients.ResourcesExist(k8s.GatewayAPIResources()...) {
-			for _, r := range k8s.GatewayAPIResources() {
-				if err := informOnResource(clients, r, &dynamicHandler); err != nil {
-					log.WithError(err).WithField("resource", r).Fatal("failed to create informer")
-				}
+
+			// Setup a Manager
+			mgr, err := manager.New(controller_config.GetConfigOrDie(), manager.Options{})
+			if err != nil {
+				log.WithError(err).Fatal("unable to set up controller manager")
 			}
+
+			// Add the Gateway API Scheme.
+			err = gatewayapi_v1alpha1.AddToScheme(mgr.GetScheme())
+			if err != nil {
+				log.WithError(err).Fatal("unable to add Gateway API to scheme.")
+			}
+
+			// Create and register the gatewayclass controller with the manager.
+			gatewayClassControllerName := ctx.Config.GatewayConfig.ControllerName
+			if _, err := controller.NewGatewayClassController(mgr, &dynamicHandler,
+				log.WithField("context", "gatewayclass-controller"), gatewayClassControllerName); err != nil {
+				log.WithError(err).Fatal("failed to create gatewayclass-controller")
+			}
+
+			// Create and register the NewGatewayController controller with the manager.
+			if _, err := controller.NewGatewayController(mgr, &dynamicHandler,
+				log.WithField("context", "gateway-controller"), gatewayClassControllerName); err != nil {
+				log.WithError(err).Fatal("failed to create gateway-controller")
+			}
+
+			// Create and register the NewHTTPRouteController controller with the manager.
+			if _, err := controller.NewHTTPRouteController(mgr, &dynamicHandler, log.WithField("context", "httproute-controller")); err != nil {
+				log.WithError(err).Fatal("failed to create httproute-controller")
+			}
+
+			// Create and register the NewTLSRouteController controller with the manager.
+			if _, err := controller.NewTLSRouteController(mgr, &dynamicHandler, log.WithField("context", "tlsroute-controller")); err != nil {
+				log.WithError(err).Fatal("failed to create tlsroute-controller")
+			}
+
 			// Inform on Namespaces.
 			if err := informOnResource(clients, k8s.NamespacesResource(), &dynamicHandler); err != nil {
 				log.WithError(err).WithField("resource", k8s.NamespacesResource()).Fatal("failed to create informer")
 			}
+
+			// Start Manager
+			g.AddContext(func(taskCtx context.Context) error {
+				return mgr.Start(signals.SetupSignalHandler())
+			})
 		} else {
-			log.Fatalf("GatewayAPI Gateway configured but APIs not installed in cluster.")
+			log.Fatalf("Gateway API Gateway configured but APIs not installed in cluster.")
 		}
 	}
 
@@ -537,9 +491,6 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 			log.WithError(err).WithField("resource", r).Fatal("failed to create informer")
 		}
 	}
-
-	// Set up workgroup runner and register informers.
-	var g workgroup.Group
 
 	// Register a task to start all the informers.
 	g.AddContext(func(taskCtx context.Context) error {
@@ -739,6 +690,104 @@ func doServe(log logrus.FieldLogger, ctx *serveContext) error {
 
 	// GO!
 	return g.Run(context.Background())
+}
+
+func getDAGBuilder(ctx *serveContext, clients *k8s.Clients, clientCert, fallbackCert *types.NamespacedName, log logrus.FieldLogger) dag.Builder {
+	var requestHeadersPolicy dag.HeadersPolicy
+	if ctx.Config.Policy.RequestHeadersPolicy.Set != nil {
+		requestHeadersPolicy.Set = make(map[string]string)
+		for k, v := range ctx.Config.Policy.RequestHeadersPolicy.Set {
+			requestHeadersPolicy.Set[k] = v
+		}
+	}
+	if ctx.Config.Policy.RequestHeadersPolicy.Remove != nil {
+		requestHeadersPolicy.Remove = make([]string, 0, len(ctx.Config.Policy.RequestHeadersPolicy.Remove))
+		requestHeadersPolicy.Remove = append(requestHeadersPolicy.Remove, ctx.Config.Policy.RequestHeadersPolicy.Remove...)
+	}
+
+	var responseHeadersPolicy dag.HeadersPolicy
+	if ctx.Config.Policy.ResponseHeadersPolicy.Set != nil {
+		responseHeadersPolicy.Set = make(map[string]string)
+		for k, v := range ctx.Config.Policy.ResponseHeadersPolicy.Set {
+			responseHeadersPolicy.Set[k] = v
+		}
+	}
+	if ctx.Config.Policy.ResponseHeadersPolicy.Remove != nil {
+		responseHeadersPolicy.Remove = make([]string, 0, len(ctx.Config.Policy.ResponseHeadersPolicy.Remove))
+		responseHeadersPolicy.Remove = append(responseHeadersPolicy.Remove, ctx.Config.Policy.ResponseHeadersPolicy.Remove...)
+	}
+
+	log.Debugf("EnableExternalNameService is set to %t", ctx.Config.EnableExternalNameService)
+	// Get the appropriate DAG processors.
+	dagProcessors := []dag.Processor{
+		&dag.IngressProcessor{
+			EnableExternalNameService: ctx.Config.EnableExternalNameService,
+			FieldLogger:               log.WithField("context", "IngressProcessor"),
+			ClientCertificate:         clientCert,
+		},
+		&dag.ExtensionServiceProcessor{
+			// Note that ExtensionService does not support ExternalName, if it does get added,
+			// need to bring EnableExternalNameService in here too.
+			FieldLogger:       log.WithField("context", "ExtensionServiceProcessor"),
+			ClientCertificate: clientCert,
+		},
+		&dag.HTTPProxyProcessor{
+			EnableExternalNameService: ctx.Config.EnableExternalNameService,
+			DisablePermitInsecure:     ctx.Config.DisablePermitInsecure,
+			FallbackCertificate:       fallbackCert,
+			DNSLookupFamily:           ctx.Config.Cluster.DNSLookupFamily,
+			ClientCertificate:         clientCert,
+			RequestHeadersPolicy:      &requestHeadersPolicy,
+			ResponseHeadersPolicy:     &responseHeadersPolicy,
+		},
+	}
+
+	if ctx.Config.GatewayConfig != nil && clients.ResourcesExist(k8s.GatewayAPIResources()...) {
+		dagProcessors = append(dagProcessors, &dag.GatewayAPIProcessor{
+			EnableExternalNameService: ctx.Config.EnableExternalNameService,
+			FieldLogger:               log.WithField("context", "GatewayAPIProcessor"),
+		})
+	}
+
+	// The listener processor has to go last since it looks at
+	// the output of the other processors.
+	dagProcessors = append(dagProcessors, &dag.ListenerProcessor{})
+
+	var configuredSecretRefs []*types.NamespacedName
+	if fallbackCert != nil {
+		configuredSecretRefs = append(configuredSecretRefs, fallbackCert)
+	}
+	if clientCert != nil {
+		configuredSecretRefs = append(configuredSecretRefs, clientCert)
+	}
+
+	builder := dag.Builder{
+		Source: dag.KubernetesCache{
+			RootNamespaces:       ctx.proxyRootNamespaces(),
+			IngressClassName:     ctx.ingressClassName,
+			ConfiguredSecretRefs: configuredSecretRefs,
+			FieldLogger:          log.WithField("context", "KubernetesCache"),
+		},
+		Processors: dagProcessors,
+	}
+
+	if ctx.Config.GatewayConfig != nil {
+
+		// Log warning that the Name/Namespace fields in the configuration file are deprecated.
+		if len(ctx.Config.GatewayConfig.Name) > 0 || len(ctx.Config.GatewayConfig.Namespace) > 0 {
+			log.WithField("context", "configurationFile").Warn("Gateway.Name & Gateway.Namespace have been deprecated and will be removed in Contour v1.18. Please use Gateway.ControllerName instead.")
+		}
+
+		builder.Source.ConfiguredGateway = types.NamespacedName{
+			Name:      ctx.Config.GatewayConfig.Name,
+			Namespace: ctx.Config.GatewayConfig.Namespace,
+		}
+	}
+
+	// govet complains about copying the sync.Once that's in the dag.KubernetesCache
+	// but it's safe to ignore since this function is only called once.
+	// nolint:govet
+	return builder
 }
 
 func contains(namespaces []string, ns string) bool {

@@ -70,39 +70,55 @@ func pathMatchConditionsValid(conds []contour_api_v1.MatchCondition) error {
 }
 
 func mergeHeaderMatchConditions(conds []contour_api_v1.MatchCondition) []HeaderMatchCondition {
-	var hc []HeaderMatchCondition
+	var headerConditions []contour_api_v1.HeaderMatchCondition
 	for _, cond := range conds {
+		if cond.Header != nil {
+			headerConditions = append(headerConditions, *cond.Header)
+		}
+	}
+
+	return headerMatchConditions(headerConditions)
+}
+
+func headerMatchConditions(conditions []contour_api_v1.HeaderMatchCondition) []HeaderMatchCondition {
+	var hc []HeaderMatchCondition
+
+	for _, cond := range conditions {
 		switch {
-		case cond.Header == nil:
-			// skip it
-		case cond.Header.Present:
+		case cond.Present:
 			hc = append(hc, HeaderMatchCondition{
-				Name:      cond.Header.Name,
+				Name:      cond.Name,
 				MatchType: HeaderMatchTypePresent,
 			})
-		case cond.Header.Contains != "":
+		case cond.NotPresent:
 			hc = append(hc, HeaderMatchCondition{
-				Name:      cond.Header.Name,
-				Value:     cond.Header.Contains,
+				Name:      cond.Name,
+				MatchType: HeaderMatchTypePresent,
+				Invert:    true,
+			})
+		case cond.Contains != "":
+			hc = append(hc, HeaderMatchCondition{
+				Name:      cond.Name,
+				Value:     cond.Contains,
 				MatchType: HeaderMatchTypeContains,
 			})
-		case cond.Header.NotContains != "":
+		case cond.NotContains != "":
 			hc = append(hc, HeaderMatchCondition{
-				Name:      cond.Header.Name,
-				Value:     cond.Header.NotContains,
+				Name:      cond.Name,
+				Value:     cond.NotContains,
 				MatchType: HeaderMatchTypeContains,
 				Invert:    true,
 			})
-		case cond.Header.Exact != "":
+		case cond.Exact != "":
 			hc = append(hc, HeaderMatchCondition{
-				Name:      cond.Header.Name,
-				Value:     cond.Header.Exact,
+				Name:      cond.Name,
+				Value:     cond.Exact,
 				MatchType: HeaderMatchTypeExact,
 			})
-		case cond.Header.NotExact != "":
+		case cond.NotExact != "":
 			hc = append(hc, HeaderMatchCondition{
-				Name:      cond.Header.Name,
-				Value:     cond.Header.NotExact,
+				Name:      cond.Name,
+				Value:     cond.NotExact,
 				MatchType: HeaderMatchTypeExact,
 				Invert:    true,
 			})
@@ -115,6 +131,7 @@ func mergeHeaderMatchConditions(conds []contour_api_v1.MatchCondition) []HeaderM
 // slice of MatchConditions are valid. Specifically, it returns an error for
 // any of the following scenarios:
 //	- more than 1 'exact' condition for the same header
+//	- a 'present' and a 'notpresent' condition for the same header
 //	- an 'exact' and a 'notexact' condition for the same header, with the same values
 //	- a 'contains' and a 'notcontains' condition for the same header, with the same values
 //
@@ -131,6 +148,20 @@ func headerMatchConditionsValid(conditions []contour_api_v1.MatchCondition) erro
 
 		headerName := strings.ToLower(v.Header.Name)
 		switch {
+		case v.Header.Present:
+			if seenMatchConditions[contour_api_v1.HeaderMatchCondition{
+				Name:       headerName,
+				NotPresent: true,
+			}] {
+				return errors.New("cannot specify contradictory 'present' and 'notpresent' conditions for the same route and header")
+			}
+		case v.Header.NotPresent:
+			if seenMatchConditions[contour_api_v1.HeaderMatchCondition{
+				Name:    headerName,
+				Present: true,
+			}] {
+				return errors.New("cannot specify contradictory 'present' and 'notpresent' conditions for the same route and header")
+			}
 		case v.Header.Exact != "":
 			// Look for duplicate "exact match" headers on conditions
 			if headersWithExactMatch[headerName] {

@@ -161,6 +161,10 @@ const (
 
 	// HeaderMatchTypePresent matches a header if it is present in a request.
 	HeaderMatchTypePresent = "present"
+
+	// HeaderMatchTypeRegex matches a header if it matches the provided regular
+	// expression.
+	HeaderMatchTypeRegex = "regex"
 )
 
 // HeaderMatchCondition matches request headers by MatchType
@@ -180,6 +184,13 @@ func (hc *HeaderMatchCondition) String() string {
 	}, "&")
 
 	return "header: " + details
+}
+
+// DirectResponse allows for a specific HTTP status code
+// to be the response to a route request vs routing to
+// an envoy cluster.
+type DirectResponse struct {
+	StatusCode uint32
 }
 
 // Route defines the properties of a route to a Cluster.
@@ -235,6 +246,11 @@ type Route struct {
 	// RequestHashPolicies is a list of policies for configuring hashes on
 	// request attributes.
 	RequestHashPolicies []RequestHashPolicy
+
+	// DirectResponse allows for a specific HTTP status code
+	// to be the response to a route request vs routing to
+	// an envoy cluster.
+	DirectResponse *DirectResponse
 }
 
 // HasPathPrefix returns whether this route has a PrefixPathCondition.
@@ -287,6 +303,7 @@ type HeadersPolicy struct {
 	// HostRewrite defines if a host should be rewritten on upstream requests
 	HostRewrite string
 
+	Add    map[string]string
 	Set    map[string]string
 	Remove []string
 }
@@ -343,19 +360,44 @@ type GlobalRateLimitPolicy struct {
 	Descriptors []*RateLimitDescriptor
 }
 
+// RateLimitDescriptor is a list of rate limit descriptor entries.
 type RateLimitDescriptor struct {
 	Entries []RateLimitDescriptorEntry
 }
 
+// RateLimitDescriptorEntry is an entry in a rate limit descriptor.
+// Exactly one field should be non-nil.
 type RateLimitDescriptorEntry struct {
-	GenericKeyKey   string
-	GenericKeyValue string
-
-	HeaderMatchHeaderName    string
-	HeaderMatchDescriptorKey string
-
-	RemoteAddress bool
+	GenericKey       *GenericKeyDescriptorEntry
+	HeaderMatch      *HeaderMatchDescriptorEntry
+	HeaderValueMatch *HeaderValueMatchDescriptorEntry
+	RemoteAddress    *RemoteAddressDescriptorEntry
 }
+
+// GenericKeyDescriptorEntry  configures a descriptor entry
+// that has a static key & value.
+type GenericKeyDescriptorEntry struct {
+	Key   string
+	Value string
+}
+
+// HeaderMatchDescriptorEntry configures a descriptor entry
+// that's populated only if the specified header is present
+// on the request.
+type HeaderMatchDescriptorEntry struct {
+	HeaderName string
+	Key        string
+}
+
+type HeaderValueMatchDescriptorEntry struct {
+	Headers     []HeaderMatchCondition
+	ExpectMatch bool
+	Value       string
+}
+
+// RemoteAddressDescriptorEntry configures a descriptor entry
+// that contains the remote address (i.e. client IP).
+type RemoteAddressDescriptorEntry struct{}
 
 // CORSPolicy allows setting the CORS policy
 type CORSPolicy struct {
@@ -388,6 +430,9 @@ type PeerValidationContext struct {
 	// SubjectName holds an optional subject name which Envoy will check against the
 	// certificate presented by the upstream.
 	SubjectName string
+	// SkipClientCertValidation when set to true will ensure Envoy requests but
+	// does not verify peer certificates.
+	SkipClientCertValidation bool
 }
 
 // GetCACertificate returns the CA certificate from PeerValidationContext.
