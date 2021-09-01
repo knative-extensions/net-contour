@@ -73,6 +73,21 @@ _Adding the `upstream` remote sets you up nicely for regularly
 Once you reach this point you are ready to do a full build and deploy as
 described below.
 
+### Local Development
+
+If you want to develop locally ensure that you follow the
+[Knative getting started](https://knative.dev/docs/getting-started/) guide
+or [Manually setup serving](https://github.com/knative/serving/blob/main/DEVELOPMENT.md)
+first.
+
+#### NOTES:
+If you use the konk script to setup your cluster, your cluster will be named `knative`.
+However, most of the scripts expect it to be the default `kind` name. Set the kind cluster
+name env `export KIND_CLUSTER_NAME=knative` to point to `knative` cluster. KO requires a
+registry which if you are developing locally you could use `export KO_DOCKER_REPO=kind.local`
+to use the local one on kind. Please see official
+[KO documentation](https://github.com/google/ko#local-publishing-options) for more information.
+
 ### Installing Contour
 
 Before deploying the `net-contour` controller you will need a properly
