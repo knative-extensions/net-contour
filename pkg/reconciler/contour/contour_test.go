@@ -762,10 +762,6 @@ func withHTTPRedirected(i *v1alpha1.Ingress) {
 	i.Spec.HTTPOption = v1alpha1.HTTPOptionRedirected
 }
 
-func withHTTPDisabled(i *v1alpha1.Ingress) {
-	i.Spec.HTTPOption = ""
-}
-
 func withMultiProxySpec(i *v1alpha1.Ingress) {
 	i.Spec = v1alpha1.IngressSpec{
 		Rules: []v1alpha1.IngressRule{{

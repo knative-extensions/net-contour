@@ -50,9 +50,7 @@ func (l *lister) ListProbeTargets(ctx context.Context, ing *v1alpha1.Ingress) ([
 		port, scheme := int32(80), "http"
 
 		// Probe external servce with https.
-		// TODO: The Empty HTTPOption means "Disabled" for now. Drop it when it is deprecated.
-		// See: https://github.com/knative/serving/blob/cecace7f79cccb3d9d44be4e93cc704ec6759a0a/pkg/reconciler/domainmapping/reconciler.go#L131-L134
-		if (ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected || ing.Spec.HTTPOption == "") &&
+		if ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected &&
 			!visibilityKeys["ClusterLocal"].Has(key) {
 			port, scheme = 443, "https"
 		}

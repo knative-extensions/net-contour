@@ -119,12 +119,6 @@ func TestListProbeTargets(t *testing.T) {
 		wantErr: fmt.Errorf("failed to lookup port 80 in %s/%s: no port with number 80 found",
 			publicNS, publicName),
 	}, {
-		name:    "no port 443 in service (http disabled)",
-		objects: []runtime.Object{publicSecureServiceNoPort443, publicEndpointsOneAddr},
-		ing:     ing("name", "ns", withBasicSpec, withContour, withHTTPDisabled),
-		wantErr: fmt.Errorf("failed to lookup port 443 in %s/%s: no port with number 443 found",
-			publicNS, publicName),
-	}, {
 		name:    "no matching port name in endpoints",
 		objects: []runtime.Object{publicService, publicEndpointsWrongPortName},
 		ing:     ing("name", "ns", withBasicSpec, withContour),
@@ -191,18 +185,6 @@ var (
 			Ports: []corev1.ServicePort{{
 				Name: "asdf",
 				Port: 443,
-			}},
-		},
-	}
-	publicSecureServiceNoPort443 = &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: publicNS,
-			Name:      publicName,
-		},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{{
-				Name: "asdf",
-				Port: 444,
 			}},
 		},
 	}
