@@ -40,7 +40,6 @@ import (
 	clientgotesting "k8s.io/client-go/testing"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
 	"knative.dev/net-contour/pkg/reconciler/contour/resources"
-	networkingpkg "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	ingressreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
@@ -597,10 +596,6 @@ var (
 				v1alpha1.IngressVisibilityExternalIP:   sets.NewString(publicKey),
 			},
 		},
-		Network: &networkingpkg.Config{
-			AutoTLS:      false,
-			HTTPProtocol: networkingpkg.HTTPEnabled,
-		},
 	}
 )
 
@@ -721,6 +716,7 @@ func makeItReady(i *v1alpha1.Ingress) {
 
 func withBasicSpec(i *v1alpha1.Ingress) {
 	i.Spec = v1alpha1.IngressSpec{
+		HTTPOption: v1alpha1.HTTPOptionEnabled,
 		Rules: []v1alpha1.IngressRule{{
 			Hosts:      []string{"example.com"},
 			Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -742,6 +738,7 @@ func withBasicSpec(i *v1alpha1.Ingress) {
 
 func withBasicSpec2(i *v1alpha1.Ingress) {
 	i.Spec = v1alpha1.IngressSpec{
+		HTTPOption: v1alpha1.HTTPOptionEnabled,
 		Rules: []v1alpha1.IngressRule{{
 			Hosts:      []string{"example.com"},
 			Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -759,6 +756,10 @@ func withBasicSpec2(i *v1alpha1.Ingress) {
 			},
 		}},
 	}
+}
+
+func withHTTPRedirected(i *v1alpha1.Ingress) {
+	i.Spec.HTTPOption = v1alpha1.HTTPOptionRedirected
 }
 
 func withMultiProxySpec(i *v1alpha1.Ingress) {

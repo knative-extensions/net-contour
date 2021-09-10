@@ -26,7 +26,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
-	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/status"
 
@@ -36,12 +35,11 @@ import (
 
 func TestListProbeTargets(t *testing.T) {
 	tests := []struct {
-		name         string
-		ing          *v1alpha1.Ingress
-		objects      []runtime.Object
-		httpProtocol network.HTTPProtocol
-		want         []status.ProbeTarget
-		wantErr      error
+		name    string
+		ing     *v1alpha1.Ingress
+		objects []runtime.Object
+		want    []status.ProbeTarget
+		wantErr error
 	}{{
 		name: "public with single address to probe",
 		objects: []runtime.Object{
@@ -68,8 +66,7 @@ func TestListProbeTargets(t *testing.T) {
 			publicEndpointsOneAddr,
 			privateEndpointsNoAddr,
 		},
-		ing:          ing("name", "ns", withBasicSpec, withContour),
-		httpProtocol: network.HTTPRedirected,
+		ing: ing("name", "ns", withBasicSpec, withContour, withHTTPRedirected),
 		want: []status.ProbeTarget{{
 			PodIPs:  sets.NewString("1.2.3.4"),
 			Port:    "443",
@@ -122,13 +119,6 @@ func TestListProbeTargets(t *testing.T) {
 		wantErr: fmt.Errorf("failed to lookup port 80 in %s/%s: no port with number 80 found",
 			publicNS, publicName),
 	}, {
-		name:         "no port 443 in service (http disabled)",
-		objects:      []runtime.Object{publicSecureServiceNoPort443, publicEndpointsOneAddr},
-		ing:          ing("name", "ns", withBasicSpec, withContour),
-		httpProtocol: network.HTTPDisabled,
-		wantErr: fmt.Errorf("failed to lookup port 443 in %s/%s: no port with number 443 found",
-			publicNS, publicName),
-	}, {
 		name:    "no matching port name in endpoints",
 		objects: []runtime.Object{publicService, publicEndpointsWrongPortName},
 		ing:     ing("name", "ns", withBasicSpec, withContour),
@@ -145,9 +135,6 @@ func TestListProbeTargets(t *testing.T) {
 			}
 
 			cfg := defaultConfig.DeepCopy()
-			if len(test.httpProtocol) != 0 {
-				cfg.Network.HTTPProtocol = test.httpProtocol
-			}
 			ctx := (&testConfigStore{config: cfg}).ToContext(context.Background())
 
 			got, gotErr := l.ListProbeTargets(ctx, test.ing)
@@ -198,18 +185,6 @@ var (
 			Ports: []corev1.ServicePort{{
 				Name: "asdf",
 				Port: 443,
-			}},
-		},
-	}
-	publicSecureServiceNoPort443 = &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: publicNS,
-			Name:      publicName,
-		},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{{
-				Name: "asdf",
-				Port: 444,
 			}},
 		},
 	}
