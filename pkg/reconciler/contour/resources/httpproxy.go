@@ -261,6 +261,12 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				hostProxy.Spec.VirtualHost = &v1.VirtualHost{
 					Fqdn: host,
 				}
+
+				// Set ExtensionService if annotation is present
+				if extensionService, ok := ing.Annotations[ExtensionServiceKey]; ok {
+					hostProxy.Spec.VirtualHost.Authorization.ExtensionServiceRef.Name = extensionService
+				}
+
 				// nolint:gosec // No strong cryptography needed.
 				hostProxy.Labels[DomainHashKey] = fmt.Sprintf("%x", sha1.Sum([]byte(host)))
 

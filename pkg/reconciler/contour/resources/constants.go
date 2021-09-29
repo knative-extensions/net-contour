@@ -38,3 +38,10 @@ const (
 	// since the child ingress exists to be said endpoint probe.
 	EndpointsProbeKey = "contour.networking.knative.dev/endpointsProbe"
 )
+
+// These are the annotations which are optionally set in ksvc/ingress
+const (
+	// If this annotation is set in ksvc/ingress, it is used as the ExternalService name in the
+	// generated HttpProxy
+	ExtensionServiceKey = "contour.networking.knative.dev/externsionService"
+)
