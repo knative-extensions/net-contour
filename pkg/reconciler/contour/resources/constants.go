@@ -43,5 +43,6 @@ const (
 const (
 	// If this annotation is set in ksvc/ingress, it is used as the ExternalService name in the
 	// generated HttpProxy
-	ExtensionServiceKey = "contour.networking.knative.dev/externsionService"
+	ExtensionServiceKey          = "contour.networking.knative.dev/extensionService"
+	ExtensionServiceNamespaceKey = "contour.networking.knative.dev/extensionServiceNamespace"
 )
