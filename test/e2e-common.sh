@@ -41,6 +41,7 @@ function test_setup() {
   # Switch Envoy to emit debug-level logging.
   ko resolve -f config/contour | \
     sed 's/--log-level info/--log-level debug/g' | \
+    sed 's/ttlSecondsAfterFinished: 0/ttlSecondsAfterFinished: 120/g' | \
     kubectl apply -f - || return 1
   wait_until_batch_job_complete contour-external || return 1
   wait_until_batch_job_complete contour-internal || return 1
