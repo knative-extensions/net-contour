@@ -1891,7 +1891,7 @@ rules:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: contour-certgen-v1.18.1
+  name: contour-certgen-v1.18.2
   namespace: contour-internal
   labels:
     networking.knative.dev/ingress-provider: contour
