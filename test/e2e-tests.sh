@@ -18,7 +18,7 @@ source $(dirname $0)/e2e-common.sh
 
 
 # Script entry point.
-initialize $@  --skip-istio-addon
+initialize $@  --skip-istio-addon --cluster-version=1.20
 
 go_test_e2e -timeout=60m \
 	    ./test/conformance \
