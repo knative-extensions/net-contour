@@ -34,20 +34,21 @@ function test_setup() {
   echo ">> Publishing test images"
   $(dirname $0)/upload-test-images.sh || fail_test "Error uploading test images"
   echo ">> Creating test resources (test/config/)"
-  ko apply --platform=all ${KO_FLAGS} -f test/config/ || return 1
+  ko apply ${KO_FLAGS} -f test/config/ || return 1
 
   # Bringing up controllers.
   echo ">> Bringing up Contour"
   # Switch Envoy to emit debug-level logging.
-  ko resolve --platform=all -f config/contour | \
+  ko resolve -f config/contour | \
     sed 's/--log-level info/--log-level debug/g' | \
+    sed 's/ttlSecondsAfterFinished: 0/ttlSecondsAfterFinished: 120/g' | \
     kubectl apply -f - || return 1
   wait_until_batch_job_complete contour-external || return 1
   wait_until_batch_job_complete contour-internal || return 1
   wait_until_service_has_external_ip contour-external envoy
 
   echo ">> Bringing up net-contour"
-  ko apply --platform=all -f config/ || return 1
+  ko apply -f config/ || return 1
 
   scale_controlplane net-contour-controller
 
