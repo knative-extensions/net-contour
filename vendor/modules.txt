@@ -197,7 +197,7 @@ github.com/modern-go/reflect2
 github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
-# github.com/projectcontour/contour v1.18.1
+# github.com/projectcontour/contour v1.18.2
 ## explicit
 github.com/projectcontour/contour/apis/projectcontour/v1
 github.com/projectcontour/contour/apis/projectcontour/v1alpha1
@@ -283,7 +283,7 @@ go.uber.org/automaxprocs/internal/runtime
 go.uber.org/automaxprocs/maxprocs
 # go.uber.org/multierr v1.6.0
 go.uber.org/multierr
-# go.uber.org/zap v1.19.0
+# go.uber.org/zap v1.19.1
 ## explicit
 go.uber.org/zap
 go.uber.org/zap/buffer
