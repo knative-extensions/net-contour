@@ -46,7 +46,6 @@ jobs:
 
     env:
       GOPATH: ${{ github.workspace }}
-      GO111MODULE: off
       KO_DOCKER_REPO: kind.local
       # Use a semi-random cluster suffix, but somewhat predictable
       # so reruns don't just give us a completely new value.
@@ -158,8 +157,6 @@ jobs:
         set -o pipefail
 
         # Build and Publish our containers to the docker daemon (including test assets)
-        export GO111MODULE=on
-        export GOFLAGS=-mod=vendor
         ko resolve --platform=linux/amd64 -Pf test/config/ -f config/contour -f config | \
           sed 's/imagePullPolicy:/# DISABLED: imagePullPolicy:/g' | \
           kubectl apply -f -
@@ -170,8 +167,6 @@ jobs:
         set -o pipefail
 
         # Build and Publish our containers to the docker daemon (including test assets)
-        export GO111MODULE=on
-        export GOFLAGS=-mod=vendor
         ko resolve --platform=linux/amd64 -Pf test/config/ -f config/contour-operator/operator.yaml -f config | \
           sed 's/imagePullPolicy:/# DISABLED: imagePullPolicy:/g' | \
           kubectl apply -f -
