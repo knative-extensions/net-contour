@@ -2246,6 +2246,13 @@ spec:
         - shutdown-manager
         image: ko://github.com/projectcontour/contour/cmd/contour
         imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: 40m
+            memory: 40Mi
+          limits:
+            cpu: 400m
+            memory: 400Mi
         lifecycle:
           preStop:
             exec:
