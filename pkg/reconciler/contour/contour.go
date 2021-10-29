@@ -310,7 +310,7 @@ func (r *Reconciler) lbStatus(ctx context.Context, vis v1alpha1.IngressVisibilit
 			if service, err := r.serviceLister.Services(namespace).Get(name); err == nil {
 				clusterIP = service.Spec.ClusterIP
 			} else {
-				logger.Infof("failed to get service to determine cluster IP %s", err)
+				logger.Infof("failed to get service to determine cluster IP", zap.Error(err))
 			}
 
 			lbs = append(lbs, v1alpha1.LoadBalancerIngressStatus{
