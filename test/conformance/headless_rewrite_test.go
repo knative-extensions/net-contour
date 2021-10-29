@@ -147,7 +147,7 @@ func createEndpoints(ctx context.Context, t *testing.T, clients *test.Clients, e
 
 	if err := reconciler.RetryTestErrors(func(attempts int) error {
 		if attempts > 0 {
-			t.Logf("Attempt %d creating endpoint %s", attempts, epName)
+			t.Logf("Attempt %d creating endpoint %q", attempts, epName)
 		}
 		_, err := clients.KubeClient.CoreV1().Endpoints(ep.Namespace).Create(ctx, ep, metav1.CreateOptions{})
 		if err != nil {
@@ -170,7 +170,7 @@ func createService(ctx context.Context, t *testing.T, clients *test.Clients, svc
 
 	if err := reconciler.RetryTestErrors(func(attempts int) error {
 		if attempts > 0 {
-			t.Logf("Attempt %d creating service %s", attempts, svcName)
+			t.Logf("Attempt %d creating service %q", attempts, svcName)
 		}
 		_, err := clients.KubeClient.CoreV1().Services(svc.Namespace).Create(ctx, svc, metav1.CreateOptions{})
 		if err != nil {
