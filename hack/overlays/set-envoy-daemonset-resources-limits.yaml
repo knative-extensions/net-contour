@@ -1,7 +1,8 @@
 #@ load("@ytt:overlay", "overlay")
 #@ load("@ytt:data", "data")
 
-#@overlay/match by=overlay.subset({"kind":"DaemonSet","metadata":{"name": "envoy"}})
+#@overlay/match by=overlay.all,expects="1+"
+#@overlay/match-child-defaults when=1
 ---
 spec:
   template:
