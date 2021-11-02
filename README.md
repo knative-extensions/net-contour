@@ -1,5 +1,7 @@
 # Knative Contour KIngress controller.
 
+**[This component is GA](https://github.com/knative/community/tree/main/mechanics/MATURITY-LEVELS.md)**
+
 [![Go Reference](https://pkg.go.dev/badge/knative.dev/net-contour.svg)](https://pkg.go.dev/knative.dev/net-contour)
 [![Go Report Card](https://goreportcard.com/badge/knative/net-contour)](https://goreportcard.com/report/knative/net-contour)
 
