@@ -2262,6 +2262,13 @@ spec:
         volumeMounts:
         - name: envoy-admin
           mountPath: /admin
+        resources:
+          requests:
+            cpu: 40m
+            memory: 40Mi
+          limits:
+            cpu: 400m
+            memory: 400Mi
       - args:
         - -c
         - /config/envoy.json
@@ -2312,6 +2319,13 @@ spec:
               path: /shutdown
               port: 8090
               scheme: HTTP
+        resources:
+          requests:
+            cpu: 200m
+            memory: 200Mi
+          limits:
+            cpu: 500m
+            memory: 500Mi
       initContainers:
       - args:
         - bootstrap
