@@ -6,6 +6,9 @@ metadata:
   name: knative-serving-contour
   labels:
     networking.knative.dev/ingress-provider: contour
+    app.kubernetes.io/component: net-contour
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: devel
     serving.knative.dev/controller: "true"
 rules:
   - apiGroups: ["projectcontour.io"]

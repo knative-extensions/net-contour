@@ -28,6 +28,9 @@ spec:
     metadata:
       labels:
         app: net-contour-controller
+        app.kubernetes.io/component: net-contour
+        app.kubernetes.io/name: knative-serving
+        app.kubernetes.io/version: devel
     spec:
       serviceAccountName: controller
       containers:
