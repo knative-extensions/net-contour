@@ -17,3 +17,5 @@ require (
 )
 
 replace github.com/envoyproxy/go-control-plane => github.com/envoyproxy/go-control-plane v0.9.10-0.20210614203518-782de910ff04
+
+replace knative.dev/networking => github.com/dprotaso/networking v0.0.0-20211123035620-befe8f903d80

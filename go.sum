@@ -193,6 +193,8 @@ github.com/docker/go-units v0.3.3/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDD
 github.com/docker/go-units v0.4.0/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96/go.mod h1:Qh8CwZgvJUkLughtfhJv5dyTYa91l1fOUCrgjqmcifM=
 github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815/go.mod h1:WwZ+bS3ebgob9U8Nd0kOddGdZWjyMGR8Wziv+TBNwSE=
+github.com/dprotaso/networking v0.0.0-20211123035620-befe8f903d80 h1:R1xKTB9YRGvZsLjTpZAFh/IjQ9EartSZR7Z7CAAyM8c=
+github.com/dprotaso/networking v0.0.0-20211123035620-befe8f903d80/go.mod h1:UCDjE4GxZJat8RJohbAwwxe+U3LjRJOU2Hb2LNiNMY0=
 github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
@@ -1482,10 +1484,9 @@ k8s.io/utils v0.0.0-20210305010621-2afb4311ab10/go.mod h1:jPW/WVKK9YHAvNhRxK0md/
 k8s.io/utils v0.0.0-20210527160623-6fdb442a123b h1:MSqsVQ3pZvPGTqCjptfimO2WjG7A9un2zcpiHkA6M/s=
 k8s.io/utils v0.0.0-20210527160623-6fdb442a123b/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 knative.dev/hack v0.0.0-20211112192837-128cf0150a69/go.mod h1:PHt8x8yX5Z9pPquBEfIj0X66f8iWkWfR0S/sarACJrI=
+knative.dev/hack v0.0.0-20211117134436-69a2295d54ce/go.mod h1:PHt8x8yX5Z9pPquBEfIj0X66f8iWkWfR0S/sarACJrI=
 knative.dev/hack v0.0.0-20211122162614-813559cefdda h1:WBfGcmu5pN+RCxDotKVYtWlJVI2V4Hvah+XD9mcSR/o=
 knative.dev/hack v0.0.0-20211122162614-813559cefdda/go.mod h1:PHt8x8yX5Z9pPquBEfIj0X66f8iWkWfR0S/sarACJrI=
-knative.dev/networking v0.0.0-20211123024050-aa82452902be h1:E9JdH2VCkl+pfCGExsTtwW158HrSCuCCoOfYHGn+mf0=
-knative.dev/networking v0.0.0-20211123024050-aa82452902be/go.mod h1:u/Biwu9curBfc1GvZE293SwEfLo84sZ6df7cymgwLvw=
 knative.dev/pkg v0.0.0-20211120133512-d016976f2567/go.mod h1:VqUp1KWJqpTDNoiSI/heaX3uMdubImslJE2tBkP+Bbw=
 knative.dev/pkg v0.0.0-20211123074649-0fae0afc10ad h1:d5EVnV0T5JX403WUx2scfr1tE/MY9xIY92qJoxCcm1I=
 knative.dev/pkg v0.0.0-20211123074649-0fae0afc10ad/go.mod h1:fZUlVceKtVNyFU6LokWGk2a9QFQXeSTtnbKOjjkQ690=

@@ -901,7 +901,7 @@ k8s.io/utils/trace
 # knative.dev/hack v0.0.0-20211122162614-813559cefdda
 ## explicit
 knative.dev/hack
-# knative.dev/networking v0.0.0-20211123024050-aa82452902be
+# knative.dev/networking v0.0.0-20211123024050-aa82452902be => github.com/dprotaso/networking v0.0.0-20211123035620-befe8f903d80
 ## explicit
 knative.dev/networking/config
 knative.dev/networking/pkg
@@ -1054,3 +1054,4 @@ sigs.k8s.io/structured-merge-diff/v4/value
 ## explicit
 sigs.k8s.io/yaml
 # github.com/envoyproxy/go-control-plane => github.com/envoyproxy/go-control-plane v0.9.10-0.20210614203518-782de910ff04
+# knative.dev/networking => github.com/dprotaso/networking v0.0.0-20211123035620-befe8f903d80
