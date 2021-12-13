@@ -31,25 +31,24 @@ import (
 // +kubebuilder:rbac:groups="projectcontour.io",resources=extensionservices,verbs=get;list;watch
 // +kubebuilder:rbac:groups="projectcontour.io",resources=extensionservices/status,verbs=create;get;update
 
+// +kubebuilder:rbac:groups="projectcontour.io",resources=contourconfigurations,verbs=get;list;watch
+// +kubebuilder:rbac:groups="projectcontour.io",resources=contourconfigurations/status,verbs=create;get;update
+
 // DefaultResources ...
 func DefaultResources() []schema.GroupVersionResource {
 	return []schema.GroupVersionResource{
 		contour_api_v1.HTTPProxyGVR,
 		contour_api_v1.TLSCertificateDelegationGVR,
 		contour_api_v1alpha1.ExtensionServiceGVR,
+		contour_api_v1alpha1.ContourConfigurationGVR,
 		corev1.SchemeGroupVersion.WithResource("services"),
-	}
-}
-
-func IngressV1Resources() []schema.GroupVersionResource {
-	return []schema.GroupVersionResource{
 		networking_v1.SchemeGroupVersion.WithResource("ingresses"),
 		networking_v1.SchemeGroupVersion.WithResource("ingressclasses"),
 	}
 }
 
-// +kubebuilder:rbac:groups="networking.x-k8s.io",resources=gatewayclasses;gateways;httproutes;backendpolicies;tlsroutes;tcproutes;udproutes,verbs=get;list;watch
-// +kubebuilder:rbac:groups="networking.x-k8s.io",resources=gatewayclasses/status;gateways/status;httproutes/status;backendpolicies/status;tlsroutes/status;tcproutes/status;udproutes/status,verbs=update
+// +kubebuilder:rbac:groups="networking.x-k8s.io",resources=gatewayclasses;gateways;httproutes;tlsroutes;tcproutes;udproutes,verbs=get;list;watch
+// +kubebuilder:rbac:groups="networking.x-k8s.io",resources=gatewayclasses/status;gateways/status;httproutes/status;tlsroutes/status;tcproutes/status;udproutes/status,verbs=update
 
 // GatewayAPIResources returns a list of Gateway API group/version resources.
 func GatewayAPIResources() []schema.GroupVersionResource {
@@ -65,10 +64,6 @@ func GatewayAPIResources() []schema.GroupVersionResource {
 		Group:    gatewayapi_v1alpha1.GroupVersion.Group,
 		Version:  gatewayapi_v1alpha1.GroupVersion.Version,
 		Resource: "httproutes",
-	}, {
-		Group:    gatewayapi_v1alpha1.GroupVersion.Group,
-		Version:  gatewayapi_v1alpha1.GroupVersion.Version,
-		Resource: "backendpolicies",
 	}, {
 		Group:    gatewayapi_v1alpha1.GroupVersion.Group,
 		Version:  gatewayapi_v1alpha1.GroupVersion.Version,

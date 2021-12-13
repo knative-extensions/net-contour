@@ -332,21 +332,22 @@ func (p *GatewayAPIProcessor) computeHosts(hostnames []gatewayapi_v1alpha1.Hostn
 			lhn := string(*listenerHostname)
 
 			// A "*" hostname matches anything.
-			if lhn == "*" {
+			switch {
+			case lhn == "*":
 				hosts[hostname] = struct{}{}
 				continue
-			} else if lhn == hostname {
+			case lhn == hostname:
 				// If the listener.hostname matches then no need to
 				// do any other validation.
 				hosts[hostname] = struct{}{}
 				continue
-			} else if strings.Contains(lhn, "*") {
+			case strings.Contains(lhn, "*"):
 
 				if removeFirstDNSLabel(lhn) != removeFirstDNSLabel(hostname) {
 					errors = append(errors, fmt.Errorf("gateway hostname %q does not match route hostname %q", lhn, hostname))
 					continue
 				}
-			} else {
+			default:
 				// Validate the gateway listener hostname matches the hostnames hostname.
 				errors = append(errors, fmt.Errorf("gateway hostname %q does not match route hostname %q", lhn, hostname))
 				continue
@@ -402,7 +403,8 @@ func (p *GatewayAPIProcessor) namespaceMatches(namespaces *gatewayapi_v1alpha1.R
 	case gatewayapi_v1alpha1.RouteSelectAll:
 		return true, nil
 	case gatewayapi_v1alpha1.RouteSelectSame:
-		return p.source.ConfiguredGateway.Namespace == namespace, nil
+		gatewayNSName := k8s.NamespacedNameOf(p.source.gateway)
+		return gatewayNSName.Namespace == namespace, nil
 	case gatewayapi_v1alpha1.RouteSelectSelector:
 		if len(namespaces.Selector.MatchLabels) == 0 && len(namespaces.Selector.MatchExpressions) == 0 {
 			return false, fmt.Errorf("RouteNamespaces selector must be specified when `RouteSelectType=Selector`")
@@ -434,17 +436,22 @@ func (p *GatewayAPIProcessor) gatewayMatches(routeGateways *gatewayapi_v1alpha1.
 		return true
 	}
 
+	gatewayNSName := types.NamespacedName{}
+	if p.source.gateway != nil {
+		gatewayNSName = k8s.NamespacedNameOf(p.source.gateway)
+	}
+
 	switch *routeGateways.Allow {
 	case gatewayapi_v1alpha1.GatewayAllowAll:
 		return true
 	case gatewayapi_v1alpha1.GatewayAllowFromList:
 		for _, gateway := range routeGateways.GatewayRefs {
-			if gateway.Name == p.source.ConfiguredGateway.Name && gateway.Namespace == p.source.ConfiguredGateway.Namespace {
+			if gateway.Name == gatewayNSName.Name && gateway.Namespace == gatewayNSName.Namespace {
 				return true
 			}
 		}
 	case gatewayapi_v1alpha1.GatewayAllowSameNamespace:
-		return p.source.ConfiguredGateway.Namespace == namespace
+		return gatewayNSName.Namespace == namespace
 	}
 	return false
 }
@@ -537,6 +544,8 @@ func (p *GatewayAPIProcessor) computeTLSRoute(route *gatewayapi_v1alpha1.TLSRout
 		}
 
 		var proxy TCPProxy
+		var totalWeight uint32
+
 		for _, forward := range rule.ForwardTo {
 
 			service, err := p.validateForwardTo(forward.ServiceName, forward.Port, route.Namespace)
@@ -545,14 +554,28 @@ func (p *GatewayAPIProcessor) computeTLSRoute(route *gatewayapi_v1alpha1.TLSRout
 				continue
 			}
 
+			// Route defaults to a weight of "1" unless otherwise specified.
+			routeWeight := uint32(1)
+			if forward.Weight != nil {
+				routeWeight = uint32(*forward.Weight)
+			}
+
+			// Keep track of all the weights for this set of forwardTos. This will be
+			// used later to understand if all the weights are set to zero.
+			totalWeight += routeWeight
+
+			// https://github.com/projectcontour/contour/issues/3593
+			service.Weighted.Weight = routeWeight
 			proxy.Clusters = append(proxy.Clusters, &Cluster{
 				Upstream: service,
 				SNI:      service.ExternalName,
+				Weight:   routeWeight,
 			})
 		}
 
-		if len(proxy.Clusters) == 0 {
-			// No valid clusters so the route should get rejected.
+		// No valid clusters or all forwardTos have a weight of 0
+		// so the route should get rejected.
+		if len(proxy.Clusters) == 0 || totalWeight == 0 {
 			continue
 		}
 

@@ -195,13 +195,13 @@ func bootstrapConfig(c *envoy.BootstrapConfig) *envoy_bootstrap_v3.Bootstrap {
 					}},
 				},
 			}, {
-				Name:                 "service-stats",
-				AltStatName:          strings.Join([]string{c.Namespace, "service-stats", strconv.Itoa(c.GetAdminPort())}, "_"),
+				Name:                 "envoy-admin",
+				AltStatName:          strings.Join([]string{c.Namespace, "envoy-admin", strconv.Itoa(c.GetAdminPort())}, "_"),
 				ConnectTimeout:       protobuf.Duration(250 * time.Millisecond),
 				ClusterDiscoveryType: ClusterDiscoveryTypeForAddress(c.GetAdminAddress(), envoy_cluster_v3.Cluster_STATIC),
 				LbPolicy:             envoy_cluster_v3.Cluster_ROUND_ROBIN,
 				LoadAssignment: &envoy_endpoint_v3.ClusterLoadAssignment{
-					ClusterName: "service-stats",
+					ClusterName: "envoy-admin",
 					Endpoints: Endpoints(
 						UnixSocketAddress(c.GetAdminAddress(), c.GetAdminPort()),
 					),
@@ -218,6 +218,9 @@ func bootstrapConfig(c *envoy.BootstrapConfig) *envoy_bootstrap_v3.Bootstrap {
 func upstreamFileTLSContext(c *envoy.BootstrapConfig) *envoy_tls_v3.UpstreamTlsContext {
 	context := &envoy_tls_v3.UpstreamTlsContext{
 		CommonTlsContext: &envoy_tls_v3.CommonTlsContext{
+			TlsParams: &envoy_tls_v3.TlsParameters{
+				TlsMaximumProtocolVersion: envoy_tls_v3.TlsParameters_TLSv1_3,
+			},
 			TlsCertificates: []*envoy_tls_v3.TlsCertificate{{
 				CertificateChain: &envoy_core_v3.DataSource{
 					Specifier: &envoy_core_v3.DataSource_Filename{
@@ -253,6 +256,9 @@ func upstreamFileTLSContext(c *envoy.BootstrapConfig) *envoy_tls_v3.UpstreamTlsC
 func upstreamSdsTLSContext(certificateSdsFile, validationSdsFile string) *envoy_tls_v3.UpstreamTlsContext {
 	context := &envoy_tls_v3.UpstreamTlsContext{
 		CommonTlsContext: &envoy_tls_v3.CommonTlsContext{
+			TlsParams: &envoy_tls_v3.TlsParameters{
+				TlsMaximumProtocolVersion: envoy_tls_v3.TlsParameters_TLSv1_3,
+			},
 			TlsCertificateSdsSecretConfigs: []*envoy_tls_v3.SdsSecretConfig{{
 				Name: "contour_xds_tls_certificate",
 				SdsConfig: &envoy_core_v3.ConfigSource{
