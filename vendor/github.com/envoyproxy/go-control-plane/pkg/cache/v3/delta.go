@@ -15,59 +15,43 @@
 package cache
 
 import (
+	"context"
+
 	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
-	"github.com/envoyproxy/go-control-plane/pkg/log"
 	"github.com/envoyproxy/go-control-plane/pkg/server/stream/v3"
 )
 
-// Respond to a delta watch with the provided snapshot value. If the response is nil, there has been no state change.
-func respondDelta(request *DeltaRequest, value chan DeltaResponse, state stream.StreamState, snapshot Snapshot, log log.Logger) *RawDeltaResponse {
-	resp, err := createDeltaResponse(request, state, snapshot, log)
-	if err != nil {
-		if log != nil {
-			log.Errorf("Error creating delta response: %v", err)
-		}
-		return nil
-	}
-
-	// Only send a response if there were changes
-	if len(resp.Resources) > 0 || len(resp.RemovedResources) > 0 {
-		if log != nil {
-			log.Debugf("node: %s, sending delta response with resources: %v removed resources %v wildcard: %t",
-				request.GetNode().GetId(), resp.Resources, resp.RemovedResources, state.Wildcard)
-		}
-		value <- resp
-		return resp
-	}
-	return nil
+// groups together resource-related arguments for the createDeltaResponse function
+type resourceContainer struct {
+	resourceMap   map[string]types.Resource
+	versionMap    map[string]string
+	systemVersion string
 }
 
-func createDeltaResponse(req *DeltaRequest, state stream.StreamState, snapshot Snapshot, log log.Logger) (*RawDeltaResponse, error) {
-	resources := snapshot.GetResources((req.TypeUrl))
-
+func createDeltaResponse(ctx context.Context, req *DeltaRequest, state stream.StreamState, resources resourceContainer) *RawDeltaResponse {
 	// variables to build our response with
 	nextVersionMap := make(map[string]string)
-	filtered := make([]types.Resource, 0, len(resources))
+	filtered := make([]types.Resource, 0, len(resources.resourceMap))
 	toRemove := make([]string, 0)
 
 	// If we are handling a wildcard request, we want to respond with all resources
 	switch {
-	case state.Wildcard:
-		for name, r := range resources {
+	case state.IsWildcard():
+		for name, r := range resources.resourceMap {
 			// Since we've already precomputed the version hashes of the new snapshot,
 			// we can just set it here to be used for comparison later
-			version := snapshot.GetVersionMap()[req.TypeUrl][name]
+			version := resources.versionMap[name]
 			nextVersionMap[name] = version
-			prevVersion, found := state.ResourceVersions[name]
+			prevVersion, found := state.GetResourceVersions()[name]
 			if !found || (prevVersion != nextVersionMap[name]) {
 				filtered = append(filtered, r)
 			}
 		}
 	default:
 		// Reply only with the requested resources
-		for name, prevVersion := range state.ResourceVersions {
-			if r, ok := resources[name]; ok {
-				nextVersion := snapshot.GetVersionMap()[req.TypeUrl][name]
+		for name, prevVersion := range state.GetResourceVersions() {
+			if r, ok := resources.resourceMap[name]; ok {
+				nextVersion := resources.versionMap[name]
 				if prevVersion != nextVersion {
 					filtered = append(filtered, r)
 				}
@@ -77,8 +61,8 @@ func createDeltaResponse(req *DeltaRequest, state stream.StreamState, snapshot S
 	}
 
 	// Compute resources for removal regardless of the request type
-	for name := range state.ResourceVersions {
-		if _, ok := resources[name]; !ok {
+	for name := range state.GetResourceVersions() {
+		if _, ok := resources.resourceMap[name]; !ok {
 			toRemove = append(toRemove, name)
 		}
 	}
@@ -88,6 +72,7 @@ func createDeltaResponse(req *DeltaRequest, state stream.StreamState, snapshot S
 		Resources:         filtered,
 		RemovedResources:  toRemove,
 		NextVersionMap:    nextVersionMap,
-		SystemVersionInfo: snapshot.GetVersion(req.TypeUrl),
-	}, nil
+		SystemVersionInfo: resources.systemVersion,
+		Ctx:               ctx,
+	}
 }

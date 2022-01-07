@@ -39,7 +39,7 @@ github.com/davecgh/go-spew/spew
 # github.com/emicklei/go-restful v2.9.5+incompatible
 github.com/emicklei/go-restful
 github.com/emicklei/go-restful/log
-# github.com/envoyproxy/go-control-plane v0.9.10-0.20210907150352-cf90f659a021 => github.com/envoyproxy/go-control-plane v0.9.10-0.20210614203518-782de910ff04
+# github.com/envoyproxy/go-control-plane v0.9.10-0.20210907150352-cf90f659a021
 github.com/envoyproxy/go-control-plane/envoy/annotations
 github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3
 github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3
@@ -68,6 +68,7 @@ github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3
 github.com/envoyproxy/go-control-plane/envoy/service/cluster/v3
 github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3
 github.com/envoyproxy/go-control-plane/envoy/service/endpoint/v3
+github.com/envoyproxy/go-control-plane/envoy/service/extension/v3
 github.com/envoyproxy/go-control-plane/envoy/service/listener/v3
 github.com/envoyproxy/go-control-plane/envoy/service/route/v3
 github.com/envoyproxy/go-control-plane/envoy/service/runtime/v3
@@ -93,7 +94,7 @@ github.com/envoyproxy/protoc-gen-validate/validate
 github.com/evanphx/json-patch
 # github.com/evanphx/json-patch/v5 v5.6.0
 github.com/evanphx/json-patch/v5
-# github.com/fatih/color v1.9.0
+# github.com/fatih/color v1.12.0
 github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
@@ -196,7 +197,7 @@ github.com/modern-go/reflect2
 github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
-# github.com/projectcontour/contour v1.18.2
+# github.com/projectcontour/contour v1.19.1
 ## explicit
 github.com/projectcontour/contour/apis/projectcontour/v1
 github.com/projectcontour/contour/apis/projectcontour/v1alpha1
@@ -220,7 +221,6 @@ github.com/projectcontour/contour/internal/protobuf
 github.com/projectcontour/contour/internal/sorter
 github.com/projectcontour/contour/internal/status
 github.com/projectcontour/contour/internal/timeout
-github.com/projectcontour/contour/internal/validation
 github.com/projectcontour/contour/internal/workgroup
 github.com/projectcontour/contour/internal/xds
 github.com/projectcontour/contour/internal/xds/v3
@@ -250,7 +250,7 @@ github.com/prometheus/statsd_exporter/pkg/mapper/fsm
 github.com/rs/dnscache
 # github.com/sirupsen/logrus v1.8.1
 github.com/sirupsen/logrus
-# github.com/spf13/cobra v1.1.3
+# github.com/spf13/cobra v1.2.1
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
@@ -1055,4 +1055,3 @@ sigs.k8s.io/structured-merge-diff/v4/value
 # sigs.k8s.io/yaml v1.3.0
 ## explicit
 sigs.k8s.io/yaml
-# github.com/envoyproxy/go-control-plane => github.com/envoyproxy/go-control-plane v0.9.10-0.20210614203518-782de910ff04

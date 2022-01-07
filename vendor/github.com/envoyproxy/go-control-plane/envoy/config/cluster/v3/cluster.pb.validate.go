@@ -182,13 +182,6 @@ func (m *Cluster) Validate() error {
 		}
 	}
 
-	if _, ok := _Cluster_LbPolicy_NotInLookup[m.GetLbPolicy()]; ok {
-		return ClusterValidationError{
-			field:  "LbPolicy",
-			reason: "value must not be in list [7]",
-		}
-	}
-
 	if _, ok := Cluster_LbPolicy_name[int32(m.GetLbPolicy())]; !ok {
 		return ClusterValidationError{
 			field:  "LbPolicy",
@@ -359,6 +352,26 @@ func (m *Cluster) Validate() error {
 		if err := v.Validate(); err != nil {
 			return ClusterValidationError{
 				field:  "DnsResolutionConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetTypedDnsResolverConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterValidationError{
+				field:  "TypedDnsResolverConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetWaitForWarmOnInit()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterValidationError{
+				field:  "WaitForWarmOnInit",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -706,10 +719,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ClusterValidationError{}
-
-var _Cluster_LbPolicy_NotInLookup = map[Cluster_LbPolicy]struct{}{
-	7: {},
-}
 
 // Validate checks the field values on LoadBalancingPolicy with the rules
 // defined in the proto definition for this message. If any rules are
@@ -1576,14 +1585,15 @@ func (m *Cluster_MaglevLbConfig) Validate() error {
 		return nil
 	}
 
-	if v, ok := interface{}(m.GetTableSize()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
+	if wrapper := m.GetTableSize(); wrapper != nil {
+
+		if wrapper.GetValue() > 5000011 {
 			return Cluster_MaglevLbConfigValidationError{
 				field:  "TableSize",
-				reason: "embedded message failed validation",
-				cause:  err,
+				reason: "value must be less than or equal to 5000011",
 			}
 		}
+
 	}
 
 	return nil
@@ -2387,12 +2397,10 @@ func (m *LoadBalancingPolicy_Policy) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Name
-
-	if v, ok := interface{}(m.GetTypedConfig()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetTypedExtensionConfig()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return LoadBalancingPolicy_PolicyValidationError{
-				field:  "TypedConfig",
+				field:  "TypedExtensionConfig",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}

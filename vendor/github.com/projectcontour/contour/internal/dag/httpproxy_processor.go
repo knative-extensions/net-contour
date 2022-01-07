@@ -15,6 +15,7 @@ package dag
 
 import (
 	"fmt"
+	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -25,7 +26,6 @@ import (
 	"github.com/projectcontour/contour/internal/k8s"
 	"github.com/projectcontour/contour/internal/status"
 	"github.com/projectcontour/contour/internal/timeout"
-	"github.com/projectcontour/contour/pkg/config"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -70,7 +70,7 @@ type HTTPProxyProcessor struct {
 	// for addresses in the IPv6 family and fallback to a lookup for addresses
 	// in the IPv4 family.
 	// Note: This only applies to externalName clusters.
-	DNSLookupFamily config.ClusterDNSFamilyType
+	DNSLookupFamily contour_api_v1alpha1.ClusterDNSFamilyType
 
 	// ClientCertificate is the optional identifier of the TLS secret containing client certificate and
 	// private key to be used when establishing TLS connection to upstream cluster.
@@ -131,6 +131,7 @@ func (p *HTTPProxyProcessor) computeHTTPProxy(proxy *contour_api_v1.HTTPProxy) {
 			"Spec.VirtualHost.Fqdn must be specified")
 		return
 	}
+
 	pa.Vhost = host
 
 	// Ensure root httpproxy lives in allowed namespace.
@@ -138,12 +139,6 @@ func (p *HTTPProxyProcessor) computeHTTPProxy(proxy *contour_api_v1.HTTPProxy) {
 	if !p.rootAllowed(proxy.Namespace) {
 		validCond.AddError(contour_api_v1.ConditionTypeRootNamespaceError, "RootProxyNotAllowedInNamespace",
 			"root HTTPProxy cannot be defined in this namespace")
-		return
-	}
-
-	if strings.Contains(host, "*") {
-		validCond.AddErrorf(contour_api_v1.ConditionTypeVirtualHostError, "WildCardNotAllowed",
-			"Spec.VirtualHost.Fqdn %q cannot use wildcards", host)
 		return
 	}
 
@@ -405,22 +400,39 @@ func (p *HTTPProxyProcessor) computeRoutes(
 			namespace = proxy.Namespace
 		}
 
+		if err := pathMatchConditionsValid(include.Conditions); err != nil {
+			validCond.AddErrorf(contour_api_v1.ConditionTypeIncludeError, "PathMatchConditionsNotValid",
+				"include: %s", err)
+			continue
+		}
+
+		if err := headerMatchConditionsValid(include.Conditions); err != nil {
+			validCond.AddError(contour_api_v1.ConditionTypeRouteError, "HeaderMatchConditionsNotValid",
+				err.Error())
+			continue
+		}
+
 		includedProxy, ok := p.source.httpproxies[types.NamespacedName{Name: include.Name, Namespace: namespace}]
 		if !ok {
 			validCond.AddErrorf(contour_api_v1.ConditionTypeIncludeError, "IncludeNotFound",
 				"include %s/%s not found", namespace, include.Name)
-			return nil
+
+			// Set 502 response when include was not found but include condition was valid.
+			if len(include.Conditions) > 0 {
+				routes = append(routes, &Route{
+					PathMatchCondition:    mergePathMatchConditions(include.Conditions),
+					HeaderMatchConditions: mergeHeaderMatchConditions(include.Conditions),
+					DirectResponse:        directResponse(http.StatusBadGateway),
+				})
+			}
+
+			continue
 		}
+
 		if includedProxy.Spec.VirtualHost != nil {
 			validCond.AddErrorf(contour_api_v1.ConditionTypeIncludeError, "RootIncludesRoot",
 				"root httpproxy cannot include another root httpproxy")
-			return nil
-		}
-
-		if err := pathMatchConditionsValid(include.Conditions); err != nil {
-			validCond.AddErrorf(contour_api_v1.ConditionTypeIncludeError, "PathMatchConditionsNotValid",
-				"include: %s", err)
-			return nil
+			continue
 		}
 
 		inc, incCommit := p.dag.StatusCache.ProxyAccessor(includedProxy)
@@ -443,10 +455,11 @@ func (p *HTTPProxyProcessor) computeRoutes(
 			return nil
 		}
 
-		conds := append(conditions, route.Conditions...)
+		routeConditions := conditions
+		routeConditions = append(routeConditions, route.Conditions...)
 
 		// Look for invalid header conditions on this route
-		if err := headerMatchConditionsValid(conds); err != nil {
+		if err := headerMatchConditionsValid(routeConditions); err != nil {
 			validCond.AddError(contour_api_v1.ConditionTypeRouteError, "HeaderMatchConditionsNotValid",
 				err.Error())
 			return nil
@@ -463,6 +476,13 @@ func (p *HTTPProxyProcessor) computeRoutes(
 		if err != nil {
 			validCond.AddErrorf(contour_api_v1.ConditionTypeRouteError, "ResponseHeaderPolicyInvalid",
 				"%s on response headers", err)
+			return nil
+		}
+
+		cookieRP, err := cookieRewritePolicies(route.CookieRewritePolicies)
+		if err != nil {
+			validCond.AddErrorf(contour_api_v1.ConditionTypeRouteError, "CookieRewritePoliciesInvalid",
+				"%s on route cookie rewrite rules", err)
 			return nil
 		}
 
@@ -489,14 +509,15 @@ func (p *HTTPProxyProcessor) computeRoutes(
 		requestHashPolicies, lbPolicy := loadBalancerRequestHashPolicies(route.LoadBalancerPolicy, validCond)
 
 		r := &Route{
-			PathMatchCondition:    mergePathMatchConditions(conds),
-			HeaderMatchConditions: mergeHeaderMatchConditions(conds),
+			PathMatchCondition:    mergePathMatchConditions(routeConditions),
+			HeaderMatchConditions: mergeHeaderMatchConditions(routeConditions),
 			Websocket:             route.EnableWebsockets,
 			HTTPSUpgrade:          routeEnforceTLS(enforceTLS, route.PermitInsecure && !p.DisablePermitInsecure),
 			TimeoutPolicy:         tp,
 			RetryPolicy:           retryPolicy(route.RetryPolicy),
 			RequestHeadersPolicy:  reqHP,
 			ResponseHeadersPolicy: respHP,
+			CookieRewritePolicies: cookieRP,
 			RateLimitPolicy:       rlp,
 			RequestHashPolicies:   requestHashPolicies,
 		}
@@ -572,7 +593,7 @@ func (p *HTTPProxyProcessor) computeRoutes(
 			if err != nil {
 				validCond.AddErrorf(contour_api_v1.ConditionTypeServiceError, "ServiceUnresolvedReference",
 					"Spec.Routes unresolved service reference: %s", err)
-				return nil
+				continue
 			}
 
 			// Determine the protocol to use to speak to this Cluster.
@@ -619,6 +640,13 @@ func (p *HTTPProxyProcessor) computeRoutes(
 				return nil
 			}
 
+			cookieRP, err := cookieRewritePolicies(service.CookieRewritePolicies)
+			if err != nil {
+				validCond.AddErrorf(contour_api_v1.ConditionTypeRouteError, "CookieRewritePoliciesInvalid",
+					"%s on service cookie rewrite rules", err)
+				return nil
+			}
+
 			var clientCertSecret *Secret
 			if p.ClientCertificate != nil {
 				clientCertSecret, err = p.source.LookupSecret(*p.ClientCertificate, validSecret)
@@ -637,6 +665,7 @@ func (p *HTTPProxyProcessor) computeRoutes(
 				UpstreamValidation:    uv,
 				RequestHeadersPolicy:  reqHP,
 				ResponseHeadersPolicy: respHP,
+				CookieRewritePolicies: cookieRP,
 				Protocol:              protocol,
 				SNI:                   determineSNI(r.RequestHeadersPolicy, reqHP, s),
 				DNSLookupFamily:       string(p.DNSLookupFamily),
@@ -654,6 +683,9 @@ func (p *HTTPProxyProcessor) computeRoutes(
 			} else {
 				r.Clusters = append(r.Clusters, c)
 			}
+		}
+		if len(r.Clusters) == 0 {
+			r.DirectResponse = directResponse(http.StatusServiceUnavailable)
 		}
 		routes = append(routes, r)
 	}
@@ -1021,4 +1053,10 @@ func isBlank(s string) bool {
 // routeEnforceTLS determines if the route should redirect the user to a secure TLS listener
 func routeEnforceTLS(enforceTLS, permitInsecure bool) bool {
 	return enforceTLS && !permitInsecure
+}
+
+func directResponse(statusCode uint32) *DirectResponse {
+	return &DirectResponse{
+		StatusCode: statusCode,
+	}
 }

@@ -923,6 +923,21 @@ func (m *RouteMatch) Validate() error {
 		}
 	}
 
+	for idx, item := range m.GetDynamicMetadata() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return RouteMatchValidationError{
+					field:  fmt.Sprintf("DynamicMetadata[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
 	switch m.PathSpecifier.(type) {
 
 	case *RouteMatch_Prefix:
@@ -1462,6 +1477,9 @@ func (m *RouteAction) Validate() error {
 				}
 			}
 		}
+
+	case *RouteAction_ClusterSpecifierPlugin:
+		// no validation rules for ClusterSpecifierPlugin
 
 	default:
 		return RouteActionValidationError{
@@ -2596,6 +2614,18 @@ func (m *HeaderMatcher) Validate() error {
 			}
 		}
 
+	case *HeaderMatcher_StringMatch:
+
+		if v, ok := interface{}(m.GetStringMatch()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return HeaderMatcherValidationError{
+					field:  "StringMatch",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
 	case *HeaderMatcher_HiddenEnvoyDeprecatedRegexMatch:
 
 		if len(m.GetHiddenEnvoyDeprecatedRegexMatch()) > 1024 {
@@ -2971,10 +3001,12 @@ func (m *WeightedCluster_ClusterWeight) Validate() error {
 		return nil
 	}
 
-	if utf8.RuneCountInString(m.GetName()) < 1 {
+	// no validation rules for Name
+
+	if !_WeightedCluster_ClusterWeight_ClusterHeader_Pattern.MatchString(m.GetClusterHeader()) {
 		return WeightedCluster_ClusterWeightValidationError{
-			field:  "Name",
-			reason: "value length must be at least 1 runes",
+			field:  "ClusterHeader",
+			reason: "value does not match regex pattern \"^[^\\x00\\n\\r]*$\"",
 		}
 	}
 
@@ -3100,6 +3132,19 @@ func (m *WeightedCluster_ClusterWeight) Validate() error {
 
 	}
 
+	switch m.HostRewriteSpecifier.(type) {
+
+	case *WeightedCluster_ClusterWeight_HostRewriteLiteral:
+
+		if !_WeightedCluster_ClusterWeight_HostRewriteLiteral_Pattern.MatchString(m.GetHostRewriteLiteral()) {
+			return WeightedCluster_ClusterWeightValidationError{
+				field:  "HostRewriteLiteral",
+				reason: "value does not match regex pattern \"^[^\\x00\\n\\r]*$\"",
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -3160,9 +3205,13 @@ var _ interface {
 	ErrorName() string
 } = WeightedCluster_ClusterWeightValidationError{}
 
+var _WeightedCluster_ClusterWeight_ClusterHeader_Pattern = regexp.MustCompile("^[^\x00\n\r]*$")
+
 var _WeightedCluster_ClusterWeight_RequestHeadersToRemove_Pattern = regexp.MustCompile("^[^\x00\n\r]*$")
 
 var _WeightedCluster_ClusterWeight_ResponseHeadersToRemove_Pattern = regexp.MustCompile("^[^\x00\n\r]*$")
+
+var _WeightedCluster_ClusterWeight_HostRewriteLiteral_Pattern = regexp.MustCompile("^[^\x00\n\r]*$")
 
 // Validate checks the field values on RouteMatch_GrpcRouteMatchOptions with
 // the rules defined in the proto definition for this message. If any rules

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	networking_v1 "k8s.io/api/networking/v1"
+	"k8s.io/utils/pointer"
 	gatewayapi_v1alpha1 "sigs.k8s.io/gateway-api/apis/v1alpha1"
 
 	contour_api_v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
@@ -84,10 +85,21 @@ func retryPolicy(rp *contour_api_v1.RetryPolicy) *RetryPolicy {
 		perTryTimeout = timeout.DurationSetting(perTryDuration)
 	}
 
+	numRetries := rp.NumRetries
+	// If set to -1, then retries set to 0. If set to 0 or
+	// not supplied, the value is set to the Envoy default of 1.
+	// Otherwise the value supplied is returned.
+	switch rp.NumRetries {
+	case -1:
+		numRetries = 0
+	case 1, 0:
+		numRetries = 1
+	}
+
 	return &RetryPolicy{
 		RetryOn:              retryOn(rp.RetryOn),
 		RetriableStatusCodes: rp.RetriableStatusCodes,
-		NumRetries:           max(1, uint32(rp.NumRetries)),
+		NumRetries:           uint32(numRetries),
 		PerTryTimeout:        perTryTimeout,
 	}
 }
@@ -266,7 +278,7 @@ func escapeHeaderValue(value string, dynamicHeaders map[string]string) string {
 	if !strings.Contains(value, "%") {
 		return value
 	}
-	escapedValue := strings.Replace(value, "%", "%%", -1)
+	escapedValue := strings.ReplaceAll(value, "%", "%%")
 	for dynamicVar, dynamicVal := range dynamicHeaders {
 		escapedValue = strings.ReplaceAll(escapedValue, "%%"+dynamicVar+"%%", dynamicVal)
 	}
@@ -304,6 +316,58 @@ func escapeHeaderValue(value string, dynamicHeaders map[string]string) string {
 	return escapedValue
 }
 
+func cookieRewritePolicies(policies []contour_api_v1.CookieRewritePolicy) ([]CookieRewritePolicy, error) {
+	validPolicies := make([]CookieRewritePolicy, 0, len(policies))
+	cookieNames := map[string]struct{}{}
+	for _, p := range policies {
+		if _, exists := cookieNames[p.Name]; exists {
+			return nil, fmt.Errorf("duplicate cookie rewrite rule for cookie %q", p.Name)
+		}
+		cookieNames[p.Name] = struct{}{}
+		policiesSet := 0
+		var path *string
+		if p.PathRewrite != nil {
+			policiesSet++
+			path = pointer.String(p.PathRewrite.Value)
+		}
+		var domain *string
+		if p.DomainRewrite != nil {
+			policiesSet++
+			domain = pointer.String(p.DomainRewrite.Value)
+		}
+		// We use a uint here since a pointer to bool cannot be
+		// distingiuished when unset or false in golang text templates.
+		// 0 means unset.
+		secure := uint(0)
+		if p.Secure != nil {
+			policiesSet++
+			// Increment to indicate it has been set.
+			secure++
+			if *p.Secure {
+				// Increment to indicate it is true.
+				secure++
+			}
+		}
+		if p.SameSite != nil {
+			policiesSet++
+		}
+		if policiesSet == 0 {
+			return nil, fmt.Errorf("no attributes rewritten for cookie %q", p.Name)
+		}
+		validPolicies = append(validPolicies, CookieRewritePolicy{
+			Name:     p.Name,
+			Path:     path,
+			Domain:   domain,
+			Secure:   secure,
+			SameSite: p.SameSite,
+		})
+	}
+	if len(validPolicies) == 0 {
+		return nil, nil
+	}
+	return validPolicies, nil
+}
+
 // ingressRetryPolicy builds a RetryPolicy from ingress annotations.
 func ingressRetryPolicy(ingress *networking_v1.Ingress, log logrus.FieldLogger) *RetryPolicy {
 	retryOn := annotation.ContourAnnotation(ingress, "retry-on")
@@ -313,9 +377,7 @@ func ingressRetryPolicy(ingress *networking_v1.Ingress, log logrus.FieldLogger) 
 
 	// if there is a non empty retry-on annotation, build a RetryPolicy manually.
 	rp := &RetryPolicy{
-		RetryOn: retryOn,
-		// TODO(dfc) k8s.NumRetries may parse as 0, which is inconsistent with
-		// retryPolicy()'s default value of 1.
+		RetryOn:    retryOn,
 		NumRetries: annotation.NumRetries(ingress),
 	}
 
@@ -419,13 +481,6 @@ func loadBalancerPolicy(lbp *contour_api_v1.LoadBalancerPolicy) string {
 	default:
 		return ""
 	}
-}
-
-func max(a, b uint32) uint32 {
-	if a > b {
-		return a
-	}
-	return b
 }
 
 func prefixReplacementsAreValid(replacements []contour_api_v1.ReplacePrefix) (string, error) {
