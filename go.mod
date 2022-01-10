@@ -15,3 +15,5 @@ require (
 	knative.dev/pkg v0.0.0-20220104185830-52e42b760b54
 	sigs.k8s.io/yaml v1.3.0
 )
+
+replace github.com/envoyproxy/go-control-plane => github.com/envoyproxy/go-control-plane v0.9.10-0.20210806072310-abdc764d71d2
