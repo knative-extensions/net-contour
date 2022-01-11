@@ -365,6 +365,26 @@ func (m *Cluster) Validate() error {
 		}
 	}
 
+	if v, ok := interface{}(m.GetTypedDnsResolverConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterValidationError{
+				field:  "TypedDnsResolverConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetWaitForWarmOnInit()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterValidationError{
+				field:  "WaitForWarmOnInit",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if v, ok := interface{}(m.GetOutlierDetection()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return ClusterValidationError{
@@ -1576,14 +1596,15 @@ func (m *Cluster_MaglevLbConfig) Validate() error {
 		return nil
 	}
 
-	if v, ok := interface{}(m.GetTableSize()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
+	if wrapper := m.GetTableSize(); wrapper != nil {
+
+		if wrapper.GetValue() > 5000011 {
 			return Cluster_MaglevLbConfigValidationError{
 				field:  "TableSize",
-				reason: "embedded message failed validation",
-				cause:  err,
+				reason: "value must be less than or equal to 5000011",
 			}
 		}
+
 	}
 
 	return nil
