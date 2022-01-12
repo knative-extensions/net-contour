@@ -30,6 +30,7 @@ FLOATING_DEPS=(
 )
 
 go_update_deps "$@"
+git apply ./hack/contour.patch
 
 # Remove unit tests & e2e tests.
 rm -rf $(find vendor/ -path '*/pkg/*_test.go')

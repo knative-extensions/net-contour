@@ -38,5 +38,10 @@ import (
 	_ "knative.dev/networking/config"
 
 	_ "github.com/mikefarah/yq/v3"
+
 	_ "github.com/projectcontour/contour/cmd/contour"
+
+	// TODO - drop this when we bump to contour 1.20
+	// Our custom patch pulls in this dependency
+	_ "github.com/bombsimon/logrusr/v2"
 )
