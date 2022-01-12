@@ -9,7 +9,7 @@ index dfc9aafd..fa063838 100644
 -	"path/filepath"
 -	"runtime"
  	"strconv"
- 
+
 -	"github.com/bombsimon/logrusr"
 +	"github.com/bombsimon/logrusr/v2"
  	"github.com/go-logr/logr"
@@ -18,7 +18,7 @@ index dfc9aafd..fa063838 100644
 @@ -77,42 +75,33 @@ func InitLogging(options ...LogOption) {
  		must(p.flags.Set("logtostderr", "false"))
  		must(p.flags.Set("alsologtostderr", "false"))
- 
+
 -		klog.SetLogger(&callDepthLogr{
 -			Logger: logrusr.NewLogger(p.log),
 -		})
@@ -30,14 +30,14 @@ index dfc9aafd..fa063838 100644
 +		}))
  	}
  }
- 
+
 -type callDepthLogr struct {
 -	logr.Logger
 -	callDepth int
 +type alwaysEnabledLogSink struct {
 +	logr.LogSink
  }
- 
+
 -func (l *callDepthLogr) WithCallDepth(depth int) logr.Logger {
 -	return &callDepthLogr{
 -		Logger:    l.Logger,
@@ -58,7 +58,7 @@ index dfc9aafd..fa063838 100644
  	}
 -	l.Logger.Info(msg, keysAndValues...)
 -}
- 
+
 -func (l *callDepthLogr) Error(err error, msg string, keysAndValues ...interface{}) {
 -	_, file, line, ok := runtime.Caller(l.callDepth + 1)
 -	if ok {
@@ -67,7 +67,7 @@ index dfc9aafd..fa063838 100644
 -	l.Logger.Error(err, msg, keysAndValues...)
 +	return l
  }
- 
+
 -// Override V and just pass through l since we can rely on klog itself to do log
 +// Override Enabled to always return true since we rely on klog itself to do log
  // level filtering.
