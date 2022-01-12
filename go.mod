@@ -5,7 +5,6 @@ go 1.16
 require (
 	github.com/bombsimon/logrusr/v2 v2.0.0-00010101000000-000000000000
 	github.com/google/go-cmp v0.5.6
-	github.com/mikefarah/yq/v3 v3.0.0-20200601230220-721dd57ed41b
 	github.com/projectcontour/contour v1.19.1
 	go.uber.org/zap v1.19.1
 	k8s.io/api v0.23.0
