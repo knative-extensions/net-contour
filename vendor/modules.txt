@@ -316,10 +316,6 @@ golang.org/x/text/width
 golang.org/x/time/rate
 # golang.org/x/tools v0.1.8
 golang.org/x/tools/go/ast/astutil
-golang.org/x/tools/go/gcexportdata
-golang.org/x/tools/go/internal/gcimporter
-golang.org/x/tools/go/internal/packagesdriver
-golang.org/x/tools/go/packages
 golang.org/x/tools/imports
 golang.org/x/tools/internal/event
 golang.org/x/tools/internal/event/core
@@ -329,9 +325,7 @@ golang.org/x/tools/internal/fastwalk
 golang.org/x/tools/internal/gocommand
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/imports
-golang.org/x/tools/internal/packagesinternal
 golang.org/x/tools/internal/typeparams
-golang.org/x/tools/internal/typesinternal
 # golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
@@ -819,7 +813,7 @@ k8s.io/client-go/util/jsonpath
 k8s.io/client-go/util/keyutil
 k8s.io/client-go/util/retry
 k8s.io/client-go/util/workqueue
-# k8s.io/code-generator v0.23.0
+# k8s.io/code-generator v0.23.0 => k8s.io/code-generator v0.22.5
 k8s.io/code-generator
 k8s.io/code-generator/cmd/client-gen
 k8s.io/code-generator/cmd/client-gen/args
@@ -1044,5 +1038,6 @@ sigs.k8s.io/yaml
 # k8s.io/api => k8s.io/api v0.22.5
 # k8s.io/apimachinery => k8s.io/apimachinery v0.22.5
 # k8s.io/client-go => k8s.io/client-go v0.22.5
+# k8s.io/code-generator => k8s.io/code-generator v0.22.5
 # k8s.io/component-base => k8s.io/component-base v0.22.5
 # sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.11.0
