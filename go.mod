@@ -9,9 +9,9 @@ require (
 	k8s.io/api v0.22.5
 	k8s.io/apimachinery v0.22.5
 	k8s.io/client-go v0.22.5
-	knative.dev/hack v0.0.0-20211222071919-abd085fc43de
-	knative.dev/networking v0.0.0-20211223134928-e40187c3026d
-	knative.dev/pkg v0.0.0-20220104185830-52e42b760b54
+	knative.dev/hack v0.0.0-20220111151514-59b0cf17578e
+	knative.dev/networking v0.0.0-20220117015928-52fb6ee37bf9
+	knative.dev/pkg v0.0.0-20220114141842-0a429cba1c73
 	sigs.k8s.io/yaml v1.3.0
 )
 
