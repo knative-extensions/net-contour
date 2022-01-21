@@ -264,6 +264,65 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			},
 		},
 	}, {
+		name: "https-only",
+		ing: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar",
+			},
+			Spec: v1alpha1.IngressSpec{
+				HTTPOption: v1alpha1.HTTPOptionRedirected,
+				Rules: []v1alpha1.IngressRule{{
+					Hosts: []string{"example.com"},
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceName: "goo",
+									ServicePort: intstr.FromInt(123),
+								},
+								Percent: 100,
+							}},
+						}},
+					},
+				}},
+			},
+		},
+		want: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar--ep",
+				Annotations: map[string]string{
+					EndpointsProbeKey: "true",
+				},
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion:         "networking.internal.knative.dev/v1alpha1",
+					Kind:               "Ingress",
+					Name:               "bar",
+					Controller:         ptr.Bool(true),
+					BlockOwnerDeletion: ptr.Bool(true),
+				}},
+			},
+			Spec: v1alpha1.IngressSpec{
+				HTTPOption: v1alpha1.HTTPOptionRedirected,
+				Rules: []v1alpha1.IngressRule{{
+					Hosts: []string{"goo.gen-0.bar.foo.net-contour.invalid"},
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceNamespace: "foo",
+									ServiceName:      "goo",
+									ServicePort:      intstr.FromInt(123),
+								},
+								Percent: 100,
+							}},
+						}},
+					},
+				}},
+			},
+		},
+	}, {
 		name: "multiple paths with header conditions",
 		ing: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{

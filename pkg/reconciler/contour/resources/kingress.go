@@ -47,10 +47,12 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 		},
 		Spec: v1alpha1.IngressSpec{
-			// TODO: Probing against HTTP should be enough as it ensures Envoy's EDS?
-			// Need to verify it by scale-N test with HTTPS.
-			HTTPOption: v1alpha1.HTTPOptionEnabled,
+			HTTPOption: ing.Spec.HTTPOption,
 		},
+	}
+
+	if childIng.Spec.HTTPOption == "" {
+		childIng.Spec.HTTPOption = v1alpha1.HTTPOptionEnabled
 	}
 
 	sns := ServiceNames(ctx, ing)
