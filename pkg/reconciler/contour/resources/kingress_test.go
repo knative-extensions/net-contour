@@ -286,6 +286,10 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 						}},
 					},
 				}},
+				TLS: []v1alpha1.IngressTLS{{
+					Hosts:      []string{"example.com"},
+					SecretName: "example",
+				}},
 			},
 		},
 		want: &v1alpha1.Ingress{
@@ -319,6 +323,10 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 							}},
 						}},
 					},
+				}},
+				TLS: []v1alpha1.IngressTLS{{
+					Hosts:      []string{"example.com"},
+					SecretName: "example",
 				}},
 			},
 		},

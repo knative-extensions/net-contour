@@ -47,12 +47,16 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 		},
 		Spec: v1alpha1.IngressSpec{
-			HTTPOption: ing.Spec.HTTPOption,
+			HTTPOption: v1alpha1.HTTPOptionEnabled,
 		},
 	}
 
-	if childIng.Spec.HTTPOption == "" {
-		childIng.Spec.HTTPOption = v1alpha1.HTTPOptionEnabled
+	hasCert := len(ing.Spec.TLS) > 0 || config.FromContext(ctx).Contour.DefaultTLSSecret != nil
+
+	if ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected && hasCert {
+		// Set the probe to operate over HTTPS IFF we have certificates AND are TLS-required
+		childIng.Spec.HTTPOption = v1alpha1.HTTPOptionRedirected
+		childIng.Spec.TLS = append(childIng.Spec.TLS, ing.Spec.TLS...)
 	}
 
 	sns := ServiceNames(ctx, ing)
