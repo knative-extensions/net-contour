@@ -51,14 +51,6 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 		},
 	}
 
-	hasCert := len(ing.Spec.TLS) > 0 || config.FromContext(ctx).Contour.DefaultTLSSecret != nil
-
-	if ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected && hasCert {
-		// Set the probe to operate over HTTPS IFF we have certificates AND are TLS-required
-		childIng.Spec.HTTPOption = v1alpha1.HTTPOptionRedirected
-		childIng.Spec.TLS = append(childIng.Spec.TLS, ing.Spec.TLS...)
-	}
-
 	sns := ServiceNames(ctx, ing)
 
 	// Reverse engineer our previous state from the prior generation's HTTP Proxy resources.
@@ -112,6 +104,8 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 	l := order.List()
 	logging.FromContext(ctx).Debugf("Endpoints probe will cover services: %v", l)
 
+	probeHosts := make([]string, 0, len(l))
+
 	for _, name := range l {
 		si := sns[name]
 		if si.HasPath {
@@ -119,8 +113,10 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 			continue
 		}
 		for _, vis := range si.Visibilities() {
+			host := fmt.Sprintf("%s.gen-%d.%s.%s.net-contour.invalid", name, ing.Generation, ing.Name, ing.Namespace)
+			probeHosts = append(probeHosts, host)
 			childIng.Spec.Rules = append(childIng.Spec.Rules, v1alpha1.IngressRule{
-				Hosts:      []string{fmt.Sprintf("%s.gen-%d.%s.%s.net-contour.invalid", name, ing.Generation, ing.Name, ing.Namespace)},
+				Hosts:      []string{host},
 				Visibility: vis,
 				HTTP: &v1alpha1.HTTPIngressRuleValue{
 					Paths: []v1alpha1.HTTPIngressPath{{
@@ -136,6 +132,17 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 					}},
 				},
 			})
+		}
+	}
+
+	hasCert := len(ing.Spec.TLS) > 0 || config.FromContext(ctx).Contour.DefaultTLSSecret != nil
+
+	if ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected && hasCert {
+		// Set the probe to operate over HTTPS IFF we have certificates AND are TLS-required
+		childIng.Spec.HTTPOption = v1alpha1.HTTPOptionRedirected
+		childIng.Spec.TLS = append(childIng.Spec.TLS, ing.Spec.TLS...)
+		for i := range childIng.Spec.TLS {
+			childIng.Spec.TLS[i].Hosts = probeHosts
 		}
 	}
 

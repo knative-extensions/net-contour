@@ -325,7 +325,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 					},
 				}},
 				TLS: []v1alpha1.IngressTLS{{
-					Hosts:      []string{"example.com"},
+					Hosts:      []string{"goo.gen-0.bar.foo.net-contour.invalid"},
 					SecretName: "example",
 				}},
 			},
