@@ -24,10 +24,18 @@ You must install these tools:
 1. [`go`](https://golang.org/doc/install): The language Knative `net-contour` is
    built in
 1. [`git`](https://help.github.com/articles/set-up-git/): For source control
-1. [`dep`](https://github.com/golang/dep): For managing external dependencies.
 1. [`ko`](https://github.com/google/ko): For development.
 1. [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/): For
    managing development environments.
+
+If you want to run the end-to-end (e2e) tests locally using [kind](https://kind.sigs.k8s.io/), you may need the following additional tools (only tested on Linux; creating a working LoadBalancer on non-Linux environments is TBD, but the [Setting up an Ingress Controller](https://kind.sigs.k8s.io/docs/user/ingress/) guide _may_ work).
+
+1. [Docker Engine](https://docs.docker.com/engine/install/) to run Docker containers
+1. `gcc` -- your distribution should have supplied this
+1. [`kind`](https://kind.sigs.k8s.io/#installation-and-usage) to run Kubernetes clusters locally on Docker
+1. [`kubetest2`](https://github.com/kubernetes-sigs/kubetest2) to set up Kubernetes clusters from the test scripts
+1. [`kntest`](https://github.com/knative/test-infra/tree/main/kntest) for additional utilities wrapping `kubetest2`
+1. [`gcloud`](https://cloud.google.com/sdk/docs/install) and an active registry, for pushing the test images to Google Cloud Registry.
 
 ### Environment setup
 
@@ -88,6 +96,32 @@ registry which if you are developing locally you could use `export KO_DOCKER_REP
 to use the local one on kind. Please see official
 [KO documentation](https://github.com/google/ko#local-publishing-options) for more information.
 
+#### Running end-to-end tests locally
+
+**NOTE** The `dispatch/path`, `host-rewrite`, and `upgrade` tests seem to fail (as of Jan 28) when run locally on Kind. You'll want to add these to the `--skip-tests` flag in `hack/e2e-tests.sh`.
+
+Run the tests from the root directory; the script will create a _new_ Kind cluster and build and install `net-contour` on it, along with building and pushing test images.
+
+```bash
+./test/e2e-tests.sh --cloud-provider kind
+```
+
+**WHILE THE TESTS ARE RUNNING**, install MetalLB in the cluster:
+
+You'll want to read the [Kind Documentation on LoadBalancers](https://kind.sigs.k8s.io/docs/user/loadbalancer/) and find your Docker IP address range once the cluster is started. You can find this via:
+
+```bash
+docker network inspect -f '{{.IPAM.Config}}' kind
+```
+
+You'll then need to [create a configmap as described in the kind documentation](https://kind.sigs.k8s.io/docs/user/loadbalancer/#setup-address-pool-used-by-loadbalancers), and save it in a `metallb-config.yaml` file. Finally, you can apply the metallb manifests and your configmap:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/master/manifests/namespace.yaml -f https://raw.githubusercontent.com/metallb/metallb/master/manifests/metallb.yaml  -f metallb-config.yaml
+```
+
+You should do this once the cluster is created, while the tests say "`Waiting until service envoy in namespace contour-external has an external address (IP/hostname)...`".
+
 ### Installing Contour
 
 Before deploying the `net-contour` controller you will need a properly
@@ -105,6 +139,14 @@ Contour installation, you can install the `net-contour` controller via:
 
 ```bash
 ko apply -f config/
+```
+
+### Running the e2e tests manually
+
+If you have a cluster with net-contour already installed and the proper images uploaded (from an earlier e2e run, or from building by hand), you can run the tests directly from `go test`:
+
+```bash
+go test -tags=e2e -count=1 -timeout=20m ./test/conformance --skip-tests host-rewrite --ingressClass=contour.ingress.networking.knative.dev
 ```
 
 ### Configuring Knative Serving to use Contour by default
