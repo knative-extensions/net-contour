@@ -39,7 +39,7 @@ rm -rf $(find vendor/ -path '*/e2e/*_test.go')
 chmod +x $(find vendor -type f -name '*.sh')
 
 function run_ytt() {
-  run_go_tool github.com/k14s/ytt/cmd/ytt ytt "$@"
+  run_go_tool github.com/vmware-tanzu/carvel-ytt/cmd/ytt ytt "$@"
 }
 
 function contour_yaml() {
