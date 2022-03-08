@@ -160,6 +160,7 @@ jobs:
         ko resolve --platform=linux/amd64 -Pf test/config/ -f config/contour -f config | \
           sed 's/imagePullPolicy:/# DISABLED: imagePullPolicy:/g' | \
           sed 's/image: ghcr.io\/projectcontour\/contour:.*/image: ghcr.io\/projectcontour\/contour:main/g' | \
+          sed 's/name: contour-certgen-.*/name: contour-certgen-main/g' | \
           sed "s/image: docker.io\/envoyproxy\/envoy:.*/image: ${envoy_image}/g" | \
           kubectl apply -f -
 
