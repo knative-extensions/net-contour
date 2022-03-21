@@ -171,6 +171,27 @@ type AuthorizationServer struct {
 	//
 	// +optional
 	FailOpen bool `json:"failOpen,omitempty"`
+
+	// WithRequestBody specifies configuration for sending the client request's body to authorization server.
+	// +optional
+	WithRequestBody *AuthorizationServerBufferSettings `json:"withRequestBody,omitempty"`
+}
+
+// AuthorizationServerBufferSettings enables ExtAuthz filter to buffer client request data and send it as part of authorization request
+type AuthorizationServerBufferSettings struct {
+	// MaxRequestBytes sets the maximum size of message body ExtAuthz filter will hold in-memory.
+	// +optional
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=1024
+	MaxRequestBytes uint32 `json:"maxRequestBytes,omitempty"`
+
+	// If AllowPartialMessage is true, then Envoy will buffer the body until MaxRequestBytes are reached.
+	// +optional
+	AllowPartialMessage bool `json:"allowPartialMessage,omitempty"`
+
+	// If PackAsBytes is true, the body sent to Authorization Server is in raw bytes.
+	// +optional
+	PackAsBytes bool `json:"packAsBytes,omitempty"`
 }
 
 // AuthorizationPolicy modifies how client requests are authenticated.
@@ -197,7 +218,7 @@ type VirtualHost struct {
 	// The fully qualified domain name of the root of the ingress tree
 	// all leaves of the DAG rooted at this object relate to the fqdn.
 	//
-	// +kubebuilder:validation:Pattern="^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+	// +kubebuilder:validation:Pattern="^(\\*\\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
 	Fqdn string `json:"fqdn"`
 
 	// If present the fields describes TLS properties of the virtual
@@ -306,9 +327,8 @@ type Route struct {
 	// +optional
 	Conditions []MatchCondition `json:"conditions,omitempty"`
 	// Services are the services to proxy traffic.
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:Required
-	Services []Service `json:"services"`
+	// +optional
+	Services []Service `json:"services,omitempty"`
 	// Enables websocket support for the route.
 	// +optional
 	EnableWebsockets bool `json:"enableWebsockets,omitempty"`
@@ -353,6 +373,63 @@ type Route struct {
 	// The policy for rate limiting on the route.
 	// +optional
 	RateLimitPolicy *RateLimitPolicy `json:"rateLimitPolicy,omitempty"`
+
+	// RequestRedirectPolicy defines an HTTP redirection.
+	// +optional
+	RequestRedirectPolicy *HTTPRequestRedirectPolicy `json:"requestRedirectPolicy,omitempty"`
+}
+
+// HTTPRequestRedirectPolicy defines configuration for redirecting a request.
+type HTTPRequestRedirectPolicy struct {
+	// Scheme is the scheme to be used in the value of the `Location`
+	// header in the response.
+	// When empty, the scheme of the request is used.
+	// +optional
+	// +kubebuilder:validation:Enum=http;https
+	Scheme *string `json:"scheme,omitempty"`
+
+	// Hostname is the precise hostname to be used in the value of the `Location`
+	// header in the response.
+	// When empty, the hostname of the request is used.
+	// No wildcards are allowed.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=253
+	// +kubebuilder:validation:Pattern=`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`
+	Hostname *string `json:"hostname,omitempty"`
+
+	// Port is the port to be used in the value of the `Location`
+	// header in the response.
+	// When empty, port (if specified) of the request is used.
+	// +optional
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65535
+	Port *int32 `json:"port,omitempty"`
+
+	// StatusCode is the HTTP status code to be used in response.
+	// +optional
+	// +kubebuilder:default=302
+	// +kubebuilder:validation:Enum=301;302
+	StatusCode *int `json:"statusCode,omitempty"`
+
+	// Path allows for redirection to a different path from the
+	// original on the request. The path must start with a
+	// leading slash.
+	//
+	// Note: Only one of Path or Prefix can be defined.
+	//
+	// +optional
+	// +kubebuilder:validation:Pattern=`^\/.*$`
+	Path *string `json:"path,omitempty"`
+
+	// Prefix defines the value to swap the matched prefix or path with.
+	// The prefix must start with a leading slash.
+	//
+	// Note: Only one of Path or Prefix can be defined.
+	//
+	// +optional
+	// +kubebuilder:validation:Pattern=`^\/.*$`
+	Prefix *string `json:"prefix,omitempty"`
 }
 
 type CookieRewritePolicy struct {
@@ -799,8 +876,14 @@ type RequestHashPolicy struct {
 	// HeaderHashOptions should be set when request header hash based load
 	// balancing is desired. It must be the only hash option field set,
 	// otherwise this request hash policy object will be ignored.
-	// +kubebuilder:validation:Required
+	// +optional
 	HeaderHashOptions *HeaderHashOptions `json:"headerHashOptions,omitempty"`
+
+	// HashSourceIP should be set to true when request source IP hash based
+	// load balancing is desired. It must be the only hash option field set,
+	// otherwise this request hash policy object will be ignored.
+	// +optional
+	HashSourceIP bool `json:"hashSourceIP,omitempty"`
 }
 
 // LoadBalancerPolicy defines the load balancing policy.
@@ -924,6 +1007,7 @@ type HTTPProxy struct {
 	Spec HTTPProxySpec `json:"spec"`
 	// Status is a container for computed information about the HTTPProxy.
 	// +optional
+	// +kubebuilder:default={currentStatus: "NotReconciled", description:"Waiting for controller"}
 	Status HTTPProxyStatus `json:"status,omitempty"`
 }
 

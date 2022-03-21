@@ -109,7 +109,7 @@ github.com/modern-go/reflect2
 github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
-# github.com/projectcontour/contour v1.19.1
+# github.com/projectcontour/contour v1.20.1
 ## explicit
 github.com/projectcontour/contour/apis/projectcontour/v1
 # github.com/prometheus/client_golang v1.11.1
@@ -790,7 +790,7 @@ k8s.io/utils/trace
 # knative.dev/hack v0.0.0-20220318020218-14f832e506f8
 ## explicit
 knative.dev/hack
-# knative.dev/networking v0.0.0-20220318143518-7d792a647031
+# knative.dev/networking v0.0.0-20220318235444-ec52d7100cd9
 ## explicit
 knative.dev/networking/config
 knative.dev/networking/pkg
@@ -828,7 +828,7 @@ knative.dev/networking/test/test_images/runtime/handlers
 knative.dev/networking/test/test_images/timeout
 knative.dev/networking/test/test_images/wsserver
 knative.dev/networking/test/types
-# knative.dev/pkg v0.0.0-20220318133418-7f16595277b2
+# knative.dev/pkg v0.0.0-20220318185521-e6e3cf03d765
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
