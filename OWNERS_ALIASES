@@ -22,7 +22,6 @@ aliases:
   - julz
   - psschwei
   control-protocol-approvers:
-  - devguyio
   - eric-sap
   - lionelvillard
   - matzew
@@ -65,7 +64,6 @@ aliases:
   eventing-kafka-approvers:
   - aliok
   - davyodom
-  - devguyio
   - eric-sap
   - lberk
   - matzew
@@ -80,11 +78,9 @@ aliases:
   eventing-kafka-mtsource-approvers:
   - steven0711dong
   eventing-kafka-wg-leads:
-  - devguyio
   - lionelvillard
   - travis-minke-sap
   eventing-kafka-writers:
-  - devguyio
   - lionelvillard
   - travis-minke-sap
   eventing-kogito-approvers:
@@ -92,7 +88,6 @@ aliases:
   - spolti
   - vaibhavjainwiz
   eventing-natss-approvers:
-  - devguyio
   - zhaojizhuang
   eventing-prometheus-approvers:
   - lberk
@@ -109,16 +104,22 @@ aliases:
   - lionelvillard
   - matzew
   eventing-wg-leads:
-  - devguyio
   - lionelvillard
   eventing-writers:
   - aliok
-  - devguyio
   - lionelvillard
   - matzew
   - odacremolbap
   - pierDipi
   - vaikas
+  func-tastic-approvers:
+  - lance
+  - lkingland
+  - matejvasek
+  - nainaz
+  - omerbensaadon
+  - salaboy
+  - zroubalik
   homebrew-kn-plugins-approvers:
   - dsimansk
   - maximilien
@@ -220,11 +221,13 @@ aliases:
   - JRBANCEL
   - ZhiminXiang
   - nak3
+  - skonto
   - tcnghia
   - vagababov
   net-kourier-approvers:
   - davidor
   - jmprusi
+  - skonto
   - tcnghia
   networking-wg-leads:
   - ZhiminXiang
