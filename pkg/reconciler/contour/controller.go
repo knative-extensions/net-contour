@@ -29,9 +29,9 @@ import (
 	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
-	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	networkcfg "knative.dev/networking/pkg/config"
 	"knative.dev/networking/pkg/status"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -68,7 +68,7 @@ func NewController(
 		func(impl *controller.Impl) controller.Options {
 			configsToResync := []interface{}{
 				&config.Contour{},
-				&network.Config{},
+				&networkcfg.Config{},
 			}
 
 			resyncIngressesOnConfigChange := configmap.TypeFilter(configsToResync...)(func(string, interface{}) {
