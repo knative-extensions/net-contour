@@ -26,9 +26,9 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
-	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/ingress"
+	"knative.dev/networking/pkg/k8s"
 	"knative.dev/networking/pkg/status"
 )
 
@@ -78,12 +78,12 @@ func (l *lister) ListProbeTargets(ctx context.Context, ing *v1alpha1.Ingress) ([
 			})
 		}
 
-		portName, err := network.NameForPortNumber(service, port)
+		portName, err := k8s.NameForPortNumber(service, port)
 		if err != nil {
 			return nil, fmt.Errorf("failed to lookup port %d in %s/%s: %w", port, namespace, name, err)
 		}
 		for _, sub := range endpoints.Subsets {
-			podPort, err := network.PortNumberForName(sub, portName)
+			podPort, err := k8s.PortNumberForName(sub, portName)
 			if err != nil {
 				return nil, fmt.Errorf("failed to lookup port name %q in endpoints subset for %s/%s: %w",
 					portName, namespace, name, err)
