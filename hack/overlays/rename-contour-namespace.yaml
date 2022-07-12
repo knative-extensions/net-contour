@@ -13,7 +13,7 @@ metadata:
   #@overlay/replace
   name: #@ data.values.namespace
 
-#@overlay/match by=overlay.subset({"kind":"RoleBinding"})
+#@overlay/match by=overlay.subset({"kind":"RoleBinding"}),expects="1+"
 ---
 subjects:
   #@overlay/match by=overlay.subset({"namespace":"projectcontour"})
