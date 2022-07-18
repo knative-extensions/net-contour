@@ -21,7 +21,6 @@ set -o pipefail
 source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 
 CONTOUR_VERSION="v1.21.1" # This is for controlling which version of contour we want to use.
-CONTOUR_OPERATOR_VERSION="v1.21.1" # This is for controlling which version of contour-operator we want to use.
 
 CLUSTER_ROLE_NAME=knative-contour
 
@@ -47,10 +46,6 @@ function contour_yaml() {
   curl "https://raw.githubusercontent.com/projectcontour/contour/${CONTOUR_VERSION}/examples/render/contour.yaml"
 }
 
-function contour_operator_yaml() {
-  curl "https://raw.githubusercontent.com/projectcontour/contour-operator/${CONTOUR_OPERATOR_VERSION}/examples/operator/operator.yaml"
-}
-
 rm -rf config/contour/*
 
 contour_yaml | \
@@ -66,8 +61,3 @@ contour_yaml | \
     --data-value clusterrole.name=$CLUSTER_ROLE_NAME \
     -f hack/overlays \
     -f - >> config/contour/external.yaml
-
-rm -rf config/contour-operator/operator.yaml
-
-contour_operator_yaml \
-  >> config/contour-operator/operator.yaml
