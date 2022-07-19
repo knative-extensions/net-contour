@@ -34,17 +34,14 @@ jobs:
         - k8s-version: v1.22.9
           kind-version: v0.14.0
           kind-image-sha: sha256:8135260b959dfe320206eb36b3aeda9cffcb262f4b44cda6b33f7bb73f453105
-          install: yaml
 
         - k8s-version: v1.23.6
           kind-version: v0.14.0
           kind-image-sha: sha256:b1fa224cc6c7ff32455e0b1fd9cbfd3d3bc87ecaa8fcb06961ed1afb3db0f9ae
-          install: yaml
 
         - k8s-version: v1.24.0
           kind-version: v0.14.0
           kind-image-sha: sha256:0866296e693efe1fed79d5e6c7af8df71fc73ae45e3679af05342239cdc5bc8e
-          install: yaml
 
     env:
       GOPATH: ${{ github.workspace }}
@@ -152,27 +149,12 @@ jobs:
               - $network.255.1-$network.255.250
         EOF
 
-    - name: Install Knative net-contour (non operator)
-      if: matrix.install == 'yaml'
+    - name: Install Knative net-contour
       run: |
         set -o pipefail
 
         # Build and Publish our containers to the docker daemon (including test assets)
         ko resolve --platform=linux/amd64 -Pf test/config/ -f config/contour -f config | \
-          sed 's/imagePullPolicy:/# DISABLED: imagePullPolicy:/g' | \
-          kubectl apply -f -
-
-    - name: Install Knative net-contour (operator)
-      if: matrix.install == 'operator'
-      run: |
-        set -o pipefail
-
-        # Build and Publish our containers to the docker daemon (including test assets)
-        ko resolve --platform=linux/amd64 -Pf test/config/ -f config/contour-operator/operator.yaml -f config | \
-          sed 's/imagePullPolicy:/# DISABLED: imagePullPolicy:/g' | \
-          kubectl apply -f -
-
-        ko resolve --platform=linux/amd64 -f config/contour-operator/gateway-external.yaml -f config/contour-operator/gateway-internal.yaml | \
           sed 's/imagePullPolicy:/# DISABLED: imagePullPolicy:/g' | \
           kubectl apply -f -
 
