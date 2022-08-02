@@ -377,6 +377,27 @@ type Route struct {
 	// RequestRedirectPolicy defines an HTTP redirection.
 	// +optional
 	RequestRedirectPolicy *HTTPRequestRedirectPolicy `json:"requestRedirectPolicy,omitempty"`
+
+	// DirectResponsePolicy returns an arbitrary HTTP response directly.
+	// +optional
+	DirectResponsePolicy *HTTPDirectResponsePolicy `json:"directResponsePolicy,omitempty"`
+}
+
+type HTTPDirectResponsePolicy struct {
+	// StatusCode is the HTTP response status to be returned.
+	// +required
+	// +kubebuilder:validation:Minimum=200
+	// +kubebuilder:validation:Maximum=599
+	StatusCode int `json:"statusCode"`
+
+	// Body is the content of the response body.
+	// If this setting is omitted, no body is included in the generated response.
+	//
+	// Note: Body is not recommended to set too long
+	// otherwise it can have significant resource usage impacts.
+	//
+	// +optional
+	Body string `json:"body,omitempty"`
 }
 
 // HTTPRequestRedirectPolicy defines configuration for redirecting a request.
@@ -955,15 +976,17 @@ type HeaderValue struct {
 
 // UpstreamValidation defines how to verify the backend service's certificate
 type UpstreamValidation struct {
-	// Name or namespaced name of the Kubernetes secret used to validate the certificate presented by the backend
+	// Name or namespaced name of the Kubernetes secret used to validate the certificate presented by the backend.
+	// The secret must contain key named ca.crt.
 	CACertificate string `json:"caSecret"`
-	// Key which is expected to be present in the 'subjectAltName' of the presented certificate
+	// Key which is expected to be present in the 'subjectAltName' of the presented certificate.
 	SubjectName string `json:"subjectName"`
 }
 
 // DownstreamValidation defines how to verify the client certificate.
 type DownstreamValidation struct {
 	// Name of a Kubernetes secret that contains a CA certificate bundle.
+	// The secret must contain key named ca.crt.
 	// The client certificate must validate against the certificates in the bundle.
 	// If specified and SkipClientCertValidation is true, client certificates will
 	// be required on requests.
@@ -981,6 +1004,20 @@ type DownstreamValidation struct {
 	// presented to the external authorization server.
 	// +optional
 	SkipClientCertValidation bool `json:"skipClientCertValidation"`
+
+	// Name of a Kubernetes opaque secret that contains a concatenated list of PEM encoded CRLs.
+	// The secret must contain key named crl.pem.
+	// This field will be used to verify that a client certificate has not been revoked.
+	// CRLs must be available from all CAs, unless crlOnlyVerifyLeafCert is true.
+	// Large CRL lists are not supported since individual secrets are limited to 1MiB in size.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	CertificateRevocationList string `json:"crlSecret,omitempty"`
+
+	// If this option is set to true, only the certificate at the end of the
+	// certificate chain will be subject to validation by CRL.
+	// +optional
+	OnlyVerifyLeafCertCrl bool `json:"crlOnlyVerifyLeafCert"`
 }
 
 // HTTPProxyStatus reports the current state of the HTTPProxy.
