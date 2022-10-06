@@ -19,6 +19,8 @@ package config
 import (
 	"context"
 
+	network "knative.dev/networking/pkg"
+	netconfig "knative.dev/networking/pkg/config"
 	"knative.dev/pkg/configmap"
 )
 
@@ -27,6 +29,7 @@ type cfgKey struct{}
 // Config of Contour.
 type Config struct {
 	Contour *Contour
+	Network *netconfig.Config
 }
 
 // FromContext fetch config from context.
@@ -60,7 +63,8 @@ func NewStore(logger configmap.Logger, onAfterStore ...func(name string, value i
 			"ingress",
 			logger,
 			configmap.Constructors{
-				ContourConfigName: NewContourFromConfigMap,
+				ContourConfigName:       NewContourFromConfigMap,
+				netconfig.ConfigMapName: network.NewConfigFromConfigMap,
 			},
 			onAfterStore...,
 		),
@@ -78,5 +82,6 @@ func (s *Store) ToContext(ctx context.Context) context.Context {
 func (s *Store) Load() *Config {
 	return &Config{
 		Contour: s.UntypedLoad(ContourConfigName).(*Contour).DeepCopy(),
+		Network: s.UntypedLoad(netconfig.ConfigMapName).(*netconfig.Config).DeepCopy(),
 	}
 }
