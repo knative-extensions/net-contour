@@ -77,6 +77,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		zap.Int64("generation", ing.Generation),
 		zap.String("resource-version", ing.ResourceVersion),
 	)
+	cfg := config.FromContext(ctx)
 
 	// Track whether there is an endpoint probe kingress to clean up.
 	haveEndpointProbe := false
@@ -188,6 +189,12 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		for _, port := range svc.Spec.Ports {
 			if port.Name == networking.ServicePortNameH2C {
 				serviceToProtocol[name] = "h2c"
+				break
+
+			} else if cfg.Network != nil && cfg.Network.InternalEncryption {
+				// TODO(KauzClay): Every port should fall into here, except those that are h2c. This would mean that h2c would be unencrypted even if internal encryption is on. Is that okay?
+				serviceToProtocol[name] = "tls"
+				logger.Debugf("We marked a svc as tls")
 				break
 			}
 		}

@@ -43,6 +43,7 @@ import (
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	ingressreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
+	netconfig "knative.dev/networking/pkg/config"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
@@ -494,6 +495,78 @@ func TestReconcile(t *testing.T) {
 	}))
 }
 
+func TestReconcileInternalEncryption(t *testing.T) {
+	table := TableTest{{
+		Name: "first reconcile basic ingress",
+		Key:  "ns/name",
+		Objects: append([]runtime.Object{
+			ing("name", "ns", withTLSServiceSpec, withContour),
+		}, tlsServiceAndEndpoint...),
+		WantCreates: []runtime.Object{mustMakeProbeWithConfig(t, ing("name", "ns", withTLSServiceSpec, withContour), internalEncryptionConfig)},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withTLSServiceSpec, withContour, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+				i.Status.MarkLoadBalancerNotReady()
+				i.Status.MarkIngressNotReady("EndpointsNotReady", "Waiting for Envoys to receive Endpoints data.")
+			}),
+		}},
+	}, {
+		Name: "first reconcile basic ingress (endpoints probe succeeded)",
+		Key:  "ns/name",
+		Objects: append([]runtime.Object{
+			ing("name", "ns", withTLSServiceSpec, withContour),
+			mustMakeProbe(t, ing("name", "ns", withTLSServiceSpec, withContour), makeItReady),
+		}, tlsServiceAndEndpoint...),
+		WantCreates: mustMakeProxiesWithConfig(t, ing("name", "ns", withTLSServiceSpec, withContour), internalEncryptionConfig),
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("name", "ns", withTLSServiceSpec, withContour, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+				i.Status.MarkNetworkConfigured()
+				i.Status.MarkLoadBalancerReady(
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: publicSvc,
+						IP:             publicSvcIP,
+					}},
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: privateSvc,
+						IP:             privateSvcIP,
+					}})
+			}),
+		}},
+		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: "ns",
+				Resource:  v1alpha1.SchemeGroupVersion.WithResource("ingresses"),
+			},
+			Name: "name--ep",
+		}},
+	}}
+
+	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
+		r := &Reconciler{
+			ingressClient: fakeingressclient.Get(ctx),
+			contourClient: fakecontourclient.Get(ctx),
+			ingressLister: listers.GetIngressLister(),
+			contourLister: listers.GetHTTPProxyLister(),
+			serviceLister: listers.GetK8sServiceLister(),
+			tracker:       &NullTracker{},
+			statusManager: &fakeStatusManager{
+				FakeIsReady: func(context.Context, *v1alpha1.Ingress) (bool, error) {
+					return true, nil
+				},
+			},
+		}
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakeingressclient.Get(ctx),
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, ContourIngressClassName,
+			controller.Options{
+				ConfigStore: &testConfigStore{
+					config: internalEncryptionConfig,
+				}})
+	}))
+}
+
 func TestReconcileProberNotReady(t *testing.T) {
 	table := TableTest{{
 		Name: "first reconcile basic ingress",
@@ -609,6 +682,17 @@ var (
 			},
 		},
 	}
+	internalEncryptionConfig = &config.Config{
+		Contour: &config.Contour{
+			VisibilityKeys: map[v1alpha1.IngressVisibility]sets.String{
+				v1alpha1.IngressVisibilityClusterLocal: sets.NewString(privateKey),
+				v1alpha1.IngressVisibilityExternalIP:   sets.NewString(publicKey),
+			},
+		},
+		Network: &netconfig.Config{
+			InternalEncryption: true,
+		},
+	}
 )
 
 var (
@@ -680,16 +764,79 @@ var (
 		},
 	}
 	servicesAndEndpoints = append(append([]runtime.Object{}, services...), endpoints...)
+
+	tlsService = []runtime.Object{
+		&corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "ns",
+				Name:      tlsServiceName,
+			},
+			Spec: corev1.ServiceSpec{
+				Ports: []corev1.ServicePort{{
+					Name:       "https",
+					Port:       443,
+					TargetPort: intstr.FromInt(8443),
+					Protocol:   corev1.ProtocolTCP,
+				}},
+			},
+		},
+		// Contour Control Plane Services
+		&corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      publicName,
+				Namespace: publicNS,
+			},
+			Spec: corev1.ServiceSpec{
+				ClusterIP: publicSvcIP,
+			},
+		},
+		&corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      privateName,
+				Namespace: privateNS,
+			},
+			Spec: corev1.ServiceSpec{
+				ClusterIP: privateSvcIP,
+			},
+		},
+	}
+	tlsEndpoint = []runtime.Object{
+		&corev1.Endpoints{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "ns",
+				Name:      tlsServiceName,
+			},
+			Subsets: []corev1.EndpointSubset{{
+				Addresses: []corev1.EndpointAddress{{
+					IP: "10.0.0.2",
+				}},
+				Ports: []corev1.EndpointPort{{
+					Name: "https",
+					Port: 8443,
+				}},
+			}},
+		},
+	}
+	tlsServiceAndEndpoint = append(append([]runtime.Object{}, tlsService...), tlsEndpoint...)
+
+	h2cServiceName    = "doo"
+	tlsServiceName    = "tlsService"
+	serviceToProtocol = map[string]string{
+		h2cServiceName: "h2c",
+		tlsServiceName: resources.InternalEncryptionProtocol,
+	}
 )
 
 type HTTPProxyOption func(*v1.HTTPProxy)
 
 func mustMakeProxies(t *testing.T, i *v1alpha1.Ingress, opts ...HTTPProxyOption) (objs []runtime.Object) {
+	return mustMakeProxiesWithConfig(t, i, defaultConfig, opts...)
+}
+
+func mustMakeProxiesWithConfig(t *testing.T, i *v1alpha1.Ingress, cfg *config.Config, opts ...HTTPProxyOption) (objs []runtime.Object) {
 	t.Helper()
-	ctx := (&testConfigStore{config: defaultConfig}).ToContext(context.Background())
-	ps := resources.MakeHTTPProxies(ctx, i, map[string]string{
-		"doo": "h2c",
-	})
+	ctx := (&testConfigStore{config: cfg}).ToContext(context.Background())
+	ps := resources.MakeHTTPProxies(ctx, i, serviceToProtocol)
 	for _, p := range ps {
 		for _, opt := range opts {
 			opt(p)
@@ -724,8 +871,12 @@ func ing(name, namespace string, opts ...IngressOption) *v1alpha1.Ingress {
 }
 
 func mustMakeProbe(t *testing.T, i *v1alpha1.Ingress, opts ...IngressOption) runtime.Object {
+	return mustMakeProbeWithConfig(t, i, defaultConfig, opts...)
+}
+
+func mustMakeProbeWithConfig(t *testing.T, i *v1alpha1.Ingress, cfg *config.Config, opts ...IngressOption) runtime.Object {
 	t.Helper()
-	ctx := (&testConfigStore{config: defaultConfig}).ToContext(context.Background())
+	ctx := (&testConfigStore{config: cfg}).ToContext(context.Background())
 	chIng := resources.MakeEndpointProbeIngress(ctx, i, nil)
 	for _, opt := range opts {
 		opt(chIng)
@@ -807,6 +958,27 @@ func withMultiProxySpec(i *v1alpha1.Ingress) {
 							ServiceName:      "goo",
 							ServiceNamespace: i.Namespace,
 							ServicePort:      intstr.FromInt(123),
+						},
+						Percent: 100,
+					}},
+				}},
+			},
+		}},
+	}
+}
+
+func withTLSServiceSpec(i *v1alpha1.Ingress) {
+	i.Spec = v1alpha1.IngressSpec{
+		Rules: []v1alpha1.IngressRule{{
+			Hosts:      []string{"foo.com"},
+			Visibility: v1alpha1.IngressVisibilityExternalIP,
+			HTTP: &v1alpha1.HTTPIngressRuleValue{
+				Paths: []v1alpha1.HTTPIngressPath{{
+					Splits: []v1alpha1.IngressBackendSplit{{
+						IngressBackend: v1alpha1.IngressBackend{
+							ServiceName:      tlsServiceName,
+							ServiceNamespace: i.Namespace,
+							ServicePort:      intstr.FromInt(443),
 						},
 						Percent: 100,
 					}},
