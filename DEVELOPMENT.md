@@ -116,7 +116,8 @@ tests directly from `go test`:
 go test -tags=e2e -count=1 -timeout=20m ./test/conformance --skip-tests host-rewrite --ingressClass=contour.ingress.networking.knative.dev
 ```
 
-The `host-rewrite` test uses `ExternalName` services, which are blocked by Contour for security reasons.
+The `host-rewrite` test uses `ExternalName` services, which are blocked by
+Contour for security reasons.
 
 ### Configuring Knative Serving to use Contour by default
 
