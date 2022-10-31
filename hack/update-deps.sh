@@ -20,7 +20,7 @@ set -o pipefail
 
 source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 
-CONTOUR_VERSION="v1.22.0" # This is for controlling which version of contour we want to use.
+CONTOUR_VERSION="v1.23.0" # This is for controlling which version of contour we want to use.
 
 CLUSTER_ROLE_NAME=knative-contour
 
@@ -38,7 +38,7 @@ rm -rf $(find vendor/ -path '*/e2e/*_test.go')
 chmod +x $(find vendor -type f -name '*.sh')
 
 function run_ytt() {
-  run_go_tool github.com/vmware-tanzu/carvel-ytt/cmd/ytt ytt "$@"
+  go_run github.com/vmware-tanzu/carvel-ytt/cmd/ytt@v0.43.0 "$@"
 }
 
 function contour_yaml() {
