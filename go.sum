@@ -2059,6 +2059,8 @@ knative.dev/networking v0.0.0-20221123133043-c037e29a5cf4/go.mod h1:DCcDFXdCCa1m
 knative.dev/pkg v0.0.0-20221123154742-05b694ec4d3a h1:mTDxXL+zRBMz7BcdM3WOgw9FVbmkIN/3cvEj4MeS8zI=
 knative.dev/pkg v0.0.0-20221123154742-05b694ec4d3a/go.mod h1:fckNBPf9bu5/p1RbnOhEauX7r+kfN1zSQupEVtkaYBs=
 knative.dev/control-protocol v0.0.0-20221026172758-74766ce15fd4 h1:V97Q83mHZZqW2bnXzXgCk06OU0TW8D612ATpcim27LE=
+knative.dev/control-protocol v0.0.0-20221026172758-74766ce15fd4 h1:V97Q83mHZZqW2bnXzXgCk06OU0TW8D612ATpcim27LE=
+knative.dev/control-protocol v0.0.0-20221026172758-74766ce15fd4/go.mod h1:v9fqtPTwQKwJAeUyFjyo4teoFA0EanxFVrtcQELTrRY=
 knative.dev/control-protocol v0.0.0-20221026172758-74766ce15fd4/go.mod h1:v9fqtPTwQKwJAeUyFjyo4teoFA0EanxFVrtcQELTrRY=
 knative.dev/control-protocol v0.0.0-20221006133934-f776ddd1e745 h1:xiG7N+ugPwGVXxrppqksMr129KcHCjdmCcbsLxTkk2k=
 knative.dev/control-protocol v0.0.0-20221006133934-f776ddd1e745 h1:xiG7N+ugPwGVXxrppqksMr129KcHCjdmCcbsLxTkk2k=
