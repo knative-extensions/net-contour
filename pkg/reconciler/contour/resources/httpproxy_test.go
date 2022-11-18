@@ -1555,7 +1555,7 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Port:     123,
 						Protocol: &protocol,
 						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: "foo/foo-serving-certs",
+							CACertificate: "knative-serving/knative-serving-certs",
 							SubjectName:   "data-plane.knative.dev",
 						},
 						Weight: 100,
@@ -1588,7 +1588,7 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Port:     123,
 						Protocol: &protocol,
 						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: "foo/foo-serving-certs",
+							CACertificate: "knative-serving/knative-serving-certs",
 							SubjectName:   "data-plane.knative.dev",
 						},
 						Weight: 100,

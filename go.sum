@@ -2068,8 +2068,12 @@ knative.dev/control-protocol v0.0.0-20221006133934-f776ddd1e745/go.mod h1:1rd+he
 knative.dev/control-protocol v0.0.0-20221006133934-f776ddd1e745/go.mod h1:1rd+heV90onvHgYDaXNQrASjbU8/yObrMcvZYyjZbuw=
 knative.dev/control-protocol v0.0.0-20221026172758-74766ce15fd4 h1:V97Q83mHZZqW2bnXzXgCk06OU0TW8D612ATpcim27LE=
 knative.dev/control-protocol v0.0.0-20221026172758-74766ce15fd4/go.mod h1:v9fqtPTwQKwJAeUyFjyo4teoFA0EanxFVrtcQELTrRY=
-knative.dev/serving v0.34.2 h1:bFamUUcc+Rh73mss2ICwmoK+dBKK/MdbgEsfdIK/Mis=
-knative.dev/serving v0.34.2/go.mod h1:IyfedOBq3KzcD5dZONjbix2BfS0jOwDq5td8UE9CjCk=
+knative.dev/hack v0.0.0-20221104013908-8f3c7050408b h1:EqqlOqjCy/hVexdmPpUjcplO2eZc12+jTdTpodfLaI4=
+knative.dev/hack v0.0.0-20221104013908-8f3c7050408b/go.mod h1:yk2OjGDsbEnQjfxdm0/HJKS2WqTLEFg/N6nUs6Rqx3Q=
+knative.dev/networking v0.0.0-20221104155004-0d4e93709170 h1:/DP0jHUGFJcF20BH4waFLz/W/RBMH4f7wQpf12t0eDI=
+knative.dev/networking v0.0.0-20221104155004-0d4e93709170/go.mod h1:qwWlbknoGTz/NV+MKB7Hb2nMjwI5zfum3KLLSl2QUMc=
+knative.dev/pkg v0.0.0-20221107171117-0243d641354d h1:ACj/4O74QvoB8zE/mlg1ji680gFW7RaUIjAL1x5IN58=
+knative.dev/pkg v0.0.0-20221107171117-0243d641354d/go.mod h1:JwNkOLWAeuMYlH9WQA83k+afGCanWcvWvdXZsI3xKo4=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/letsencrypt v0.0.3/go.mod h1:buyQKZ6IXrRnB7TdkHP0RyEybLx18HHyOSoTyoOLqNY=
 rsc.io/pdf v0.1.1/go.mod h1:n8OzWcQ6Sp37PL01nO98y4iUCRdTGarVfzxY20ICaU4=

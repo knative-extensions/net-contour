@@ -14,7 +14,9 @@ require (
 	knative.dev/networking v0.0.0-20221123133043-c037e29a5cf4
 	knative.dev/pkg v0.0.0-20221123154742-05b694ec4d3a
 	knative.dev/control-protocol v0.0.0-20221026172758-74766ce15fd4
-	knative.dev/serving v0.34.2
+	knative.dev/hack v0.0.0-20221104013908-8f3c7050408b
+	knative.dev/networking v0.0.0-20221104155004-0d4e93709170
+	knative.dev/pkg v0.0.0-20221107171117-0243d641354d
 	sigs.k8s.io/yaml v1.3.0
 )
 
