@@ -18,12 +18,18 @@ source $(dirname $0)/e2e-common.sh
 
 
 # Script entry point.
-initialize $@  --skip-istio-addon
+initialize $@
 
-go_test_e2e -timeout=60m \
-	    ./test/conformance \
-	    --enable-beta --enable-alpha \
-	    --skip-tests host-rewrite \
-	    --ingressClass=contour.ingress.networking.knative.dev || fail_test
+test_flags="-timeout=60m"
+if (( KIND )); then
+  test_flags="-timeout=20m -short"
+fi
+
+go_test_e2e $test_flags ./test/conformance \
+    -enable-alpha \
+    -enable-beta \
+    -skip-tests host-rewrite \
+    -cluster-suffix "${CLUSTER_DOMAIN}" \
+    -ingressClass=contour.ingress.networking.knative.dev || fail_test
 
 success

@@ -17,18 +17,34 @@
 # This script includes common functions for testing setup and teardown.
 source $(dirname $0)/../vendor/knative.dev/hack/e2e-tests.sh
 
+export KIND=${KIND:-0}
+export CLUSTER_DOMAIN=${CLUSTER_DOMAIN:-cluster.local}
+
+function parse_flags() {
+  case "$1" in
+    --kind)
+      readonly KIND=1
+      return 1
+      ;;
+  esac
+  return 0
+}
+
 # Setup resources.
 function test_setup() {
   echo ">> Setting up logging..."
-  # Install kail if needed.
-  if ! which kail > /dev/null; then
-    bash <( curl -sfL https://raw.githubusercontent.com/boz/kail/master/godownloader.sh) -b "$GOPATH/bin"
+
+  if (( PROW )); then
+    # Install kail if needed.
+    if ! which kail > /dev/null; then
+      bash <( curl -sfL https://raw.githubusercontent.com/boz/kail/master/godownloader.sh) -b "$GOPATH/bin"
+    fi
+    # Capture all logs.
+    kail > ${ARTIFACTS}/k8s.log.txt &
+    local kail_pid=$!
+    # Clean up kail so it doesn't interfere with job shutting down
+    add_trap "kill $kail_pid || true" EXIT
   fi
-  # Capture all logs.
-  kail > ${ARTIFACTS}/k8s.log.txt &
-  local kail_pid=$!
-  # Clean up kail so it doesn't interfere with job shutting down
-  add_trap "kill $kail_pid || true" EXIT
 
   # Setting up test resources.
   echo ">> Publishing test images"
@@ -50,7 +66,12 @@ function test_setup() {
   echo ">> Bringing up net-contour"
   ko apply -f config/ || return 1
 
-  scale_controlplane net-contour-controller
+  if (( KIND )); then
+    # remove chaosduck for kind testing
+    kubectl delete -f ./test/config/chaosduck.yaml
+  else
+    scale_controlplane net-contour-controller
+  fi
 
   # Wait for pods to be running.
   echo ">> Waiting for Serving components to be running..."
@@ -65,19 +86,5 @@ function scale_controlplane() {
     sleep 5
     # Scale up components for HA tests
     kubectl -n knative-serving scale deployment "$deployment" --replicas=3 || failed=1
-  done
-}
-
-# Add function call to trap
-# Parameters: $1 - Function to call
-#             $2...$n - Signals for trap
-function add_trap() {
-  local cmd=$1
-  shift
-  for trap_signal in $@; do
-    local current_trap="$(trap -p $trap_signal | cut -d\' -f2)"
-    local new_cmd="($cmd)"
-    [[ -n "${current_trap}" ]] && new_cmd="${current_trap};${new_cmd}"
-    trap -- "${new_cmd}" $trap_signal
   done
 }
