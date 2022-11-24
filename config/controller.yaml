@@ -71,4 +71,4 @@ spec:
           runAsNonRoot: true
           capabilities:
             drop:
-            - all
+            - ALL
