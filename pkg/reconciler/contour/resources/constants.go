@@ -43,7 +43,8 @@ const (
 	//InternalEncryptionProtocol is the protocol to set on the Services in
 	//the HTTPProxy when InternalEncryption is enabled. This prompt's
 	//Contour's Envoys to encrypt the traffic to the activator.
-	InternalEncryptionProtocol = "tls"
+	InternalEncryptionProtocol   = "tls"
+	InternalEncryptionH2Protocol = "h2"
 )
 
 // These are the annotations which are optionally set in ksvc/ingress
