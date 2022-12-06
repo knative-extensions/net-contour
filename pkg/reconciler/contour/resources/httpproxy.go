@@ -36,6 +36,7 @@ import (
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/ptr"
+	"knative.dev/pkg/system"
 )
 
 type ServiceInfo struct {
@@ -191,7 +192,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 
 				if cfg.Network != nil && cfg.Network.InternalEncryption {
 					svc.UpstreamValidation = &v1.UpstreamValidation{
-						CACertificate: fmt.Sprintf("%s/%s", "knative-serving", netcfg.ServingInternalCertName),
+						CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingInternalCertName),
 						SubjectName:   certificates.FakeDnsName,
 					}
 				}

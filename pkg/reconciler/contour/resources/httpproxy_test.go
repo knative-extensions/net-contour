@@ -18,7 +18,11 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"testing"
+
+	"knative.dev/pkg/system"
+	_ "knative.dev/pkg/system/testing"
 
 	"github.com/google/go-cmp/cmp"
 	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
@@ -1557,7 +1561,7 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Port:     123,
 						Protocol: &tlsProto,
 						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: "knative-serving/knative-serving-certs",
+							CACertificate: fmt.Sprintf("%s/knative-serving-certs", system.Namespace()),
 							SubjectName:   "data-plane.knative.dev",
 						},
 						Weight: 100,
@@ -1590,7 +1594,7 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Port:     123,
 						Protocol: &tlsProto,
 						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: "knative-serving/knative-serving-certs",
+							CACertificate: fmt.Sprintf("%s/knative-serving-certs", system.Namespace()),
 							SubjectName:   "data-plane.knative.dev",
 						},
 						Weight: 100,
@@ -1695,7 +1699,7 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 							Port:     123,
 							Protocol: &h2Proto,
 							UpstreamValidation: &v1.UpstreamValidation{
-								CACertificate: "knative-serving/knative-serving-certs",
+								CACertificate: fmt.Sprintf("%s/knative-serving-certs", system.Namespace()),
 								SubjectName:   "data-plane.knative.dev",
 							},
 							Weight: 100,
@@ -1728,7 +1732,7 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 							Port:     123,
 							Protocol: &h2Proto,
 							UpstreamValidation: &v1.UpstreamValidation{
-								CACertificate: "knative-serving/knative-serving-certs",
+								CACertificate: fmt.Sprintf("%s/knative-serving-certs", system.Namespace()),
 								SubjectName:   "data-plane.knative.dev",
 							},
 							Weight: 100,
