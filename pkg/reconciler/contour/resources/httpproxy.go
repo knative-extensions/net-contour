@@ -28,12 +28,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"knative.dev/control-protocol/pkg/certificates"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	netcfg "knative.dev/networking/pkg/config"
 	"knative.dev/networking/pkg/ingress"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/ptr"
+	"knative.dev/pkg/system"
 )
 
 type ServiceInfo struct {
@@ -94,6 +97,8 @@ func defaultRetryPolicy() *v1.RetryPolicy {
 }
 
 func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtocol map[string]string) []*v1.HTTPProxy {
+	cfg := config.FromContext(ctx)
+
 	ing = ing.DeepCopy()
 	ingress.InsertProbe(ing)
 
@@ -155,6 +160,13 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 
 			svcs := make([]v1.Service, 0, len(path.Splits))
 			for _, split := range path.Splits {
+
+				svc := v1.Service{
+					Name:   split.ServiceName,
+					Port:   split.ServicePort.IntValue(),
+					Weight: int64(split.Percent),
+				}
+
 				postSplitHeaders := &v1.HeadersPolicy{
 					Set: make([]v1.HeaderValue, 0, len(split.AppendHeaders)),
 				}
@@ -171,17 +183,21 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				} else {
 					postSplitHeaders = nil
 				}
-				var protocol *string
+
+				svc.RequestHeadersPolicy = postSplitHeaders
+
 				if proto, ok := serviceToProtocol[split.ServiceName]; ok {
-					protocol = ptr.String(proto)
+					svc.Protocol = ptr.String(proto)
 				}
-				svcs = append(svcs, v1.Service{
-					Name:                 split.ServiceName,
-					Port:                 split.ServicePort.IntValue(),
-					Weight:               int64(split.Percent),
-					RequestHeadersPolicy: postSplitHeaders,
-					Protocol:             protocol,
-				})
+
+				if cfg.Network != nil && cfg.Network.InternalEncryption {
+					svc.UpstreamValidation = &v1.UpstreamValidation{
+						CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingInternalCertName),
+						SubjectName:   certificates.FakeDnsName,
+					}
+				}
+
+				svcs = append(svcs, svc)
 			}
 
 			var conditions []v1.MatchCondition

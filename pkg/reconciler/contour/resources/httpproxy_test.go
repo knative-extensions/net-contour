@@ -18,7 +18,11 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"testing"
+
+	"knative.dev/pkg/system"
+	_ "knative.dev/pkg/system/testing"
 
 	"github.com/google/go-cmp/cmp"
 	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
@@ -28,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	netcfg "knative.dev/networking/pkg/config"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/ptr"
 	"knative.dev/pkg/reconciler"
@@ -1438,6 +1443,328 @@ func TestMakeProxies(t *testing.T) {
 					},
 					TimeoutPolicyResponse: "infinity",
 					TimeoutPolicyIdle:     "infinity",
+				},
+			}
+
+			if test.modifyConfig != nil {
+				test.modifyConfig(config)
+			}
+
+			tcs := &testConfigStore{config: config}
+			ctx := tcs.ToContext(context.Background())
+
+			got := MakeHTTPProxies(ctx, test.ing, serviceToProtocol)
+			if !cmp.Equal(test.want, got) {
+				t.Error("MakeHTTPProxies (-want, +got) =", cmp.Diff(test.want, got))
+			}
+		})
+	}
+}
+
+func TestMakeProxiesInternalEncryption(t *testing.T) {
+	tlsProto := InternalEncryptionProtocol
+	h2Proto := InternalEncryptionH2Protocol
+	serviceToProtocol := map[string]string{
+		"goo":  tlsProto,
+		"htwo": h2Proto,
+	}
+
+	tests := []struct {
+		name         string
+		ing          *v1alpha1.Ingress
+		want         []*v1.HTTPProxy
+		modifyConfig func(*config.Config)
+	}{{
+		name: "single external domain with internal encryption enabled",
+		ing: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar",
+			},
+			Spec: v1alpha1.IngressSpec{
+				HTTPOption: v1alpha1.HTTPOptionEnabled,
+				Rules: []v1alpha1.IngressRule{{
+					Hosts:      []string{"example.com"},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							AppendHeaders: map[string]string{
+								"Foo": "bar",
+							},
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceName:      "goo",
+									ServiceNamespace: "foo",
+									ServicePort:      intstr.FromInt(123),
+								},
+								Percent: 100,
+								AppendHeaders: map[string]string{
+									"Baz":   "blah",
+									"Bleep": "bloop",
+								},
+							}},
+						}},
+					},
+				}},
+			},
+		},
+		want: []*v1.HTTPProxy{{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar-" + publicClass + "-example.com",
+				Labels: map[string]string{
+					DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
+					GenerationKey: "0",
+					ParentKey:     "bar",
+					ClassKey:      publicClass,
+				},
+				Annotations: map[string]string{
+					ClassKey: publicClass,
+				},
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion:         "networking.internal.knative.dev/v1alpha1",
+					Kind:               "Ingress",
+					Name:               "bar",
+					Controller:         ptr.Bool(true),
+					BlockOwnerDeletion: ptr.Bool(true),
+				}},
+			},
+			Spec: v1.HTTPProxySpec{
+				VirtualHost: &v1.VirtualHost{
+					Fqdn: "example.com",
+				},
+				Routes: []v1.Route{{
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "Foo",
+							Value: "bar",
+						}, {
+							Name:  "K-Network-Hash",
+							Value: "6d6a4e524d201b156fae9b8d16e5dc534c6a2c18ca612061c9a5ac4b797affbb",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Port:     123,
+						Protocol: &tlsProto,
+						UpstreamValidation: &v1.UpstreamValidation{
+							CACertificate: fmt.Sprintf("%s/knative-serving-certs", system.Namespace()),
+							SubjectName:   "data-plane.knative.dev",
+						},
+						Weight: 100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blah",
+							}, {
+								Name:  "Bleep",
+								Value: "bloop",
+							}},
+						},
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "Foo",
+							Value: "bar",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Port:     123,
+						Protocol: &tlsProto,
+						UpstreamValidation: &v1.UpstreamValidation{
+							CACertificate: fmt.Sprintf("%s/knative-serving-certs", system.Namespace()),
+							SubjectName:   "data-plane.knative.dev",
+						},
+						Weight: 100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blah",
+							}, {
+								Name:  "Bleep",
+								Value: "bloop",
+							}},
+						},
+					}},
+				}},
+			},
+		}},
+	},
+		{
+			name: "single external domain with internal encryption enabled and http/2",
+			ing: &v1alpha1.Ingress{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo",
+					Name:      "bar",
+				},
+				Spec: v1alpha1.IngressSpec{
+					HTTPOption: v1alpha1.HTTPOptionEnabled,
+					Rules: []v1alpha1.IngressRule{{
+						Hosts:      []string{"example.com"},
+						Visibility: v1alpha1.IngressVisibilityExternalIP,
+						HTTP: &v1alpha1.HTTPIngressRuleValue{
+							Paths: []v1alpha1.HTTPIngressPath{{
+								AppendHeaders: map[string]string{
+									"Foo": "bar",
+								},
+								Splits: []v1alpha1.IngressBackendSplit{{
+									IngressBackend: v1alpha1.IngressBackend{
+										ServiceName:      "htwo",
+										ServiceNamespace: "foo",
+										ServicePort:      intstr.FromInt(123),
+									},
+									Percent: 100,
+									AppendHeaders: map[string]string{
+										"Baz":   "blah",
+										"Bleep": "bloop",
+									},
+								}},
+							}},
+						},
+					}},
+				},
+			},
+			want: []*v1.HTTPProxy{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo",
+					Name:      "bar-" + publicClass + "-example.com",
+					Labels: map[string]string{
+						DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
+						GenerationKey: "0",
+						ParentKey:     "bar",
+						ClassKey:      publicClass,
+					},
+					Annotations: map[string]string{
+						ClassKey: publicClass,
+					},
+					OwnerReferences: []metav1.OwnerReference{{
+						APIVersion:         "networking.internal.knative.dev/v1alpha1",
+						Kind:               "Ingress",
+						Name:               "bar",
+						Controller:         ptr.Bool(true),
+						BlockOwnerDeletion: ptr.Bool(true),
+					}},
+				},
+				Spec: v1.HTTPProxySpec{
+					VirtualHost: &v1.VirtualHost{
+						Fqdn: "example.com",
+					},
+					Routes: []v1.Route{{
+						EnableWebsockets: true,
+						PermitInsecure:   true,
+						TimeoutPolicy: &v1.TimeoutPolicy{
+							Response: "infinity",
+							Idle:     "infinity",
+						},
+						RetryPolicy: defaultRetryPolicy(),
+						Conditions: []v1.MatchCondition{{
+							Header: &v1.HeaderMatchCondition{
+								Name:  "K-Network-Hash",
+								Exact: "override",
+							},
+						}},
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Foo",
+								Value: "bar",
+							}, {
+								Name:  "K-Network-Hash",
+								Value: "fe69d18ca560b548fd9cd1fe9a417a4de806f573b52353a435e222a23a984127",
+							}},
+						},
+						Services: []v1.Service{{
+							Name:     "htwo",
+							Port:     123,
+							Protocol: &h2Proto,
+							UpstreamValidation: &v1.UpstreamValidation{
+								CACertificate: fmt.Sprintf("%s/knative-serving-certs", system.Namespace()),
+								SubjectName:   "data-plane.knative.dev",
+							},
+							Weight: 100,
+							RequestHeadersPolicy: &v1.HeadersPolicy{
+								Set: []v1.HeaderValue{{
+									Name:  "Baz",
+									Value: "blah",
+								}, {
+									Name:  "Bleep",
+									Value: "bloop",
+								}},
+							},
+						}},
+					}, {
+						EnableWebsockets: true,
+						PermitInsecure:   true,
+						TimeoutPolicy: &v1.TimeoutPolicy{
+							Response: "infinity",
+							Idle:     "infinity",
+						},
+						RetryPolicy: defaultRetryPolicy(),
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Foo",
+								Value: "bar",
+							}},
+						},
+						Services: []v1.Service{{
+							Name:     "htwo",
+							Port:     123,
+							Protocol: &h2Proto,
+							UpstreamValidation: &v1.UpstreamValidation{
+								CACertificate: fmt.Sprintf("%s/knative-serving-certs", system.Namespace()),
+								SubjectName:   "data-plane.knative.dev",
+							},
+							Weight: 100,
+							RequestHeadersPolicy: &v1.HeadersPolicy{
+								Set: []v1.HeaderValue{{
+									Name:  "Baz",
+									Value: "blah",
+								}, {
+									Name:  "Bleep",
+									Value: "bloop",
+								}},
+							},
+						}},
+					}},
+				},
+			}},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			config := &config.Config{
+				Contour: &config.Contour{
+					VisibilityClasses: map[v1alpha1.IngressVisibility]string{
+						v1alpha1.IngressVisibilityClusterLocal: privateClass,
+						v1alpha1.IngressVisibilityExternalIP:   publicClass,
+					},
+					TimeoutPolicyResponse: "infinity",
+					TimeoutPolicyIdle:     "infinity",
+				},
+				Network: &netcfg.Config{
+					InternalEncryption: true,
 				},
 			}
 

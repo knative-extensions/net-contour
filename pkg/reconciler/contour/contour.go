@@ -77,6 +77,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		zap.Int64("generation", ing.Generation),
 		zap.String("resource-version", ing.ResourceVersion),
 	)
+	cfg := config.FromContext(ctx)
 
 	// Track whether there is an endpoint probe kingress to clean up.
 	haveEndpointProbe := false
@@ -186,8 +187,18 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			return err
 		}
 		for _, port := range svc.Spec.Ports {
+
 			if port.Name == networking.ServicePortNameH2C {
-				serviceToProtocol[name] = "h2c"
+				if cfg.Network != nil && cfg.Network.InternalEncryption {
+					serviceToProtocol[name] = resources.InternalEncryptionH2Protocol
+					logger.Debugf("marked an http2 svc %s as h2 for internal encryption", name)
+				} else {
+					serviceToProtocol[name] = "h2c"
+				}
+				break
+			} else if cfg.Network != nil && cfg.Network.InternalEncryption {
+				serviceToProtocol[name] = resources.InternalEncryptionProtocol
+				logger.Debugf("marked a svc %s as tls for internal encryption", name)
 				break
 			}
 		}

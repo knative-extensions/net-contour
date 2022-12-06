@@ -1,5 +1,5 @@
-# cloud.google.com/go v0.99.0
-## explicit; go 1.11
+# cloud.google.com/go/compute v1.5.0
+## explicit; go 1.15
 cloud.google.com/go/compute/metadata
 # contrib.go.opencensus.io/exporter/ocagent v0.7.1-0.20200907061046-05415f1de66d
 ## explicit; go 1.13
@@ -241,7 +241,7 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
+# golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b
 ## explicit; go 1.11
 golang.org/x/oauth2
 golang.org/x/oauth2/authhandler
@@ -278,7 +278,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/time v0.0.0-20220210224613-90d013bbcef8
+# golang.org/x/time v0.0.0-20220224211638-0e9765cccd65
 ## explicit
 golang.org/x/time/rate
 # golang.org/x/tools v0.1.12
@@ -304,8 +304,8 @@ golang.org/x/tools/internal/typesinternal
 # gomodules.xyz/jsonpatch/v2 v2.2.0
 ## explicit; go 1.12
 gomodules.xyz/jsonpatch/v2
-# google.golang.org/api v0.63.0
-## explicit; go 1.11
+# google.golang.org/api v0.70.0
+## explicit; go 1.15
 google.golang.org/api/support/bundler
 # google.golang.org/appengine v1.6.7
 ## explicit; go 1.11
@@ -888,12 +888,16 @@ k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
+# knative.dev/control-protocol v0.0.0-20221026172758-74766ce15fd4
+## explicit; go 1.18
+knative.dev/control-protocol/pkg/certificates
 # knative.dev/hack v0.0.0-20221122182941-c12c1bfbd6d2
 ## explicit; go 1.18
 knative.dev/hack
 # knative.dev/networking v0.0.0-20221123133043-c037e29a5cf4
 ## explicit; go 1.18
 knative.dev/networking/config
+knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
 knative.dev/networking/pkg/client/clientset/versioned
@@ -917,6 +921,8 @@ knative.dev/networking/pkg/config
 knative.dev/networking/pkg/http
 knative.dev/networking/pkg/http/header
 knative.dev/networking/pkg/http/probe
+knative.dev/networking/pkg/http/proxy
+knative.dev/networking/pkg/http/stats
 knative.dev/networking/pkg/ingress
 knative.dev/networking/pkg/k8s
 knative.dev/networking/pkg/prober
