@@ -20,7 +20,7 @@ set -o pipefail
 
 source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 
-CONTOUR_VERSION="v1.23.0" # This is for controlling which version of contour we want to use.
+CONTOUR_VERSION="v1.23.2" # This is for controlling which version of contour we want to use.
 
 CLUSTER_ROLE_NAME=knative-contour
 
@@ -29,13 +29,6 @@ FLOATING_DEPS=(
 )
 
 go_update_deps "$@"
-
-# Remove unit tests & e2e tests.
-rm -rf $(find vendor/ -path '*/pkg/*_test.go')
-rm -rf $(find vendor/ -path '*/e2e/*_test.go')
-
-# Add permission for shell scripts
-chmod +x $(find vendor -type f -name '*.sh')
 
 function run_ytt() {
   go_run github.com/vmware-tanzu/carvel-ytt/cmd/ytt@v0.43.0 "$@"
@@ -61,3 +54,4 @@ contour_yaml | \
     --data-value clusterrole.name=$CLUSTER_ROLE_NAME \
     -f hack/overlays \
     -f - >> config/contour/external.yaml
+
