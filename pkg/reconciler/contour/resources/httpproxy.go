@@ -228,7 +228,10 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					return conditions[i].Header.Name > conditions[j].Header.Name
 				})
 			}
-
+			ai := allowInsecure
+			if rule.Visibility == v1alpha1.IngressVisibilityClusterLocal {
+				ai = true
+			}
 			routes = append(routes, v1.Route{
 				Conditions:           conditions,
 				TimeoutPolicy:        top,
@@ -236,7 +239,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				Services:             svcs,
 				EnableWebsockets:     true,
 				RequestHeadersPolicy: preSplitHeaders,
-				PermitInsecure:       allowInsecure,
+				PermitInsecure:       ai,
 			})
 		}
 
