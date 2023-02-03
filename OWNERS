@@ -1,9 +1,9 @@
 approvers:
-- technical-oversight-committee
 - knative-release-leads
-- networking-wg-leads
+- technical-oversight-committee
+- serving-writers
 - net-contour-approvers
 
 reviewers:
-- networking-wg-leads
+- serving-reviewers
 - net-contour-approvers
