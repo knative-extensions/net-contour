@@ -214,6 +214,12 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					}
 				}
 
+				if strings.Contains(path.Path, HTTPChallengePath) {
+					//make sure http01 challenge doesn't get encrypted or use http2
+					svc.Protocol = nil
+					svc.UpstreamValidation = nil
+				}
+
 				svcs = append(svcs, svc)
 			}
 
