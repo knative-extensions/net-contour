@@ -542,6 +542,37 @@ func TestReconcileInternalEncryption(t *testing.T) {
 			},
 			Name: "name--ep",
 		}},
+	}, {
+		Name: "first reconcile domainmapping ingress (endpoints probe succeeded)",
+		Key:  "ns/dm-name",
+		Objects: append([]runtime.Object{
+			ing("dm-name", "ns", withDomainMappingSpec, withContour),
+			mustMakeProbe(t, ing("dm-name", "ns", withDomainMappingSpec, withContour), makeItReady),
+		}, servicesAndEndpoints...),
+		WantCreates: mustMakeProxiesWithConfig(t, ing("dm-name", "ns", withDomainMappingSpec, withContour), internalEncryptionConfig),
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ing("dm-name", "ns", withDomainMappingSpec, withContour, func(i *v1alpha1.Ingress) {
+				// These are the things we expect to change in status.
+				i.Status.InitializeConditions()
+				i.Status.MarkNetworkConfigured()
+				i.Status.MarkLoadBalancerReady(
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: publicSvc,
+						IP:             publicSvcIP,
+					}},
+					[]v1alpha1.LoadBalancerIngressStatus{{
+						DomainInternal: privateSvc,
+						IP:             privateSvcIP,
+					}})
+			}),
+		}},
+		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: "ns",
+				Resource:  v1alpha1.SchemeGroupVersion.WithResource("ingresses"),
+			},
+			Name: "dm-name--ep",
+		}},
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
@@ -979,6 +1010,32 @@ func withTLSServiceSpec(i *v1alpha1.Ingress) {
 							ServiceName:      tlsServiceName,
 							ServiceNamespace: i.Namespace,
 							ServicePort:      intstr.FromInt(443),
+						},
+						Percent: 100,
+					}},
+				}},
+			},
+		}},
+	}
+}
+
+func withDomainMappingSpec(i *v1alpha1.Ingress) {
+	i.Spec = v1alpha1.IngressSpec{
+		HTTPOption: v1alpha1.HTTPOptionEnabled,
+		Rules: []v1alpha1.IngressRule{{
+			Hosts:      []string{"dm.example.com"},
+			Visibility: v1alpha1.IngressVisibilityExternalIP,
+			HTTP: &v1alpha1.HTTPIngressRuleValue{
+				Paths: []v1alpha1.HTTPIngressPath{{
+					RewriteHost: "name.ns.svc.cluster.local",
+					Splits: []v1alpha1.IngressBackendSplit{{
+						AppendHeaders: map[string]string{
+							"K-Original-Host": "dm.example.com",
+						},
+						IngressBackend: v1alpha1.IngressBackend{
+							ServiceName:      "doo",
+							ServiceNamespace: i.Namespace,
+							ServicePort:      intstr.FromInt(80),
 						},
 						Percent: 100,
 					}},
