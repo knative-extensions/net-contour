@@ -32,7 +32,6 @@ import (
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	netcfg "knative.dev/networking/pkg/config"
-	netheader "knative.dev/networking/pkg/http/header"
 	"knative.dev/networking/pkg/ingress"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/network"
@@ -172,15 +171,11 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					Set: make([]v1.HeaderValue, 0, len(split.AppendHeaders)),
 				}
 
-				hasOriginalHostKey := false
 				for key, value := range split.AppendHeaders {
 					postSplitHeaders.Set = append(postSplitHeaders.Set, v1.HeaderValue{
 						Name:  key,
 						Value: value,
 					})
-					if key == netheader.OriginalHostKey {
-						hasOriginalHostKey = true
-					}
 				}
 				if len(postSplitHeaders.Set) > 0 {
 					sort.Slice(postSplitHeaders.Set, func(i, j int) bool {
@@ -197,10 +192,9 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					//encryption, need to unencrypt traffic back to the envoy.
 					//See
 					//https://github.com/knative-sandbox/net-contour/issues/862
-					//Can identify domain mappings by the presence of the RewriteHost field on
-					//the Path in combination with the "K-Original-Host" key in appendHeaders on
-					//the split
-					if path.RewriteHost != "" && hasOriginalHostKey {
+					//Can identify domain mappings by the presence of the
+					//RewriteHost field on the Path
+					if path.RewriteHost != "" {
 						svc.Protocol = ptr.String("h2c")
 					} else {
 						svc.Protocol = ptr.String(proto)
