@@ -548,7 +548,7 @@ func TestReconcileInternalEncryption(t *testing.T) {
 		Objects: append([]runtime.Object{
 			ing("dm-name", "ns", withDomainMappingSpec, withContour),
 			mustMakeProbe(t, ing("dm-name", "ns", withDomainMappingSpec, withContour), makeItReady),
-		}, servicesAndEndpoints...),
+		}, tlsServiceAndEndpoint...),
 		WantCreates: mustMakeProxiesWithConfig(t, ing("dm-name", "ns", withDomainMappingSpec, withContour), internalEncryptionConfig),
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ing("dm-name", "ns", withDomainMappingSpec, withContour, func(i *v1alpha1.Ingress) {
@@ -800,7 +800,7 @@ var (
 		&corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "ns",
-				Name:      tlsServiceName,
+				Name:      tlsRevisionServiceName,
 			},
 			Spec: corev1.ServiceSpec{
 				Ports: []corev1.ServicePort{{
@@ -808,6 +808,18 @@ var (
 					Port:       443,
 					TargetPort: intstr.FromInt(8443),
 					Protocol:   corev1.ProtocolTCP,
+				}},
+			},
+		},
+		&corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "ns",
+				Name:      tlsServiceName,
+			},
+			Spec: corev1.ServiceSpec{
+				Ports: []corev1.ServicePort{{
+					Name: "http2",
+					Port: 80,
 				}},
 			},
 		},
@@ -835,7 +847,7 @@ var (
 		&corev1.Endpoints{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "ns",
-				Name:      tlsServiceName,
+				Name:      tlsRevisionServiceName,
 			},
 			Subsets: []corev1.EndpointSubset{{
 				Addresses: []corev1.EndpointAddress{{
@@ -847,14 +859,32 @@ var (
 				}},
 			}},
 		},
+		&corev1.Endpoints{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "ns",
+				Name:      tlsServiceName,
+			},
+			Subsets: []corev1.EndpointSubset{{
+				Addresses: []corev1.EndpointAddress{{
+					IP: "192.168.1.1",
+				}},
+				Ports: []corev1.EndpointPort{{
+					Name:     "http2",
+					Port:     80,
+					Protocol: corev1.ProtocolTCP,
+				}},
+			}},
+		},
 	}
 	tlsServiceAndEndpoint = append(append([]runtime.Object{}, tlsService...), tlsEndpoint...)
 
-	h2cServiceName    = "doo"
-	tlsServiceName    = "tlsService"
-	serviceToProtocol = map[string]string{
-		h2cServiceName: "h2c",
-		tlsServiceName: resources.InternalEncryptionProtocol,
+	h2cServiceName         = "doo"
+	tlsServiceName         = "tlsService"
+	tlsRevisionServiceName = tlsServiceName + "-00001"
+	serviceToProtocol      = map[string]string{
+		h2cServiceName:         "h2c",
+		tlsServiceName:         "h2c",
+		tlsRevisionServiceName: resources.InternalEncryptionProtocol,
 	}
 )
 
@@ -1007,7 +1037,7 @@ func withTLSServiceSpec(i *v1alpha1.Ingress) {
 				Paths: []v1alpha1.HTTPIngressPath{{
 					Splits: []v1alpha1.IngressBackendSplit{{
 						IngressBackend: v1alpha1.IngressBackend{
-							ServiceName:      tlsServiceName,
+							ServiceName:      tlsRevisionServiceName,
 							ServiceNamespace: i.Namespace,
 							ServicePort:      intstr.FromInt(443),
 						},
@@ -1033,7 +1063,7 @@ func withDomainMappingSpec(i *v1alpha1.Ingress) {
 							"K-Original-Host": "dm.example.com",
 						},
 						IngressBackend: v1alpha1.IngressBackend{
-							ServiceName:      "doo",
+							ServiceName:      tlsServiceName,
 							ServiceNamespace: i.Namespace,
 							ServicePort:      intstr.FromInt(80),
 						},

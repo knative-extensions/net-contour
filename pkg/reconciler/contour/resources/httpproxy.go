@@ -188,17 +188,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				svc.RequestHeadersPolicy = postSplitHeaders
 
 				if proto, ok := serviceToProtocol[split.ServiceName]; ok {
-					//In order for domain mappings to work with internal
-					//encryption, need to unencrypt traffic back to the envoy.
-					//See
-					//https://github.com/knative-sandbox/net-contour/issues/862
-					//Can identify domain mappings by the presence of the
-					//RewriteHost field on the Path
-					if path.RewriteHost != "" {
-						svc.Protocol = ptr.String("h2c")
-					} else {
-						svc.Protocol = ptr.String(proto)
-					}
+					svc.Protocol = ptr.String(proto)
 				}
 
 				if cfg.Network != nil && cfg.Network.InternalEncryption {

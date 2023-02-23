@@ -189,7 +189,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		for _, port := range svc.Spec.Ports {
 
 			if port.Name == networking.ServicePortNameH2C {
-				if cfg.Network != nil && cfg.Network.InternalEncryption {
+				if cfg.Network != nil && cfg.Network.InternalEncryption && port.Port != networking.ServiceHTTPPort {
 					serviceToProtocol[name] = resources.InternalEncryptionH2Protocol
 					logger.Debugf("marked an http2 svc %s as h2 for internal encryption", name)
 				} else {
