@@ -721,7 +721,9 @@ var (
 			},
 		},
 		Network: &netconfig.Config{
-			InternalEncryption: true,
+			// Right now, any trust configuration which is not Disabled should be equivalent to what we used to have as "internal-encryption=enabled"
+			// TODO: Expand test coverage when more trust states are implemented
+			DataplaneTrust: netconfig.TrustMinimal,
 		},
 	}
 )

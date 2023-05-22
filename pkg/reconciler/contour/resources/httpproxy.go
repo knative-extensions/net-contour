@@ -207,10 +207,10 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					}
 				}
 
-				if cfg.Network != nil && cfg.Network.InternalEncryption {
+				if cfg.Network != nil && (cfg.Network.DataplaneTrust != netcfg.TrustDisabled) {
 					svc.UpstreamValidation = &v1.UpstreamValidation{
-						CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingInternalCertName),
-						SubjectName:   certificates.FakeDnsName,
+						CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
+						SubjectName:   certificates.LegacyFakeDnsName,
 					}
 				}
 

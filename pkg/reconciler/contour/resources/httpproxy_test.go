@@ -1967,7 +1967,7 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Port:     123,
 						Protocol: &tlsProto,
 						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: fmt.Sprintf("%s/knative-serving-certs", system.Namespace()),
+							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
 							SubjectName:   "data-plane.knative.dev",
 						},
 						Weight: 100,
@@ -2000,7 +2000,7 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Port:     123,
 						Protocol: &tlsProto,
 						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: fmt.Sprintf("%s/knative-serving-certs", system.Namespace()),
+							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
 							SubjectName:   "data-plane.knative.dev",
 						},
 						Weight: 100,
@@ -2104,7 +2104,7 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Port:     123,
 						Protocol: &h2Proto,
 						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: fmt.Sprintf("%s/knative-serving-certs", system.Namespace()),
+							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
 							SubjectName:   "data-plane.knative.dev",
 						},
 						Weight: 100,
@@ -2137,7 +2137,7 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Port:     123,
 						Protocol: &h2Proto,
 						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: fmt.Sprintf("%s/knative-serving-certs", system.Namespace()),
+							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
 							SubjectName:   "data-plane.knative.dev",
 						},
 						Weight: 100,
@@ -2257,7 +2257,7 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Port:     123,
 						Protocol: &tlsProto,
 						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: fmt.Sprintf("%s/knative-serving-certs", system.Namespace()),
+							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
 							SubjectName:   "data-plane.knative.dev",
 						},
 						Weight: 100,
@@ -2314,7 +2314,7 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Port:     123,
 						Protocol: &tlsProto,
 						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: fmt.Sprintf("%s/knative-serving-certs", system.Namespace()),
+							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
 							SubjectName:   "data-plane.knative.dev",
 						},
 						Weight: 100,
@@ -2365,7 +2365,9 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 					TimeoutPolicyIdle:     "infinity",
 				},
 				Network: &netcfg.Config{
-					InternalEncryption: true,
+					// Right now, any trust configuration which is not Disabled should be equivalent to what we used to have as "internal-encryption=enabled"
+					// TODO: Expand test coverage when more trust states are implemented
+					DataplaneTrust: netcfg.TrustMinimal,
 				},
 			}
 
