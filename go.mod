@@ -2,16 +2,6 @@ module knative.dev/net-contour
 
 go 1.18
 
-replace k8s.io/client-go => k8s.io/client-go v0.25.4
-
-replace k8s.io/api => k8s.io/api v0.25.4
-
-replace k8s.io/apimachinery => k8s.io/apimachinery v0.25.4
-
-replace k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.25.4
-
-replace k8s.io/code-generator => k8s.io/code-generator v0.25.4
-
 require (
 	github.com/google/go-cmp v0.5.9
 	github.com/projectcontour/contour v1.24.2
@@ -27,8 +17,6 @@ require (
 )
 
 require (
-	cloud.google.com/go/compute v1.13.0 // indirect
-	cloud.google.com/go/compute/metadata v0.2.1 // indirect
 	contrib.go.opencensus.io/exporter/ocagent v0.7.1-0.20200907061046-05415f1de66d // indirect
 	contrib.go.opencensus.io/exporter/prometheus v0.4.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

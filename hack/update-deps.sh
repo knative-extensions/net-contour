@@ -20,7 +20,7 @@ set -o pipefail
 
 source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 
-CONTOUR_VERSION="v1.24.2" # This is for controlling which version of contour we want to use.
+CONTOUR_VERSION="v1.25.0" # This is for controlling which version of contour we want to use.
 
 CLUSTER_ROLE_NAME=knative-contour
 
@@ -31,7 +31,7 @@ FLOATING_DEPS=(
 go_update_deps "$@"
 
 function run_ytt() {
-  go_run github.com/vmware-tanzu/carvel-ytt/cmd/ytt@v0.43.0 "$@"
+  go_run github.com/vmware-tanzu/carvel-ytt/cmd/ytt@v0.45.1 "$@"
 }
 
 function contour_yaml() {
