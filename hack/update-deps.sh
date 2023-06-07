@@ -21,12 +21,9 @@ set -o pipefail
 source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 
 CONTOUR_VERSION="v1.25.0" # This is for controlling which version of contour we want to use.
-
 CLUSTER_ROLE_NAME=knative-contour
 
-FLOATING_DEPS=(
-  "github.com/projectcontour/contour@${CONTOUR_VERSION}"
-)
+go get "github.com/projectcontour/contour@${CONTOUR_VERSION}"
 
 go_update_deps "$@"
 
