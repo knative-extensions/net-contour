@@ -40,7 +40,6 @@ import (
 	"knative.dev/net-contour/pkg/reconciler/contour/resources/names"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
-	netcfg "knative.dev/networking/pkg/config"
 	"knative.dev/networking/pkg/status"
 	"knative.dev/pkg/kmp"
 	"knative.dev/pkg/logging"
@@ -190,14 +189,14 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		for _, port := range svc.Spec.Ports {
 
 			if port.Name == networking.ServicePortNameH2C {
-				if cfg.Network != nil && (cfg.Network.DataplaneTrust != netcfg.TrustDisabled) {
+				if cfg.Network != nil && cfg.Network.SystemInternalTLSEnabled() {
 					serviceToProtocol[name] = resources.InternalEncryptionH2Protocol
 					logger.Debugf("marked an http2 svc %s as h2 for internal encryption", name)
 				} else {
 					serviceToProtocol[name] = "h2c"
 				}
 				break
-			} else if cfg.Network != nil && (cfg.Network.DataplaneTrust != netcfg.TrustDisabled) {
+			} else if cfg.Network != nil && cfg.Network.SystemInternalTLSEnabled() {
 				serviceToProtocol[name] = resources.InternalEncryptionProtocol
 				logger.Debugf("marked a svc %s as tls for internal encryption", name)
 				break
