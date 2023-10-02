@@ -705,8 +705,8 @@ k8s.io/utils v0.0.0-20230209194617-a36077c30491 h1:r0BAOLElQnnFhE/ApUsg3iHdVYYPB
 k8s.io/utils v0.0.0-20230209194617-a36077c30491/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 knative.dev/hack v0.0.0-20230926181829-f2f9b6f91263 h1:e6r9J1YopzSh6tDCpyKhVBfRUlZ2r0KRo9wupRjdRF4=
 knative.dev/hack v0.0.0-20230926181829-f2f9b6f91263/go.mod h1:yk2OjGDsbEnQjfxdm0/HJKS2WqTLEFg/N6nUs6Rqx3Q=
-knative.dev/networking v0.0.0-20230926123909-c382f81bd011 h1:FUbAMo0hVK49wJcUTEJfyMQhPCOwoKBEpphCeHrpAiE=
-knative.dev/networking v0.0.0-20230926123909-c382f81bd011/go.mod h1:q3caOSuP1eAzp6Aef8iPcbjnoufxxopv3yeOPOB1yrc=
+knative.dev/networking v0.0.0-20231002132535-463dc388389e h1:IifOH0ZKyU+QtY97+GUoopC+vyFMlee6cOw+wxK7cxc=
+knative.dev/networking v0.0.0-20231002132535-463dc388389e/go.mod h1:U9yqeTf2NtTY5aexYLbE4LAoIt/FAsnoERbnejJKlgI=
 knative.dev/pkg v0.0.0-20230926133247-0f52db700d63 h1:L0O5LRuKFkdwuR+MrDLGjrXgaQv9+7xse+kC7EboshI=
 knative.dev/pkg v0.0.0-20230926133247-0f52db700d63/go.mod h1:NzXHwtuwTWXyMD1KbL2ONwLk8cLROLYTtujCTTG7xQs=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
