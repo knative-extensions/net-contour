@@ -3,11 +3,11 @@ module knative.dev/net-contour
 go 1.18
 
 replace (
-	k8s.io/api => k8s.io/api v0.26.5
-	k8s.io/apimachinery => k8s.io/apimachinery v0.26.5
-	k8s.io/client-go => k8s.io/client-go v0.26.5
-	k8s.io/code-generator => k8s.io/code-generator v0.26.5
-	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280
+	k8s.io/api => k8s.io/api v0.27.6
+	k8s.io/apimachinery => k8s.io/apimachinery v0.27.6
+	k8s.io/client-go => k8s.io/client-go v0.27.6
+	k8s.io/code-generator => k8s.io/code-generator v0.27.6
+	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f
 )
 
 require (
