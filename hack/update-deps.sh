@@ -20,7 +20,7 @@ set -o pipefail
 
 source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 
-CONTOUR_VERSION="v1.24.2" # This is for controlling which version of contour we want to use.
+CONTOUR_VERSION="v1.24.6" # This is for controlling which version of contour we want to use.
 
 CLUSTER_ROLE_NAME=knative-contour
 
