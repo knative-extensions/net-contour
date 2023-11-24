@@ -103,8 +103,9 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 	ing = ing.DeepCopy()
 	ingress.InsertProbe(ing)
 
-	hostToTLS := make(map[string]v1alpha1.IngressTLS, len(ing.Spec.TLS))
-	for _, tls := range ing.Spec.TLS {
+	externalIngressTLS := ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP)
+	hostToTLS := make(map[string]v1alpha1.IngressTLS, len(externalIngressTLS))
+	for _, tls := range externalIngressTLS {
 		for _, host := range tls.Hosts {
 			hostToTLS[host] = tls
 		}
