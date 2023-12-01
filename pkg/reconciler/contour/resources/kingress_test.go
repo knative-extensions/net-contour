@@ -273,7 +273,8 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			Spec: v1alpha1.IngressSpec{
 				HTTPOption: v1alpha1.HTTPOptionRedirected,
 				Rules: []v1alpha1.IngressRule{{
-					Hosts: []string{"example.com"},
+					Hosts:      []string{"example.com"},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
 							Splits: []v1alpha1.IngressBackendSplit{{
@@ -310,7 +311,8 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			Spec: v1alpha1.IngressSpec{
 				HTTPOption: v1alpha1.HTTPOptionRedirected,
 				Rules: []v1alpha1.IngressRule{{
-					Hosts: []string{"goo.gen-0.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"goo.gen-0.bar.foo.net-contour.invalid"},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
 							Splits: []v1alpha1.IngressBackendSplit{{

@@ -135,12 +135,13 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 		}
 	}
 
-	hasCert := len(ing.Spec.TLS) > 0 || config.FromContext(ctx).Contour.DefaultTLSSecret != nil
+	externalIngressTLS := ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP)
+	hasCert := len(externalIngressTLS) > 0 || config.FromContext(ctx).Contour.DefaultTLSSecret != nil
 
 	if ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected && hasCert {
 		// Set the probe to operate over HTTPS IFF we have certificates AND are TLS-required
 		childIng.Spec.HTTPOption = v1alpha1.HTTPOptionRedirected
-		childIng.Spec.TLS = append(childIng.Spec.TLS, ing.Spec.TLS...)
+		childIng.Spec.TLS = append(childIng.Spec.TLS, externalIngressTLS...)
 		for i := range childIng.Spec.TLS {
 			childIng.Spec.TLS[i].Hosts = probeHosts
 		}
