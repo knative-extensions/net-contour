@@ -90,7 +90,7 @@ func (l *lister) ListProbeTargets(ctx context.Context, ing *v1alpha1.Ingress) ([
 			}
 
 			pt := status.ProbeTarget{
-				PodIPs:  sets.NewString(),
+				PodIPs:  sets.New[string](),
 				Port:    strconv.Itoa(int(port)),
 				PodPort: strconv.Itoa(int(podPort)),
 				URLs:    urls,

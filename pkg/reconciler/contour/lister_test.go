@@ -50,7 +50,7 @@ func TestListProbeTargets(t *testing.T) {
 		},
 		ing: ing("name", "ns", withBasicSpec, withContour),
 		want: []status.ProbeTarget{{
-			PodIPs:  sets.NewString("1.2.3.4"),
+			PodIPs:  sets.New("1.2.3.4"),
 			Port:    "80",
 			PodPort: "1234",
 			URLs: []*url.URL{{
@@ -68,7 +68,7 @@ func TestListProbeTargets(t *testing.T) {
 		},
 		ing: ing("name", "ns", withBasicSpec, withContour, withHTTPRedirected),
 		want: []status.ProbeTarget{{
-			PodIPs:  sets.NewString("1.2.3.4"),
+			PodIPs:  sets.New("1.2.3.4"),
 			Port:    "443",
 			PodPort: "1234",
 			URLs: []*url.URL{{
@@ -86,7 +86,7 @@ func TestListProbeTargets(t *testing.T) {
 		},
 		ing: ing("name", "ns", withBasicSpec, withContour),
 		want: []status.ProbeTarget{{
-			PodIPs:  sets.NewString("2.3.4.5"),
+			PodIPs:  sets.New("2.3.4.5"),
 			Port:    "80",
 			PodPort: "1234",
 			URLs: []*url.URL{{
@@ -94,7 +94,7 @@ func TestListProbeTargets(t *testing.T) {
 				Host:   "example.com",
 			}},
 		}, {
-			PodIPs:  sets.NewString("3.4.5.6", "4.3.2.1"),
+			PodIPs:  sets.New("3.4.5.6", "4.3.2.1"),
 			Port:    "80",
 			PodPort: "4321",
 			URLs: []*url.URL{{

@@ -707,17 +707,17 @@ var (
 	privateSvcIP  = "5.6.7.8"
 	defaultConfig = &config.Config{
 		Contour: &config.Contour{
-			VisibilityKeys: map[v1alpha1.IngressVisibility]sets.String{
-				v1alpha1.IngressVisibilityClusterLocal: sets.NewString(privateKey),
-				v1alpha1.IngressVisibilityExternalIP:   sets.NewString(publicKey),
+			VisibilityKeys: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityClusterLocal: sets.New(privateKey),
+				v1alpha1.IngressVisibilityExternalIP:   sets.New(publicKey),
 			},
 		},
 	}
 	internalEncryptionConfig = &config.Config{
 		Contour: &config.Contour{
-			VisibilityKeys: map[v1alpha1.IngressVisibility]sets.String{
-				v1alpha1.IngressVisibilityClusterLocal: sets.NewString(privateKey),
-				v1alpha1.IngressVisibilityExternalIP:   sets.NewString(publicKey),
+			VisibilityKeys: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityClusterLocal: sets.New(privateKey),
+				v1alpha1.IngressVisibilityExternalIP:   sets.New(publicKey),
 			},
 		},
 		Network: &netconfig.Config{
