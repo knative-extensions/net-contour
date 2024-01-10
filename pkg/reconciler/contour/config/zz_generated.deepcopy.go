@@ -59,14 +59,14 @@ func (in *Contour) DeepCopyInto(out *Contour) {
 	*out = *in
 	if in.VisibilityKeys != nil {
 		in, out := &in.VisibilityKeys, &out.VisibilityKeys
-		*out = make(map[v1alpha1.IngressVisibility]sets.String, len(*in))
+		*out = make(map[v1alpha1.IngressVisibility]sets.Set[string], len(*in))
 		for key, val := range *in {
 			var outVal map[string]sets.Empty
 			if val == nil {
 				(*out)[key] = nil
 			} else {
 				in, out := &val, &outVal
-				*out = make(sets.String, len(*in))
+				*out = make(sets.Set[string], len(*in))
 				for key, val := range *in {
 					(*out)[key] = val
 				}

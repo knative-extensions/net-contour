@@ -314,7 +314,7 @@ func (r *Reconciler) lbStatus(ctx context.Context, vis v1alpha1.IngressVisibilit
 	logger := logging.FromContext(ctx)
 
 	if keys, ok := config.FromContext(ctx).Contour.VisibilityKeys[vis]; ok {
-		for _, key := range keys.List() {
+		for _, key := range sets.List(keys) {
 			namespace, name, _ := cache.SplitMetaNamespaceKey(key)
 			clusterIP := ""
 

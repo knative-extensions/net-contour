@@ -44,7 +44,7 @@ const (
 // Contour contains contour related configuration defined in the
 // contour config map.
 type Contour struct {
-	VisibilityKeys        map[v1alpha1.IngressVisibility]sets.String
+	VisibilityKeys        map[v1alpha1.IngressVisibility]sets.Set[string]
 	VisibilityClasses     map[v1alpha1.IngressVisibility]string
 	DefaultTLSSecret      *types.NamespacedName
 	TimeoutPolicyResponse string
@@ -75,9 +75,9 @@ func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 		// These are the defaults.
 		return &Contour{
 			DefaultTLSSecret: tlsSecret,
-			VisibilityKeys: map[v1alpha1.IngressVisibility]sets.String{
-				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("contour-internal/envoy"),
-				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("contour-external/envoy"),
+			VisibilityKeys: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityClusterLocal: sets.New("contour-internal/envoy"),
+				v1alpha1.IngressVisibilityExternalIP:   sets.New("contour-external/envoy"),
 			},
 			VisibilityClasses: map[v1alpha1.IngressVisibility]string{
 				v1alpha1.IngressVisibilityClusterLocal: "contour-internal",
@@ -103,7 +103,7 @@ func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 
 	contour := &Contour{
 		DefaultTLSSecret:      tlsSecret,
-		VisibilityKeys:        make(map[v1alpha1.IngressVisibility]sets.String, 2),
+		VisibilityKeys:        make(map[v1alpha1.IngressVisibility]sets.Set[string], 2),
 		VisibilityClasses:     make(map[v1alpha1.IngressVisibility]string, 2),
 		TimeoutPolicyResponse: timeoutPolicyResponse,
 		TimeoutPolicyIdle:     timeoutPolicyIdle,
@@ -120,7 +120,7 @@ func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 		if _, _, err := cache.SplitMetaNamespaceKey(value.Service); err != nil {
 			return nil, err
 		}
-		contour.VisibilityKeys[key] = sets.NewString(value.Service)
+		contour.VisibilityKeys[key] = sets.New(value.Service)
 		contour.VisibilityClasses[key] = value.Class
 	}
 	return contour, nil

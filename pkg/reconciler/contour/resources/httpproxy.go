@@ -287,7 +287,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 		}
 
 		for _, originalHost := range rule.Hosts {
-			for _, host := range ingress.ExpandedHosts(sets.NewString(originalHost)).List() {
+			for _, host := range sets.List(ingress.ExpandedHosts(sets.New(originalHost))) {
 				hostProxy := base.DeepCopy()
 
 				class := class
