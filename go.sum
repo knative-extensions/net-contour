@@ -38,8 +38,6 @@ dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
-github.com/ReToCode/networking v0.0.0-20240109073627-bc010699726a h1:tNqizB6R53cc8/k0GmYQNh3qAvG7JGZXuUpD0Qc8cOQ=
-github.com/ReToCode/networking v0.0.0-20240109073627-bc010699726a/go.mod h1:KL3tdfTQ58qOdE66WagSuFtppfMCNp+ZlDL3Oc6Bxno=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
@@ -698,8 +696,8 @@ honnef.co/go/tools v0.0.1-2020.1.3/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9
 honnef.co/go/tools v0.0.1-2020.1.4/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9vFzvIQ3k=
 k8s.io/api v0.27.6 h1:PBWu/lywJe2qQcshMjubzcBg7+XDZOo7O8JJAWuYtUo=
 k8s.io/api v0.27.6/go.mod h1:AQYj0UsFCp3qJE7bOVnUuy4orCsXVkvHefnbYQiNWgk=
-k8s.io/apiextensions-apiserver v0.28.2 h1:J6/QRWIKV2/HwBhHRVITMLYoypCoPY1ftigDM0Kn+QU=
-k8s.io/apiextensions-apiserver v0.28.2/go.mod h1:5tnkxLGa9nefefYzWuAlWZ7RZYuN/765Au8cWLA6SRg=
+k8s.io/apiextensions-apiserver v0.28.5 h1:YKW9O9T/0Gkyl6LTFDLIhCbouSRh+pHt2vMLB38Snfc=
+k8s.io/apiextensions-apiserver v0.28.5/go.mod h1:7p7TQ0X9zCJLNFlOTi5dncAi2dkPsdsrcvu5ILa7PEk=
 k8s.io/apimachinery v0.27.6 h1:mGU8jmBq5o8mWBov+mLjdTBcU+etTE19waies4AQ6NE=
 k8s.io/apimachinery v0.27.6/go.mod h1:XNfZ6xklnMCOGGFNqXG7bUrQCoR04dh/E7FprV6pb+E=
 k8s.io/client-go v0.27.6 h1:vzI8804gpUtpMCNaFjIFyJrifH7u//LJCJPy8fQuYQg=
@@ -717,8 +715,10 @@ k8s.io/utils v0.0.0-20230505201702-9f6742963106 h1:EObNQ3TW2D+WptiYXlApGNLVy0zm/
 k8s.io/utils v0.0.0-20230505201702-9f6742963106/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 knative.dev/hack v0.0.0-20240108153050-3ea694d6dad7 h1:mICurlRke2mlKP3LmyWYQYl6KZe80rYP5+ag9w2HQLA=
 knative.dev/hack v0.0.0-20240108153050-3ea694d6dad7/go.mod h1:yk2OjGDsbEnQjfxdm0/HJKS2WqTLEFg/N6nUs6Rqx3Q=
-knative.dev/pkg v0.0.0-20240108152118-de3e9cc204c9 h1:4nsTvrgApGtLTt6Gpo7ulJS03pBI+wSJ8+EOwVamDx0=
-knative.dev/pkg v0.0.0-20240108152118-de3e9cc204c9/go.mod h1:YzKN/kzcJPhL+Z4fwuzbaiEnRLIbYvOiZUuCWFJ7PRA=
+knative.dev/networking v0.0.0-20240109202710-07c412e16861 h1:rmEXnF2baoXtlsxcE3hxuqUIoRKzyiY1SeZCGFOv8y8=
+knative.dev/networking v0.0.0-20240109202710-07c412e16861/go.mod h1:8Cr9FIZbsa9KhhzglMchAd4dSKvp0G+fs0wjvzK1LaE=
+knative.dev/pkg v0.0.0-20240109155808-21d8c37af23f h1:F7zv+n+OY+FD8kX6/4CzAFbT+n4QKeJ025jHeOwFBvM=
+knative.dev/pkg v0.0.0-20240109155808-21d8c37af23f/go.mod h1:8/u65OwQ+l56FFE1j8BB/rMiy6B9dom4fTrvLFZ/Vqg=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=

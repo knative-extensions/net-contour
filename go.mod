@@ -14,12 +14,12 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/projectcontour/contour v1.26.1
 	go.uber.org/zap v1.26.0
-	k8s.io/api v0.28.2
-	k8s.io/apimachinery v0.28.2
-	k8s.io/client-go v0.28.2
+	k8s.io/api v0.28.5
+	k8s.io/apimachinery v0.28.5
+	k8s.io/client-go v0.28.5
 	knative.dev/hack v0.0.0-20240108153050-3ea694d6dad7
-	knative.dev/networking v0.0.0-20240103144957-a34a5c563a3a
-	knative.dev/pkg v0.0.0-20240108152118-de3e9cc204c9
+	knative.dev/networking v0.0.0-20240109202710-07c412e16861
+	knative.dev/pkg v0.0.0-20240109155808-21d8c37af23f
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -92,8 +92,8 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.28.2 // indirect
-	k8s.io/code-generator v0.28.2 // indirect
+	k8s.io/apiextensions-apiserver v0.28.5 // indirect
+	k8s.io/code-generator v0.28.5 // indirect
 	k8s.io/gengo v0.0.0-20221011193443-fad74ee6edd9 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230717233707-2695361300d9 // indirect
@@ -101,5 +101,3 @@ require (
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 )
-
-replace knative.dev/networking => github.com/ReToCode/networking v0.0.0-20240109073627-bc010699726a
