@@ -17,6 +17,7 @@ jobs:
         k8s-version:
         - v1.27.x
         - v1.28.x
+        - v1.29.x
 
     env:
       KO_DOCKER_REPO: registry.local:5000/knative # registry setup by setup-kind
@@ -26,11 +27,11 @@ jobs:
 
     steps:
     - name: Set up Go 1.21.x
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v5
       with:
         go-version: 1.21.x
 
-    - uses: imjasonh/setup-ko@v0.6
+    - uses: ko-build/setup-ko@v0.6
 
     - name: Setup KinD
       uses: chainguard-dev/actions/setup-kind@main
@@ -39,7 +40,7 @@ jobs:
         kind-worker-count: 3
         cluster-suffix: ${{ env.CLUSTER_DOMAIN }}
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: test
       run: |
