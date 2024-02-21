@@ -42,6 +42,27 @@ type HTTPProxySpec struct {
 	IngressClassName string `json:"ingressClassName,omitempty"`
 }
 
+// Namespace refers to a Kubernetes namespace. It must be a RFC 1123 label.
+//
+// This validation is based off of the corresponding Kubernetes validation:
+// https://github.com/kubernetes/apimachinery/blob/02cfb53916346d085a6c6c7c66f882e3c6b0eca6/pkg/util/validation/validation.go#L187
+//
+// This is used for Namespace name validation here:
+// https://github.com/kubernetes/apimachinery/blob/02cfb53916346d085a6c6c7c66f882e3c6b0eca6/pkg/api/validation/generic.go#L63
+//
+// Valid values include:
+//
+// * "example"
+//
+// Invalid values include:
+//
+// * "example.com" - "." is an invalid character
+//
+// +kubebuilder:validation:Pattern=`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`
+// +kubebuilder:validation:MinLength=1
+// +kubebuilder:validation:MaxLength=63
+type Namespace string
+
 // Include describes a set of policies that can be applied to an HTTPProxy in a namespace.
 type Include struct {
 	// Name of the HTTPProxy
@@ -1306,14 +1327,27 @@ type HeaderValue struct {
 }
 
 // UpstreamValidation defines how to verify the backend service's certificate
+// +kubebuilder:validation:XValidation:message="subjectNames[0] must equal subjectName if set",rule="has(self.subjectNames) ? self.subjectNames[0] == self.subjectName : true"
 type UpstreamValidation struct {
 	// Name or namespaced name of the Kubernetes secret used to validate the certificate presented by the backend.
 	// The secret must contain key named ca.crt.
 	// The name can be optionally prefixed with namespace "namespace/name".
 	// When cross-namespace reference is used, TLSCertificateDelegation resource must exist in the namespace to grant access to the secret.
+	// Max length should be the actual max possible length of a namespaced name (63 + 253 + 1 = 317)
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=317
 	CACertificate string `json:"caSecret"`
 	// Key which is expected to be present in the 'subjectAltName' of the presented certificate.
+	// Deprecated: migrate to using the plural field subjectNames.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=250
 	SubjectName string `json:"subjectName"`
+	// List of keys, of which at least one is expected to be present in the 'subjectAltName of the
+	// presented certificate.
+	// +optional
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=8
+	SubjectNames []string `json:"subjectNames"`
 }
 
 // DownstreamValidation defines how to verify the client certificate.
@@ -1480,3 +1514,6 @@ type SlowStartPolicy struct {
 	// +kubebuilder:validation:Maximum=100
 	MinimumWeightPercent uint32 `json:"minWeightPercent"`
 }
+
+// +kubebuilder:validation:Enum=grpcroutes;tlsroutes;extensionservices;backendtlspolicies
+type Feature string
