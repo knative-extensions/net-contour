@@ -54,3 +54,19 @@ data:
       ClusterLocal:
         class: contour-internal
         service: contour-internal/envoy
+    # corsPolicy contains the configuration to set CORS policy for HTTPProxies.
+    corsPolicy: |
+      allowCredentials: true
+      allowOrigin:
+        - example.com
+      allowMethods:
+        - GET
+        - POST
+        - OPTIONS
+      allowHeaders:
+        - authorization
+        - cache-control
+      exposeHeaders:
+        - Content-Length
+        - Content-Range
+      maxAge: "10m"

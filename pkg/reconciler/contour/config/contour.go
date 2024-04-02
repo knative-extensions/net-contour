@@ -18,6 +18,7 @@ package config
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -39,6 +40,13 @@ const (
 	defaultTLSSecretConfigKey = "default-tls-secret"
 	timeoutPolicyIdleKey      = "timeout-policy-idle"
 	timeoutPolicyResponseKey  = "timeout-policy-response"
+	corsPolicy                = "corsPolicy"
+	allowCredentials          = "allowCredentials"
+	allowOrigin               = "allowOrigin"
+	allowMethods              = "allowMethods"
+	allowHeaders              = "allowHeaders"
+	exposeHeaders             = "exposeHeaders"
+	maxAge                    = "maxAge"
 )
 
 // Contour contains contour related configuration defined in the
@@ -49,6 +57,17 @@ type Contour struct {
 	DefaultTLSSecret      *types.NamespacedName
 	TimeoutPolicyResponse string
 	TimeoutPolicyIdle     string
+	CORSPolicy            *CORSPolicy
+}
+
+// TODO (izabelacg) Create type to facilitate field validation? e.g. CORSHeaderValue
+type CORSPolicy struct {
+	AllowCredentials bool
+	AllowOrigin      []string
+	AllowMethods     []string
+	AllowHeaders     []string
+	ExposeHeaders    []string
+	MaxAge           string
 }
 
 type visibilityValue struct {
@@ -56,16 +75,18 @@ type visibilityValue struct {
 	Service string `json:"service"`
 }
 
-// NewContourFromConfigMap creates an Contour config from the supplied ConfigMap
+// NewContourFromConfigMap creates a Contour config from the supplied ConfigMap
 func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 	var tlsSecret *types.NamespacedName
 	var timeoutPolicyResponse = "infinity"
 	var timeoutPolicyIdle = "infinity"
+	var contourCORSPolicy *CORSPolicy
 
 	if err := configmap.Parse(configMap.Data,
 		configmap.AsOptionalNamespacedName(defaultTLSSecretConfigKey, &tlsSecret),
 		asContourDuration(timeoutPolicyResponseKey, &timeoutPolicyResponse),
 		asContourDuration(timeoutPolicyIdleKey, &timeoutPolicyIdle),
+		AsOptionalCORSPolicy(corsPolicy, &contourCORSPolicy),
 	); err != nil {
 		return nil, err
 	}
@@ -85,6 +106,7 @@ func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 			},
 			TimeoutPolicyResponse: timeoutPolicyResponse,
 			TimeoutPolicyIdle:     timeoutPolicyIdle,
+			CORSPolicy:            contourCORSPolicy,
 		}, nil
 	}
 	entry := make(map[v1alpha1.IngressVisibility]visibilityValue)
@@ -124,6 +146,50 @@ func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 		contour.VisibilityClasses[key] = value.Class
 	}
 	return contour, nil
+}
+
+// AsOptionalCORSPolicy parses the value at key as a CORSPolicy into the target, if it exists
+// The nested fields are all required and expected to be set and valid
+func AsOptionalCORSPolicy(key string, target **CORSPolicy) configmap.ParseFunc {
+	return func(data map[string]string) error {
+		if _, ok := data[key]; !ok {
+			return nil
+		}
+
+		*target = &CORSPolicy{}
+		return AsCORSPolicy(key, *target)(data)
+	}
+}
+
+// AsCORSPolicy parses the value at key as a CORSPolicy into the target, if it exists
+// The nested fields are all required and expected to be set and valid
+func AsCORSPolicy(key string, target *CORSPolicy) configmap.ParseFunc {
+	return func(data map[string]string) error {
+		_, ok := data[key]
+		if !ok {
+			return nil
+		}
+
+		err := configmap.AsBool(allowCredentials, &target.AllowCredentials)
+		if err != nil {
+			// FIXME (izabelacg) how to bubble this up?
+			return fmt.Errorf("failed to parse %q", key)
+		}
+		return nil
+	}
+}
+
+func asCORSHeadersValue(key string, target *string) configmap.ParseFunc {
+	return func(data map[string]string) error {
+		if raw, ok := data[key]; ok {
+			_, err := regexp.MatchString("^[a-zA-Z0-9!#$%&'*+.^_`|~-]+$", raw)
+			if err != nil {
+				return fmt.Errorf("failed to parse %q: %w", key, err)
+			}
+			*target = raw
+		}
+		return nil
+	}
 }
 
 func asContourDuration(key string, target *string) configmap.ParseFunc {

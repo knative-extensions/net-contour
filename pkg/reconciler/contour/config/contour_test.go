@@ -40,6 +40,29 @@ func TestContour(t *testing.T) {
 	}
 }
 
+func TestCORSPolicy(t *testing.T) {
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: system.Namespace(),
+			Name:      ContourConfigName,
+		},
+		Data: map[string]string{
+			"corsPolicy": "moo",
+		},
+	}
+
+	cfg, err := NewContourFromConfigMap(cm)
+	if err != nil {
+		t.Error("NewContourFromConfigMap(corsPolicy:moo) =", err)
+		t.FailNow()
+	}
+
+	want := &CORSPolicy{}
+	if got, want := cfg.CORSPolicy, want; got != want {
+		t.Errorf("CORSPolicy got %+v want %+v", got, want)
+	}
+}
+
 func TestDefaultTLSSecret(t *testing.T) {
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
