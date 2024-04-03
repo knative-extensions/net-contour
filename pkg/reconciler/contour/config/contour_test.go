@@ -17,6 +17,7 @@ limitations under the License.
 package config
 
 import (
+	"github.com/google/go-cmp/cmp"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -47,19 +48,140 @@ func TestCORSPolicy(t *testing.T) {
 			Name:      ContourConfigName,
 		},
 		Data: map[string]string{
-			"corsPolicy": "moo",
+			corsPolicy: `
+allowCredentials: true
+allowOrigin:
+  - "*"
+allowMethods:
+  - GET
+  - POST
+  - OPTIONS
+allowHeaders:
+  - authorization
+  - cache-control
+exposeHeaders:
+  - Content-Length
+  - Content-Range
+maxAge: "10m"
+`,
 		},
 	}
 
 	cfg, err := NewContourFromConfigMap(cm)
 	if err != nil {
-		t.Error("NewContourFromConfigMap(corsPolicy:moo) =", err)
+		t.Error("NewContourFromConfigMap(corsPolicy) =", err)
 		t.FailNow()
 	}
 
-	want := &CORSPolicy{}
-	if got, want := cfg.CORSPolicy, want; got != want {
-		t.Errorf("CORSPolicy got %+v want %+v", got, want)
+	want := &CORSPolicy{
+		AllowCredentials: true,
+		AllowOrigin:      []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowHeaders:     []string{"authorization", "cache-control"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Range"},
+		MaxAge:           "10m",
+	}
+	got := cfg.CORSPolicy
+	if !cmp.Equal(got, want) {
+		t.Errorf("Got = %v, want: %v, diff:\n%s", got, want, cmp.Diff(got, want))
+	}
+}
+func TestCORSPolicyConfigurationErrors(t *testing.T) {
+	tests := []struct {
+		name    string
+		wantErr bool
+		config  *corev1.ConfigMap
+	}{{
+		name:    "failure parsing yaml",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: "moo",
+			},
+		},
+	}, {
+		name:    "wrong type",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: `
+allowCredentials: 3
+allowOrigin: true
+allowMethods: "moo"
+allowHeaders:
+  - authorization
+  - cache-control
+exposeHeaders:
+  - Content-Length
+  - Content-Range
+maxAge: "10m"
+`,
+			},
+		},
+	}, {
+		name:    "incomplete configuration",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: `
+allowHeaders:
+  - authorization
+  - cache-control
+exposeHeaders:
+  - Content-Length
+  - Content-Range
+maxAge: "10m"
+`,
+			},
+		},
+	}, {
+		name:    "empty value",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: `
+allowCredentials: false
+allowOrigin: []
+allowMethods:
+  - GET
+  - POST
+  - OPTIONS
+allowHeaders:
+  - authorization
+  - cache-control
+exposeHeaders:
+  - Content-Length
+  - Content-Range
+maxAge: "10m"
+`,
+			},
+		},
+	}}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := NewContourFromConfigMap(tt.config)
+			t.Log(err)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("Test: %q; NewContourFromConfigMap() error = %v, WantErr %v", tt.name, err, tt.wantErr)
+			}
+		})
 	}
 }
 
