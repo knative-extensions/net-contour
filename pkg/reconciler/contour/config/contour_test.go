@@ -17,8 +17,9 @@ limitations under the License.
 package config
 
 import (
-	"github.com/google/go-cmp/cmp"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -169,6 +170,60 @@ exposeHeaders:
   - Content-Length
   - Content-Range
 maxAge: "10m"
+`,
+			},
+		},
+	}, {
+		name:    "wrong option",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: `
+allowCredentials: true
+allowOrigin:
+  - "*"
+allowMethods:
+  - ((GET))
+  - POST
+  - OPTIONS
+allowHeaders:
+  - authorization
+  - cache-control
+exposeHeaders:
+  - Content-Length
+  - Content-Range
+maxAge: "10m"
+`,
+			},
+		},
+	}, {
+		name:    "invalid duration",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: `
+allowCredentials: true
+allowOrigin:
+  - "*"
+allowMethods:
+  - GET
+  - POST
+  - OPTIONS
+allowHeaders:
+  - authorization
+  - cache-control
+exposeHeaders:
+  - Content-Length
+  - Content-Range
+maxAge: "10"
 `,
 			},
 		},

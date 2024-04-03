@@ -18,6 +18,7 @@ package config
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -53,14 +54,7 @@ type Contour struct {
 	CORSPolicy            *CORSPolicy
 }
 
-// TODO (izabelacg) Create type to facilitate field validation? e.g. CORSHeaderValue
 type CORSPolicy struct {
-	//AllowCredentials bool
-	//AllowOrigin      sets.Set[string]
-	//AllowMethods     sets.Set[string]
-	//AllowHeaders     sets.Set[string]
-	//ExposeHeaders    sets.Set[string]
-	//MaxAge           string
 	AllowCredentials bool     `json:"allowCredentials"`
 	AllowOrigin      []string `json:"allowOrigin"`
 	AllowMethods     []string `json:"allowMethods"`
@@ -95,13 +89,28 @@ func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 			return nil, err
 		}
 
-		fields := [][]string{contourCORSPolicy.AllowOrigin, contourCORSPolicy.AllowHeaders}
+		fields := [][]string{
+			contourCORSPolicy.AllowOrigin,
+			contourCORSPolicy.AllowMethods,
+			contourCORSPolicy.AllowHeaders,
+			contourCORSPolicy.ExposeHeaders,
+		}
 		for _, field := range fields {
-			if len(field) <= 0 {
-				// TODO (izabelacg) improve error message
-				// TODO (izabelacg) validate each field? regexp.MatchString("^[a-zA-Z0-9!#$%&'*+.^_`|~-]+$", raw)
-				return nil, fmt.Errorf("all fields required")
+			if len(field) > 0 {
+				var validOption = regexp.MustCompile("^[a-zA-Z0-9!#$%&'*+.^_`|~-]+$")
+				for _, option := range field {
+					if !validOption.MatchString(option) {
+						return nil, fmt.Errorf("option %s is not validly formated", option)
+					}
+				}
+			} else {
+				return nil, fmt.Errorf("fields AllowOrigin, AllowMethods, AllowHeaders, and ExposeHeaders require at least one value")
 			}
+		}
+
+		_, err := time.ParseDuration(contourCORSPolicy.MaxAge)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse MaxAge: %w", err)
 		}
 	}
 
