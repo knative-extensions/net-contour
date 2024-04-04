@@ -2587,12 +2587,12 @@ func TestMakeProxiesCORSPolicy(t *testing.T) {
 					},
 					TimeoutPolicyResponse: "infinity",
 					TimeoutPolicyIdle:     "infinity",
-					CORSPolicy: &config.CORSPolicy{
+					CORSPolicy: &v1.CORSPolicy{
 						AllowCredentials: true,
 						AllowOrigin:      []string{"*"},
-						AllowMethods:     []string{"GET", "POST", "OPTIONS"},
-						AllowHeaders:     []string{"authorization", "cache-control"},
-						ExposeHeaders:    []string{"Content-Length", "Content-Range"},
+						AllowMethods:     []v1.CORSHeaderValue{"GET", "POST", "OPTIONS"},
+						AllowHeaders:     []v1.CORSHeaderValue{"authorization", "cache-control"},
+						ExposeHeaders:    []v1.CORSHeaderValue{"Content-Length", "Content-Range"},
 						MaxAge:           "10m",
 					},
 				},

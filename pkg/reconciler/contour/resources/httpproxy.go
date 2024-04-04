@@ -18,8 +18,6 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
-
 	// nolint:gosec // No strong cryptography needed.
 	"crypto/sha1"
 	"fmt"
@@ -304,13 +302,9 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				hostProxy.Name = kmeta.ChildName(ing.Name+"-"+class+"-", host)
 
 				if cfg.Contour.CORSPolicy != nil {
-					corsPolicy := &v1.CORSPolicy{}
-					tmp, _ := json.Marshal(cfg.Contour.CORSPolicy)
-					json.Unmarshal(tmp, &corsPolicy)
-
 					hostProxy.Spec.VirtualHost = &v1.VirtualHost{
 						Fqdn:       host,
-						CORSPolicy: corsPolicy,
+						CORSPolicy: cfg.Contour.CORSPolicy,
 					}
 				} else {
 					hostProxy.Spec.VirtualHost = &v1.VirtualHost{

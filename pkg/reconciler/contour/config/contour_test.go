@@ -21,6 +21,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
+	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -74,12 +75,12 @@ maxAge: "10m"
 		t.FailNow()
 	}
 
-	want := &CORSPolicy{
+	want := &v1.CORSPolicy{
 		AllowCredentials: true,
 		AllowOrigin:      []string{"*"},
-		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
-		AllowHeaders:     []string{"authorization", "cache-control"},
-		ExposeHeaders:    []string{"Content-Length", "Content-Range"},
+		AllowMethods:     []v1.CORSHeaderValue{"GET", "POST", "OPTIONS"},
+		AllowHeaders:     []v1.CORSHeaderValue{"authorization", "cache-control"},
+		ExposeHeaders:    []v1.CORSHeaderValue{"Content-Length", "Content-Range"},
 		MaxAge:           "10m",
 	}
 	got := cfg.CORSPolicy
