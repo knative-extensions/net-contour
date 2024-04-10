@@ -90,21 +90,22 @@ func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 			contourCORSPolicy.AllowHeaders,
 			contourCORSPolicy.ExposeHeaders,
 		}
-		for _, field := range fields {
+		userFriendlyError := []string{corsPolicy + ".allowMethods", corsPolicy + ".allowHeaders", corsPolicy + ".exposeHeaders"}
+		for i, field := range fields {
 			if len(field) > 0 {
-				var validOption = regexp.MustCompile("^[a-zA-Z0-9!#$%&'*+.^_`|~-]+$")
+				validOption := regexp.MustCompile("^[a-zA-Z0-9!#$%&'*+.^_`|~-]+$")
 				for _, option := range field {
 					if !validOption.MatchString(string(option)) {
-						return nil, fmt.Errorf("%s.allowMethods, %s.allowHeaders, and %s.exposeHeaders have to be validly formatted. Option %s is invalid", corsPolicy, corsPolicy, corsPolicy, option)
+						return nil, fmt.Errorf("option %s is invalid for %s", userFriendlyError[i], option)
 					}
 				}
 			}
 		}
 
 		if len(contourCORSPolicy.MaxAge) > 0 {
-			_, err := time.ParseDuration(contourCORSPolicy.MaxAge)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse %s.maxAge: %w", corsPolicy, err)
+			validOption := regexp.MustCompile(`^(((\d*(\.\d*)?h)|(\d*(\.\d*)?m)|(\d*(\.\d*)?s)|(\d*(\.\d*)?ms)|(\d*(\.\d*)?us)|(\d*(\.\d*)?µs)|(\d*(\.\d*)?ns))+|0)$`)
+			if !validOption.MatchString(contourCORSPolicy.MaxAge) {
+				return nil, fmt.Errorf("%s.maxAge is invalid. Must be 0 or \\d*(h|m|s|ms|us|ns)", corsPolicy)
 			}
 		}
 	}

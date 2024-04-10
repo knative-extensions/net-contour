@@ -228,6 +228,33 @@ maxAge: "10"
 `,
 			},
 		},
+	}, {
+		name:    "invalid duration",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: `
+allowCredentials: true
+allowOrigin:
+  - "*"
+allowMethods:
+  - GET
+  - POST
+  - OPTIONS
+allowHeaders:
+  - authorization
+  - cache-control
+exposeHeaders:
+  - Content-Length
+  - Content-Range
+maxAge: "-2ms"
+`,
+			},
+		},
 	}}
 
 	for _, tt := range tests {
