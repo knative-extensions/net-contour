@@ -22,6 +22,7 @@ limitations under the License.
 package config
 
 import (
+	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	sets "k8s.io/apimachinery/pkg/util/sets"
 	v1alpha1 "knative.dev/networking/pkg/apis/networking/v1alpha1"
@@ -85,6 +86,11 @@ func (in *Contour) DeepCopyInto(out *Contour) {
 		in, out := &in.DefaultTLSSecret, &out.DefaultTLSSecret
 		*out = new(types.NamespacedName)
 		**out = **in
+	}
+	if in.CORSPolicy != nil {
+		in, out := &in.CORSPolicy, &out.CORSPolicy
+		*out = new(v1.CORSPolicy)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }

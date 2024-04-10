@@ -300,8 +300,13 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				}
 
 				hostProxy.Name = kmeta.ChildName(ing.Name+"-"+class+"-", host)
+
 				hostProxy.Spec.VirtualHost = &v1.VirtualHost{
 					Fqdn: host,
+				}
+
+				if cfg.Contour.CORSPolicy != nil {
+					hostProxy.Spec.VirtualHost.CORSPolicy = cfg.Contour.CORSPolicy
 				}
 
 				// Set ExtensionService if annotation is present

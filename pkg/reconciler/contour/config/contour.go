@@ -18,8 +18,10 @@ package config
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
+	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -39,6 +41,7 @@ const (
 	defaultTLSSecretConfigKey = "default-tls-secret"
 	timeoutPolicyIdleKey      = "timeout-policy-idle"
 	timeoutPolicyResponseKey  = "timeout-policy-response"
+	corsPolicy                = "cors-policy"
 )
 
 // Contour contains contour related configuration defined in the
@@ -49,6 +52,7 @@ type Contour struct {
 	DefaultTLSSecret      *types.NamespacedName
 	TimeoutPolicyResponse string
 	TimeoutPolicyIdle     string
+	CORSPolicy            *v1.CORSPolicy
 }
 
 type visibilityValue struct {
@@ -56,11 +60,12 @@ type visibilityValue struct {
 	Service string `json:"service"`
 }
 
-// NewContourFromConfigMap creates an Contour config from the supplied ConfigMap
+// NewContourFromConfigMap creates a Contour config from the supplied ConfigMap
 func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 	var tlsSecret *types.NamespacedName
 	var timeoutPolicyResponse = "infinity"
 	var timeoutPolicyIdle = "infinity"
+	var contourCORSPolicy *v1.CORSPolicy
 
 	if err := configmap.Parse(configMap.Data,
 		configmap.AsOptionalNamespacedName(defaultTLSSecretConfigKey, &tlsSecret),
@@ -68,6 +73,41 @@ func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 		asContourDuration(timeoutPolicyIdleKey, &timeoutPolicyIdle),
 	); err != nil {
 		return nil, err
+	}
+
+	cors, ok := configMap.Data[corsPolicy]
+	if ok {
+		if err := yaml.Unmarshal([]byte(cors), &contourCORSPolicy); err != nil {
+			return nil, err
+		}
+
+		if len(contourCORSPolicy.AllowOrigin) == 0 || len(contourCORSPolicy.AllowMethods) == 0 {
+			return nil, fmt.Errorf("the following fields are required but are missing or empty: %s.allowOrigin and %s.allowMethods", corsPolicy, corsPolicy)
+		}
+
+		fields := [][]v1.CORSHeaderValue{
+			contourCORSPolicy.AllowMethods,
+			contourCORSPolicy.AllowHeaders,
+			contourCORSPolicy.ExposeHeaders,
+		}
+		userFriendlyError := []string{corsPolicy + ".allowMethods", corsPolicy + ".allowHeaders", corsPolicy + ".exposeHeaders"}
+		for i, field := range fields {
+			if len(field) > 0 {
+				validOption := regexp.MustCompile("^[a-zA-Z0-9!#$%&'*+.^_`|~-]+$")
+				for _, option := range field {
+					if !validOption.MatchString(string(option)) {
+						return nil, fmt.Errorf("option %q is invalid for %s", option, userFriendlyError[i])
+					}
+				}
+			}
+		}
+
+		if len(contourCORSPolicy.MaxAge) > 0 {
+			validOption := regexp.MustCompile(`^(((\d*(\.\d*)?h)|(\d*(\.\d*)?m)|(\d*(\.\d*)?s)|(\d*(\.\d*)?ms)|(\d*(\.\d*)?us)|(\d*(\.\d*)?µs)|(\d*(\.\d*)?ns))+|0)$`)
+			if !validOption.MatchString(contourCORSPolicy.MaxAge) {
+				return nil, fmt.Errorf("%s.maxAge is invalid. Must be 0 or \\d*(h|m|s|ms|us|ns)", corsPolicy)
+			}
+		}
 	}
 
 	v, ok := configMap.Data[visibilityConfigKey]
@@ -85,6 +125,7 @@ func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 			},
 			TimeoutPolicyResponse: timeoutPolicyResponse,
 			TimeoutPolicyIdle:     timeoutPolicyIdle,
+			CORSPolicy:            contourCORSPolicy,
 		}, nil
 	}
 	entry := make(map[v1alpha1.IngressVisibility]visibilityValue)
@@ -107,6 +148,7 @@ func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 		VisibilityClasses:     make(map[v1alpha1.IngressVisibility]string, 2),
 		TimeoutPolicyResponse: timeoutPolicyResponse,
 		TimeoutPolicyIdle:     timeoutPolicyIdle,
+		CORSPolicy:            contourCORSPolicy,
 	}
 	for key, value := range entry {
 		// Check that the visibility makes sense.

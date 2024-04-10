@@ -19,6 +19,9 @@ package config
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
+	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -37,6 +40,231 @@ func TestContour(t *testing.T) {
 
 	if _, err := NewContourFromConfigMap(example); err != nil {
 		t.Error("NewContourFromConfigMap(example) =", err)
+	}
+}
+
+func TestCORSPolicy(t *testing.T) {
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: system.Namespace(),
+			Name:      ContourConfigName,
+		},
+		Data: map[string]string{
+			corsPolicy: `
+allowCredentials: true
+allowOrigin:
+  - "*"
+allowMethods:
+  - GET
+  - POST
+  - OPTIONS
+allowHeaders:
+  - authorization
+  - cache-control
+exposeHeaders:
+  - Content-Length
+  - Content-Range
+maxAge: "10m"
+`,
+		},
+	}
+
+	cfg, err := NewContourFromConfigMap(cm)
+	if err != nil {
+		t.Error("NewContourFromConfigMap(corsPolicy) =", err)
+		t.FailNow()
+	}
+
+	want := &v1.CORSPolicy{
+		AllowCredentials: true,
+		AllowOrigin:      []string{"*"},
+		AllowMethods:     []v1.CORSHeaderValue{"GET", "POST", "OPTIONS"},
+		AllowHeaders:     []v1.CORSHeaderValue{"authorization", "cache-control"},
+		ExposeHeaders:    []v1.CORSHeaderValue{"Content-Length", "Content-Range"},
+		MaxAge:           "10m",
+	}
+	got := cfg.CORSPolicy
+	if !cmp.Equal(got, want) {
+		t.Errorf("Got = %v, want: %v, diff:\n%s", got, want, cmp.Diff(got, want))
+	}
+}
+func TestCORSPolicyConfigurationErrors(t *testing.T) {
+	tests := []struct {
+		name    string
+		wantErr bool
+		config  *corev1.ConfigMap
+	}{{
+		name:    "failure parsing yaml",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: "moo",
+			},
+		},
+	}, {
+		name:    "wrong type",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: `
+allowCredentials: 3
+allowOrigin: true
+allowMethods: "moo"
+allowHeaders:
+  - authorization
+  - cache-control
+exposeHeaders:
+  - Content-Length
+  - Content-Range
+maxAge: "10m"
+`,
+			},
+		},
+	}, {
+		name:    "incomplete configuration",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: `
+allowHeaders:
+  - authorization
+  - cache-control
+exposeHeaders:
+  - Content-Length
+  - Content-Range
+maxAge: "10m"
+`,
+			},
+		},
+	}, {
+		name:    "empty value",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: `
+allowCredentials: false
+allowOrigin: []
+allowMethods:
+  - GET
+  - POST
+  - OPTIONS
+allowHeaders:
+  - authorization
+  - cache-control
+exposeHeaders:
+  - Content-Length
+  - Content-Range
+maxAge: "10m"
+`,
+			},
+		},
+	}, {
+		name:    "wrong option",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: `
+allowCredentials: true
+allowOrigin:
+  - "*"
+allowMethods:
+  - ((GET))
+  - POST
+  - OPTIONS
+allowHeaders:
+  - authorization
+  - cache-control
+exposeHeaders:
+  - Content-Length
+  - Content-Range
+maxAge: "10m"
+`,
+			},
+		},
+	}, {
+		name:    "invalid duration",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: `
+allowCredentials: true
+allowOrigin:
+  - "*"
+allowMethods:
+  - GET
+  - POST
+  - OPTIONS
+allowHeaders:
+  - authorization
+  - cache-control
+exposeHeaders:
+  - Content-Length
+  - Content-Range
+maxAge: "10"
+`,
+			},
+		},
+	}, {
+		name:    "invalid duration",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: `
+allowCredentials: true
+allowOrigin:
+  - "*"
+allowMethods:
+  - GET
+  - POST
+  - OPTIONS
+allowHeaders:
+  - authorization
+  - cache-control
+exposeHeaders:
+  - Content-Length
+  - Content-Range
+maxAge: "-2ms"
+`,
+			},
+		},
+	}}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := NewContourFromConfigMap(tt.config)
+			t.Log(err)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("Test: %q; NewContourFromConfigMap() error = %v, WantErr %v", tt.name, err, tt.wantErr)
+			}
+		})
 	}
 }
 
