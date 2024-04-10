@@ -96,7 +96,7 @@ func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 				validOption := regexp.MustCompile("^[a-zA-Z0-9!#$%&'*+.^_`|~-]+$")
 				for _, option := range field {
 					if !validOption.MatchString(string(option)) {
-						return nil, fmt.Errorf("option %s is invalid for %s", userFriendlyError[i], option)
+						return nil, fmt.Errorf("option %q is invalid for %s", option, userFriendlyError[i])
 					}
 				}
 			}
