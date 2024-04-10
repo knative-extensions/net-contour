@@ -138,7 +138,7 @@ github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# github.com/projectcontour/contour v1.28.2
+# github.com/projectcontour/contour v1.28.3
 ## explicit; go 1.21
 github.com/projectcontour/contour/apis/projectcontour/v1
 # github.com/prometheus/client_golang v1.19.0
