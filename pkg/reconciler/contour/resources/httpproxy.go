@@ -302,7 +302,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				hostProxy.Name = kmeta.ChildName(ing.Name+"-"+class+"-", host)
 
 				hostProxy.Spec.VirtualHost = &v1.VirtualHost{
-					Fqdn:       host,
+					Fqdn: host,
 				}
 
 				if cfg.Contour.CORSPolicy != nil {
