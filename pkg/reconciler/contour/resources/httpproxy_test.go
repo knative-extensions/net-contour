@@ -2574,8 +2574,344 @@ func TestMakeProxiesCORSPolicy(t *testing.T) {
 				}},
 			},
 		}},
-	},
-	}
+	}, {
+		name: "set corsPolicy values for cluster local visibility",
+		ing: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar",
+			},
+			Spec: v1alpha1.IngressSpec{
+				HTTPOption: v1alpha1.HTTPOptionEnabled,
+				Rules: []v1alpha1.IngressRule{{
+					Hosts:      []string{"bar.foo.svc.cluster.local"},
+					Visibility: v1alpha1.IngressVisibilityClusterLocal,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceName:      "goo",
+									ServiceNamespace: "foo",
+									ServicePort:      intstr.FromInt(123),
+								},
+								Percent: 100,
+								AppendHeaders: map[string]string{
+									"Baz": "blurg",
+								},
+							}},
+						}},
+					},
+				}},
+			},
+		},
+		want: []*v1.HTTPProxy{{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar-" + privateClass + "-bar.foo",
+				Labels: map[string]string{
+					DomainHashKey: "9cfdfc6963ce12bea7d12be5e91d11d9f8341f9c",
+					GenerationKey: "0",
+					ParentKey:     "bar",
+					ClassKey:      privateClass,
+				},
+				Annotations: map[string]string{
+					ClassKey: privateClass,
+				},
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion:         "networking.internal.knative.dev/v1alpha1",
+					Kind:               "Ingress",
+					Name:               "bar",
+					Controller:         ptr.Bool(true),
+					BlockOwnerDeletion: ptr.Bool(true),
+				}},
+			},
+			Spec: v1.HTTPProxySpec{
+				VirtualHost: &v1.VirtualHost{
+					Fqdn: "bar.foo",
+					CORSPolicy: &v1.CORSPolicy{
+						AllowCredentials: true,
+						AllowOrigin: []string{
+							"*",
+						},
+						AllowMethods: []v1.CORSHeaderValue{
+							"GET",
+							"POST",
+							"OPTIONS",
+						},
+						AllowHeaders: []v1.CORSHeaderValue{
+							"authorization",
+							"cache-control",
+						},
+						ExposeHeaders: []v1.CORSHeaderValue{
+							"Content-Length",
+							"Content-Range",
+						},
+						MaxAge: "10m",
+					},
+				},
+				Routes: []v1.Route{{
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "K-Network-Hash",
+							Value: "619767405fa568ea5bdf705ebf9f9ca2fb5f0d988e2a4038c7b1ebfc73baf0c5",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blurg",
+							}},
+						},
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blurg",
+							}},
+						},
+					}},
+				}},
+			},
+		}, {
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar-" + privateClass + "-bar.foo.svc",
+				Labels: map[string]string{
+					DomainHashKey: "f9ce2a330aabcf0eb7da1c9d0aa594339f79d454",
+					GenerationKey: "0",
+					ParentKey:     "bar",
+					ClassKey:      privateClass,
+				},
+				Annotations: map[string]string{
+					ClassKey: privateClass,
+				},
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion:         "networking.internal.knative.dev/v1alpha1",
+					Kind:               "Ingress",
+					Name:               "bar",
+					Controller:         ptr.Bool(true),
+					BlockOwnerDeletion: ptr.Bool(true),
+				}},
+			},
+			Spec: v1.HTTPProxySpec{
+				VirtualHost: &v1.VirtualHost{
+					Fqdn: "bar.foo.svc",
+					CORSPolicy: &v1.CORSPolicy{
+						AllowCredentials: true,
+						AllowOrigin: []string{
+							"*",
+						},
+						AllowMethods: []v1.CORSHeaderValue{
+							"GET",
+							"POST",
+							"OPTIONS",
+						},
+						AllowHeaders: []v1.CORSHeaderValue{
+							"authorization",
+							"cache-control",
+						},
+						ExposeHeaders: []v1.CORSHeaderValue{
+							"Content-Length",
+							"Content-Range",
+						},
+						MaxAge: "10m",
+					},
+				},
+				Routes: []v1.Route{{
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "K-Network-Hash",
+							Value: "619767405fa568ea5bdf705ebf9f9ca2fb5f0d988e2a4038c7b1ebfc73baf0c5",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blurg",
+							}},
+						},
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blurg",
+							}},
+						},
+					}},
+				}},
+			},
+		}, {
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar-" + privateClass + "-bar.foo.svc.cluster.local",
+				Labels: map[string]string{
+					DomainHashKey: "adc2b09a03a391d630bfcc54e3d3f9be36060617",
+					GenerationKey: "0",
+					ParentKey:     "bar",
+					ClassKey:      privateClass,
+				},
+				Annotations: map[string]string{
+					ClassKey: privateClass,
+				},
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion:         "networking.internal.knative.dev/v1alpha1",
+					Kind:               "Ingress",
+					Name:               "bar",
+					Controller:         ptr.Bool(true),
+					BlockOwnerDeletion: ptr.Bool(true),
+				}},
+			},
+			Spec: v1.HTTPProxySpec{
+				VirtualHost: &v1.VirtualHost{
+					Fqdn: "bar.foo.svc.cluster.local",
+					CORSPolicy: &v1.CORSPolicy{
+						AllowCredentials: true,
+						AllowOrigin: []string{
+							"*",
+						},
+						AllowMethods: []v1.CORSHeaderValue{
+							"GET",
+							"POST",
+							"OPTIONS",
+						},
+						AllowHeaders: []v1.CORSHeaderValue{
+							"authorization",
+							"cache-control",
+						},
+						ExposeHeaders: []v1.CORSHeaderValue{
+							"Content-Length",
+							"Content-Range",
+						},
+						MaxAge: "10m",
+					},
+				},
+				Routes: []v1.Route{{
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "K-Network-Hash",
+							Value: "619767405fa568ea5bdf705ebf9f9ca2fb5f0d988e2a4038c7b1ebfc73baf0c5",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blurg",
+							}},
+						},
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blurg",
+							}},
+						},
+					}},
+				}},
+			},
+		}},
+	}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
