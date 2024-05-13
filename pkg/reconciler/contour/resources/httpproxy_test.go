@@ -2575,7 +2575,7 @@ func TestMakeProxiesCORSPolicy(t *testing.T) {
 			},
 		}},
 	}, {
-		name: "set corsPolicy values for cluster local visibility",
+		name: "do not set corsPolicy values for cluster local visibility",
 		ing: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
@@ -2628,26 +2628,6 @@ func TestMakeProxiesCORSPolicy(t *testing.T) {
 			Spec: v1.HTTPProxySpec{
 				VirtualHost: &v1.VirtualHost{
 					Fqdn: "bar.foo",
-					CORSPolicy: &v1.CORSPolicy{
-						AllowCredentials: true,
-						AllowOrigin: []string{
-							"*",
-						},
-						AllowMethods: []v1.CORSHeaderValue{
-							"GET",
-							"POST",
-							"OPTIONS",
-						},
-						AllowHeaders: []v1.CORSHeaderValue{
-							"authorization",
-							"cache-control",
-						},
-						ExposeHeaders: []v1.CORSHeaderValue{
-							"Content-Length",
-							"Content-Range",
-						},
-						MaxAge: "10m",
-					},
 				},
 				Routes: []v1.Route{{
 					EnableWebsockets: true,
@@ -2730,26 +2710,6 @@ func TestMakeProxiesCORSPolicy(t *testing.T) {
 			Spec: v1.HTTPProxySpec{
 				VirtualHost: &v1.VirtualHost{
 					Fqdn: "bar.foo.svc",
-					CORSPolicy: &v1.CORSPolicy{
-						AllowCredentials: true,
-						AllowOrigin: []string{
-							"*",
-						},
-						AllowMethods: []v1.CORSHeaderValue{
-							"GET",
-							"POST",
-							"OPTIONS",
-						},
-						AllowHeaders: []v1.CORSHeaderValue{
-							"authorization",
-							"cache-control",
-						},
-						ExposeHeaders: []v1.CORSHeaderValue{
-							"Content-Length",
-							"Content-Range",
-						},
-						MaxAge: "10m",
-					},
 				},
 				Routes: []v1.Route{{
 					EnableWebsockets: true,
@@ -2832,26 +2792,6 @@ func TestMakeProxiesCORSPolicy(t *testing.T) {
 			Spec: v1.HTTPProxySpec{
 				VirtualHost: &v1.VirtualHost{
 					Fqdn: "bar.foo.svc.cluster.local",
-					CORSPolicy: &v1.CORSPolicy{
-						AllowCredentials: true,
-						AllowOrigin: []string{
-							"*",
-						},
-						AllowMethods: []v1.CORSHeaderValue{
-							"GET",
-							"POST",
-							"OPTIONS",
-						},
-						AllowHeaders: []v1.CORSHeaderValue{
-							"authorization",
-							"cache-control",
-						},
-						ExposeHeaders: []v1.CORSHeaderValue{
-							"Content-Length",
-							"Content-Range",
-						},
-						MaxAge: "10m",
-					},
 				},
 				Routes: []v1.Route{{
 					EnableWebsockets: true,

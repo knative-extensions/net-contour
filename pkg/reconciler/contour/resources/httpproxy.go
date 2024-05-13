@@ -305,7 +305,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					Fqdn: host,
 				}
 
-				if cfg.Contour.CORSPolicy != nil {
+				if cfg.Contour.CORSPolicy != nil && rule.Visibility == v1alpha1.IngressVisibilityExternalIP {
 					hostProxy.Spec.VirtualHost.CORSPolicy = cfg.Contour.CORSPolicy
 				}
 
