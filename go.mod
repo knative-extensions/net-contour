@@ -1,6 +1,6 @@
 module knative.dev/net-contour
 
-go 1.21
+go 1.22.0
 
 replace (
 	k8s.io/api => k8s.io/api v0.29.3
@@ -13,11 +13,11 @@ replace (
 
 require (
 	github.com/google/go-cmp v0.6.0
-	github.com/projectcontour/contour v1.28.3
+	github.com/projectcontour/contour v1.29.0
 	go.uber.org/zap v1.27.0
-	k8s.io/api v0.29.3
-	k8s.io/apimachinery v0.29.3
-	k8s.io/client-go v0.29.3
+	k8s.io/api v0.30.0
+	k8s.io/apimachinery v0.30.0
+	k8s.io/client-go v0.30.0
 	knative.dev/hack v0.0.0-20240507013718-68e3bfb39d11
 	knative.dev/networking v0.0.0-20240515132013-4e598f42f4c2
 	knative.dev/pkg v0.0.0-20240515073057-11a3d46fe4d6
@@ -62,7 +62,7 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.19.1 // indirect
-	github.com/prometheus/client_model v0.6.0 // indirect
+	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.53.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/prometheus/statsd_exporter v0.22.7 // indirect
@@ -90,11 +90,11 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.29.3 // indirect
+	k8s.io/apiextensions-apiserver v0.30.0 // indirect
 	k8s.io/code-generator v0.29.3 // indirect
 	k8s.io/gengo v0.0.0-20240129211411-f967bbeff4b4 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20240103051144-eec4567ac022 // indirect
+	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
