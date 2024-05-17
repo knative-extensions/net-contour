@@ -4,6 +4,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/knative.dev/net-contour.svg)](https://pkg.go.dev/knative.dev/net-contour)
 [![Go Report Card](https://goreportcard.com/badge/knative/net-contour)](https://goreportcard.com/report/knative/net-contour)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fknative-extensions%2Fnet-contour.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fknative-extensions%2Fnet-contour?ref=badge_shield)
 
 The `net-contour` controller enables [Contour](https://projectcontour.io) to
 satisfy the networking needs of Knative Serving by bridging Knative's KIngress
@@ -14,3 +15,7 @@ To learn more about Knative, please visit our
 
 If you are interested in contributing, see [CONTRIBUTING.md](./CONTRIBUTING.md)
 and [DEVELOPMENT.md](./DEVELOPMENT.md).
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fknative-extensions%2Fnet-contour.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fknative-extensions%2Fnet-contour?ref=badge_large)
