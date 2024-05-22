@@ -81,7 +81,7 @@ func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 			return nil, err
 		}
 
-		if len(contourCORSPolicy.AllowOrigin) == 0 || len(contourCORSPolicy.AllowMethods) == 0 {
+		if contourCORSPolicy == nil || len(contourCORSPolicy.AllowOrigin) == 0 || len(contourCORSPolicy.AllowMethods) == 0 {
 			return nil, fmt.Errorf("the following fields are required but are missing or empty: %s.allowOrigin and %s.allowMethods", corsPolicy, corsPolicy)
 		}
 

@@ -175,6 +175,18 @@ maxAge: "10m"
 			},
 		},
 	}, {
+		name:    "empty configuration",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      ContourConfigName,
+			},
+			Data: map[string]string{
+				corsPolicy: "",
+			},
+		},
+	}, {
 		name:    "wrong option",
 		wantErr: true,
 		config: &corev1.ConfigMap{
