@@ -3,21 +3,21 @@ module knative.dev/net-contour
 go 1.22.0
 
 replace (
-	k8s.io/api => k8s.io/api v0.29.3
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.29.3 // indirect
-	k8s.io/apimachinery => k8s.io/apimachinery v0.29.3
-	k8s.io/client-go => k8s.io/client-go v0.29.3
-	k8s.io/code-generator => k8s.io/code-generator v0.29.3 // indirect
-	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20240103051144-eec4567ac022 // indirect
+	k8s.io/api => k8s.io/api v0.29.6
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.29.6 // indirect
+	k8s.io/apimachinery => k8s.io/apimachinery v0.29.6
+	k8s.io/client-go => k8s.io/client-go v0.29.6
+	k8s.io/code-generator => k8s.io/code-generator v0.29.6 // indirect
+	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00
 )
 
 require (
 	github.com/google/go-cmp v0.6.0
-	github.com/projectcontour/contour v1.29.0
+	github.com/projectcontour/contour v1.29.1
 	go.uber.org/zap v1.27.0
-	k8s.io/api v0.30.0
-	k8s.io/apimachinery v0.30.0
-	k8s.io/client-go v0.30.0
+	k8s.io/api v0.30.1
+	k8s.io/apimachinery v0.30.1
+	k8s.io/client-go v0.30.1
 	knative.dev/hack v0.0.0-20240607132042-09143140a254
 	knative.dev/networking v0.0.0-20240611072033-3b8764c0bb4c
 	knative.dev/pkg v0.0.0-20240614135239-339c22b8218c
@@ -38,7 +38,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.9.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
-	github.com/go-logr/logr v1.4.1 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-openapi/jsonpointer v0.20.2 // indirect
 	github.com/go-openapi/jsonreference v0.20.4 // indirect
 	github.com/go-openapi/swag v0.22.7 // indirect
@@ -86,12 +86,12 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20240521202816-d264139d666e // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
 	google.golang.org/grpc v1.64.0 // indirect
-	google.golang.org/protobuf v1.34.1 // indirect
+	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.30.0 // indirect
-	k8s.io/code-generator v0.29.3 // indirect
+	k8s.io/apiextensions-apiserver v0.30.1 // indirect
+	k8s.io/code-generator v0.29.6 // indirect
 	k8s.io/gengo v0.0.0-20240129211411-f967bbeff4b4 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
