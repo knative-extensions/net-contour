@@ -260,6 +260,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 			if rule.Visibility == v1alpha1.IngressVisibilityClusterLocal {
 				ai = true
 			}
+
 			routes = append(routes, v1.Route{
 				Conditions:           conditions,
 				TimeoutPolicy:        top,

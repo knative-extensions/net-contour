@@ -1867,7 +1867,7 @@ func TestMakeProxies(t *testing.T) {
 	}
 }
 
-func TestMakeProxiesInternalEncryption(t *testing.T) {
+func TestMakeProxiesSystemInternalEncryption(t *testing.T) {
 	tlsProto := InternalEncryptionProtocol
 	h2Proto := InternalEncryptionH2Protocol
 	serviceToProtocol := map[string]string{
@@ -1968,7 +1968,11 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Protocol: &tlsProto,
 						UpstreamValidation: &v1.UpstreamValidation{
 							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
-							SubjectName:   "data-plane.knative.dev",
+							SubjectName:   "kn-user-foo",
+							SubjectNames: []string{
+								"kn-user-foo",
+								"kn-routing",
+							},
 						},
 						Weight: 100,
 						RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -2001,7 +2005,11 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Protocol: &tlsProto,
 						UpstreamValidation: &v1.UpstreamValidation{
 							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
-							SubjectName:   "data-plane.knative.dev",
+							SubjectName:   "kn-user-foo",
+							SubjectNames: []string{
+								"kn-user-foo",
+								"kn-routing",
+							},
 						},
 						Weight: 100,
 						RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -2105,7 +2113,11 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Protocol: &h2Proto,
 						UpstreamValidation: &v1.UpstreamValidation{
 							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
-							SubjectName:   "data-plane.knative.dev",
+							SubjectName:   "kn-user-foo",
+							SubjectNames: []string{
+								"kn-user-foo",
+								"kn-routing",
+							},
 						},
 						Weight: 100,
 						RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -2138,7 +2150,11 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Protocol: &h2Proto,
 						UpstreamValidation: &v1.UpstreamValidation{
 							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
-							SubjectName:   "data-plane.knative.dev",
+							SubjectName:   "kn-user-foo",
+							SubjectNames: []string{
+								"kn-user-foo",
+								"kn-routing",
+							},
 						},
 						Weight: 100,
 						RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -2258,7 +2274,11 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Protocol: &tlsProto,
 						UpstreamValidation: &v1.UpstreamValidation{
 							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
-							SubjectName:   "data-plane.knative.dev",
+							SubjectName:   "kn-user-foo",
+							SubjectNames: []string{
+								"kn-user-foo",
+								"kn-routing",
+							},
 						},
 						Weight: 100,
 						RequestHeadersPolicy: &v1.HeadersPolicy{
@@ -2315,7 +2335,11 @@ func TestMakeProxiesInternalEncryption(t *testing.T) {
 						Protocol: &tlsProto,
 						UpstreamValidation: &v1.UpstreamValidation{
 							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
-							SubjectName:   "data-plane.knative.dev",
+							SubjectName:   "kn-user-foo",
+							SubjectNames: []string{
+								"kn-user-foo",
+								"kn-routing",
+							},
 						},
 						Weight: 100,
 						RequestHeadersPolicy: &v1.HeadersPolicy{
