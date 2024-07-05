@@ -211,7 +211,11 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				if cfg.Network != nil && cfg.Network.SystemInternalTLSEnabled() {
 					svc.UpstreamValidation = &v1.UpstreamValidation{
 						CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
-						SubjectName:   certificates.LegacyFakeDnsName,
+						SubjectName:   certificates.DataPlaneUserSAN(ing.Namespace),
+						SubjectNames: []string{
+							certificates.DataPlaneUserSAN(ing.Namespace),
+							certificates.DataPlaneRoutingSAN,
+						},
 					}
 				}
 
@@ -256,6 +260,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 			if rule.Visibility == v1alpha1.IngressVisibilityClusterLocal {
 				ai = true
 			}
+
 			routes = append(routes, v1.Route{
 				Conditions:           conditions,
 				TimeoutPolicy:        top,
