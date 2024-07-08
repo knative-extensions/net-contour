@@ -1929,6 +1929,261 @@ func TestMakeProxies(t *testing.T) {
 				}},
 			},
 		}},
+	}, {
+		name: "cluster local tls is enabled",
+		ing: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar",
+			},
+			Spec: v1alpha1.IngressSpec{
+				HTTPOption: v1alpha1.HTTPOptionEnabled,
+				TLS: []v1alpha1.IngressTLS{{
+					Hosts: []string{
+						"foo.bar",
+						"foo.bar.svc",
+						"foo.bar.svc.cluster.local",
+					},
+					SecretName:      "some-secret",
+					SecretNamespace: "some-secret-namespace",
+				}},
+				Rules: []v1alpha1.IngressRule{{
+					Hosts:      []string{network.GetServiceHostname("foo", "bar")},
+					Visibility: v1alpha1.IngressVisibilityClusterLocal,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceName: "goo",
+									ServicePort: intstr.FromInt(123),
+								},
+								Percent: 100,
+							}},
+						}},
+					},
+				}},
+			},
+		},
+		want: []*v1.HTTPProxy{{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar-" + privateClass + "-foo.bar",
+				Labels: map[string]string{
+					DomainHashKey: "336d1b3d72e061b98b59d6c793f6a8da217a727a",
+					GenerationKey: "0",
+					ParentKey:     "bar",
+					ClassKey:      privateClass,
+				},
+				Annotations: map[string]string{
+					ClassKey: privateClass,
+				},
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion:         "networking.internal.knative.dev/v1alpha1",
+					Kind:               "Ingress",
+					Name:               "bar",
+					Controller:         ptr.Bool(true),
+					BlockOwnerDeletion: ptr.Bool(true),
+				}},
+			},
+			Spec: v1.HTTPProxySpec{
+				VirtualHost: &v1.VirtualHost{
+					Fqdn: "foo.bar",
+					TLS: &v1.TLS{
+						SecretName: "some-secret-namespace/some-secret",
+					},
+				},
+				Routes: []v1.Route{{
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "K-Network-Hash",
+							Value: "cff88c5187b8b06f96fdd65fc26493720cae752621d375f7d24ffcac71f6b907",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+					}},
+				}},
+			},
+		}, {
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar-" + privateClass + "-foo.bar.svc",
+				Labels: map[string]string{
+					DomainHashKey: "c537bbef14c1570803e5c51c6ca824524c758496",
+					GenerationKey: "0",
+					ParentKey:     "bar",
+					ClassKey:      privateClass,
+				},
+				Annotations: map[string]string{
+					ClassKey: privateClass,
+				},
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion:         "networking.internal.knative.dev/v1alpha1",
+					Kind:               "Ingress",
+					Name:               "bar",
+					Controller:         ptr.Bool(true),
+					BlockOwnerDeletion: ptr.Bool(true),
+				}},
+			},
+			Spec: v1.HTTPProxySpec{
+				VirtualHost: &v1.VirtualHost{
+					Fqdn: "foo.bar.svc",
+					TLS: &v1.TLS{
+						SecretName: "some-secret-namespace/some-secret",
+					},
+				},
+				Routes: []v1.Route{{
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "K-Network-Hash",
+							Value: "cff88c5187b8b06f96fdd65fc26493720cae752621d375f7d24ffcac71f6b907",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+					}},
+				}},
+			},
+		}, {
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar-" + privateClass + "-foo.bar.svc.cluster.local",
+				Labels: map[string]string{
+					DomainHashKey: "6f498a962729705e1c12fdef2c3371c00f5094e9",
+					GenerationKey: "0",
+					ParentKey:     "bar",
+					ClassKey:      privateClass,
+				},
+				Annotations: map[string]string{
+					ClassKey: privateClass,
+				},
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion:         "networking.internal.knative.dev/v1alpha1",
+					Kind:               "Ingress",
+					Name:               "bar",
+					Controller:         ptr.Bool(true),
+					BlockOwnerDeletion: ptr.Bool(true),
+				}},
+			},
+			Spec: v1.HTTPProxySpec{
+				VirtualHost: &v1.VirtualHost{
+					Fqdn: "foo.bar.svc.cluster.local",
+					TLS: &v1.TLS{
+						SecretName: "some-secret-namespace/some-secret",
+					},
+				},
+				Routes: []v1.Route{{
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "K-Network-Hash",
+							Value: "cff88c5187b8b06f96fdd65fc26493720cae752621d375f7d24ffcac71f6b907",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+					}},
+				}},
+			},
+		}},
 	}}
 
 	for _, test := range tests {
