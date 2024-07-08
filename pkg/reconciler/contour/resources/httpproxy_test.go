@@ -970,9 +970,6 @@ func TestMakeProxies(t *testing.T) {
 			Spec: v1.HTTPProxySpec{
 				VirtualHost: &v1.VirtualHost{
 					Fqdn: "bar.foo",
-					TLS: &v1.TLS{
-						SecretName: "foo/bar",
-					},
 				},
 				Routes: []v1.Route{{
 					EnableWebsockets: true,
@@ -1055,9 +1052,6 @@ func TestMakeProxies(t *testing.T) {
 			Spec: v1.HTTPProxySpec{
 				VirtualHost: &v1.VirtualHost{
 					Fqdn: "bar.foo.svc",
-					TLS: &v1.TLS{
-						SecretName: "foo/bar",
-					},
 				},
 				Routes: []v1.Route{{
 					EnableWebsockets: true,
@@ -1140,9 +1134,6 @@ func TestMakeProxies(t *testing.T) {
 			Spec: v1.HTTPProxySpec{
 				VirtualHost: &v1.VirtualHost{
 					Fqdn: "bar.foo.svc.cluster.local",
-					TLS: &v1.TLS{
-						SecretName: "foo/bar",
-					},
 				},
 				Routes: []v1.Route{{
 					EnableWebsockets: true,
@@ -1392,6 +1383,25 @@ func TestMakeProxies(t *testing.T) {
 							}},
 						}},
 					},
+				}, {
+					Hosts: []string{
+						"hello.default",
+					},
+					Visibility: v1alpha1.IngressVisibilityClusterLocal,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceName: "goo",
+									ServicePort: intstr.FromInt(123),
+								},
+								Percent: 100,
+								AppendHeaders: map[string]string{
+									"Baz": "blah",
+								},
+							}},
+						}},
+					},
 				}},
 			},
 		},
@@ -1440,7 +1450,89 @@ func TestMakeProxies(t *testing.T) {
 					RequestHeadersPolicy: &v1.HeadersPolicy{
 						Set: []v1.HeaderValue{{
 							Name:  "K-Network-Hash",
-							Value: "225764a7e90e21a05c0591ed9ec9f82f7014ce34f3293ecee049ed44c3ab9eb1",
+							Value: "1767beffd53ed097be2cf345709d9b65a8b09943196418e59d82ecf48b562e97",
+						}},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blah",
+							}},
+						},
+					}},
+				}, {
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{},
+					},
+					Services: []v1.Service{{
+						Name:     "goo",
+						Protocol: &protocol,
+						Port:     123,
+						Weight:   100,
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Baz",
+								Value: "blah",
+							}},
+						},
+					}},
+				}},
+			},
+		}, {
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "foo",
+				Name:      "bar-" + privateClass + "-hello.default",
+				Labels: map[string]string{
+					DomainHashKey: "b8a521823106d27dcc64898df9d4bab6ad322938",
+					GenerationKey: "0",
+					ParentKey:     "bar",
+					ClassKey:      privateClass,
+				},
+				Annotations: map[string]string{
+					ClassKey: privateClass,
+				},
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion:         "networking.internal.knative.dev/v1alpha1",
+					Kind:               "Ingress",
+					Name:               "bar",
+					Controller:         ptr.Bool(true),
+					BlockOwnerDeletion: ptr.Bool(true),
+				}},
+			},
+			Spec: v1.HTTPProxySpec{
+				VirtualHost: &v1.VirtualHost{
+					Fqdn: "hello.default",
+				},
+				Routes: []v1.Route{{
+					EnableWebsockets: true,
+					PermitInsecure:   true,
+					TimeoutPolicy: &v1.TimeoutPolicy{
+						Response: "infinity",
+						Idle:     "infinity",
+					},
+					RetryPolicy: defaultRetryPolicy(),
+					Conditions: []v1.MatchCondition{{
+						Header: &v1.HeaderMatchCondition{
+							Name:  "K-Network-Hash",
+							Exact: "override",
+						},
+					}},
+					RequestHeadersPolicy: &v1.HeadersPolicy{
+						Set: []v1.HeaderValue{{
+							Name:  "K-Network-Hash",
+							Value: "1767beffd53ed097be2cf345709d9b65a8b09943196418e59d82ecf48b562e97",
 						}},
 					},
 					Services: []v1.Service{{
