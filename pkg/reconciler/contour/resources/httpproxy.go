@@ -123,13 +123,13 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 
 	proxies := []*v1.HTTPProxy{}
 	for _, rule := range ing.Spec.Rules {
-		class := config.FromContext(ctx).Contour.VisibilityClasses[rule.Visibility]
+		class := cfg.Contour.VisibilityClasses[rule.Visibility]
 
 		routes := make([]v1.Route, 0, len(rule.HTTP.Paths))
 		for _, path := range rule.HTTP.Paths {
 			top := &v1.TimeoutPolicy{
-				Response: config.FromContext(ctx).Contour.TimeoutPolicyResponse,
-				Idle:     config.FromContext(ctx).Contour.TimeoutPolicyIdle,
+				Response: cfg.Contour.TimeoutPolicyResponse,
+				Idle:     cfg.Contour.TimeoutPolicyIdle,
 			}
 
 			// By default retry on connection problems twice.
@@ -299,7 +299,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 
 				// Ideally these would just be marked ClusterLocal :(
 				if strings.HasSuffix(originalHost, network.GetClusterDomainName()) {
-					class = config.FromContext(ctx).Contour.VisibilityClasses[v1alpha1.IngressVisibilityClusterLocal]
+					class = cfg.Contour.VisibilityClasses[v1alpha1.IngressVisibilityClusterLocal]
 					hostProxy.Annotations[ClassKey] = class
 					hostProxy.Labels[ClassKey] = class
 				}
@@ -334,7 +334,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					hostProxy.Spec.VirtualHost.TLS = &v1.TLS{
 						SecretName: fmt.Sprintf("%s/%s", tls.SecretNamespace, tls.SecretName),
 					}
-				} else if s := config.FromContext(ctx).Contour.DefaultTLSSecret; s != nil {
+				} else if s := cfg.Contour.DefaultTLSSecret; s != nil && rule.Visibility == v1alpha1.IngressVisibilityExternalIP {
 					hostProxy.Spec.VirtualHost.TLS = &v1.TLS{SecretName: s.String()}
 				}
 
