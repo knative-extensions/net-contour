@@ -97,21 +97,21 @@ func defaultRetryPolicy() *v1.RetryPolicy {
 	}
 }
 
+func addHostEntries(entries map[string]v1alpha1.IngressTLS, list []v1alpha1.IngressTLS) {
+	for _, tls := range list {
+		for _, host := range tls.Hosts {
+			entries[host] = tls
+		}
+	}
+}
+
 func tlsEntries(ing *v1alpha1.Ingress) map[string]v1alpha1.IngressTLS {
 	external := ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP)
 	internal := ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityClusterLocal)
 
 	entries := make(map[string]v1alpha1.IngressTLS, len(external)+len(internal))
-	for _, tls := range external {
-		for _, host := range tls.Hosts {
-			entries[host] = tls
-		}
-	}
-	for _, tls := range internal {
-		for _, host := range tls.Hosts {
-			entries[host] = tls
-		}
-	}
+	addHostEntries(entries, external)
+	addHostEntries(entries, internal)
 	return entries
 }
 
