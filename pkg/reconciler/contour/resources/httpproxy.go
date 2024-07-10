@@ -97,19 +97,31 @@ func defaultRetryPolicy() *v1.RetryPolicy {
 	}
 }
 
+func addHostEntries(entries map[string]v1alpha1.IngressTLS, list []v1alpha1.IngressTLS) {
+	for _, tls := range list {
+		for _, host := range tls.Hosts {
+			entries[host] = tls
+		}
+	}
+}
+
+func tlsEntries(ing *v1alpha1.Ingress) map[string]v1alpha1.IngressTLS {
+	external := ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP)
+	internal := ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityClusterLocal)
+
+	entries := make(map[string]v1alpha1.IngressTLS, len(external)+len(internal))
+	addHostEntries(entries, external)
+	addHostEntries(entries, internal)
+	return entries
+}
+
 func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtocol map[string]string) []*v1.HTTPProxy {
 	cfg := config.FromContext(ctx)
 
 	ing = ing.DeepCopy()
 	ingress.InsertProbe(ing)
 
-	externalIngressTLS := ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP)
-	hostToTLS := make(map[string]v1alpha1.IngressTLS, len(externalIngressTLS))
-	for _, tls := range externalIngressTLS {
-		for _, host := range tls.Hosts {
-			hostToTLS[host] = tls
-		}
-	}
+	tlsEntries := tlsEntries(ing)
 
 	var allowInsecure bool
 	switch ing.Spec.HTTPOption {
@@ -329,7 +341,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				// nolint:gosec // No strong cryptography needed.
 				hostProxy.Labels[DomainHashKey] = fmt.Sprintf("%x", sha1.Sum([]byte(host)))
 
-				if tls, ok := hostToTLS[host]; ok {
+				if tls, ok := tlsEntries[host]; ok {
 					// TODO(mattmoor): How do we deal with custom secret schemas?
 					hostProxy.Spec.VirtualHost.TLS = &v1.TLS{
 						SecretName: fmt.Sprintf("%s/%s", tls.SecretNamespace, tls.SecretName),
