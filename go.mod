@@ -13,11 +13,11 @@ replace (
 
 require (
 	github.com/google/go-cmp v0.6.0
-	github.com/projectcontour/contour v1.29.1
+	github.com/projectcontour/contour v1.30.1
 	go.uber.org/zap v1.27.0
-	k8s.io/api v0.30.3
-	k8s.io/apimachinery v0.30.3
-	k8s.io/client-go v0.30.3
+	k8s.io/api v0.30.6
+	k8s.io/apimachinery v0.30.6
+	k8s.io/client-go v0.30.6
 	knative.dev/hack v0.0.0-20241128013751-1978b3a02667
 	knative.dev/networking v0.0.0-20241213084654-8b69a35edbf3
 	knative.dev/pkg v0.0.0-20241218051509-40afb7c5436e
@@ -90,7 +90,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.30.3 // indirect
+	k8s.io/apiextensions-apiserver v0.30.6 // indirect
 	k8s.io/code-generator v0.30.3 // indirect
 	k8s.io/gengo v0.0.0-20240404160639-a0386bf69313 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect

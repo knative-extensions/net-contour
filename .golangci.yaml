@@ -1,5 +1,6 @@
 run:
-  timeout: 5m
+  timeout: 10m
+  allow-parallel-runners: true
 
   build-tags:
     - e2e
@@ -8,13 +9,20 @@ run:
     - preupgrade
     - postupgrade
     - postdowngrade
-    - istio
 
-  skip-dirs:
+  exclude-dirs:
     - pkg/client
 
-  skip-files:
+  exclude-files:
     - ".pb.go$"
+
+output:
+  uniq-by-line: true
+  sort-results: true
+  sort-order:
+  - linter
+  - file
+  show-stats: true
 
 linters:
   enable:
@@ -30,12 +38,21 @@ linters:
   disable:
     - errcheck
 
+linters-settings:
+  revive:
+    rules:
+    # use unparam linter instead - defaults are better
+    - name: unused-parameter
+      disabled: true
+
 issues:
   exclude-rules:
     - path: test # Excludes /test, *_test.go etc.
       linters:
         - gosec
         - unparam
+        - noctx
+        - dot-imports
 
     # Allow source and sink receivers in conversion code for clarity.
     - path: _conversion\.go
