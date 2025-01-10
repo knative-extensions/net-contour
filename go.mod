@@ -2,15 +2,6 @@ module knative.dev/net-contour
 
 go 1.22.7
 
-replace (
-	k8s.io/api => k8s.io/api v0.29.6
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.29.6 // indirect
-	k8s.io/apimachinery => k8s.io/apimachinery v0.29.6
-	k8s.io/client-go => k8s.io/client-go v0.29.6
-	k8s.io/code-generator => k8s.io/code-generator v0.29.6 // indirect
-	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00
-)
-
 require (
 	github.com/google/go-cmp v0.6.0
 	github.com/projectcontour/contour v1.30.1
@@ -91,8 +82,9 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.30.6 // indirect
-	k8s.io/code-generator v0.30.3 // indirect
+	k8s.io/code-generator v0.30.6 // indirect
 	k8s.io/gengo v0.0.0-20240404160639-a0386bf69313 // indirect
+	k8s.io/gengo/v2 v2.0.0-20240228010128-51d4e06bde70 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240808142205-8e686545bdb8 // indirect
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
