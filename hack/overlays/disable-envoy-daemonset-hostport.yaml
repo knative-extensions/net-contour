@@ -18,3 +18,7 @@ spec:
             - containerPort: 8443
               #@overlay/remove
               hostPort: 443
+            #@overlay/match by="containerPort"
+            - containerPort: 8002
+              #@overlay/remove
+              hostPort: 8002
