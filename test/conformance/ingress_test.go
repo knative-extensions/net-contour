@@ -34,7 +34,7 @@ const iterations = 11
 func TestIngressConformance(t *testing.T) {
 	t.Parallel()
 
-	for i := 0; i < iterations; i++ {
+	for i := range iterations {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			t.Parallel()
 			ingress.RunConformance(t)

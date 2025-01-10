@@ -88,6 +88,7 @@ maxAge: "10m"
 		t.Errorf("Got = %v, want: %v, diff:\n%s", got, want, cmp.Diff(got, want))
 	}
 }
+
 func TestCORSPolicyConfigurationErrors(t *testing.T) {
 	tests := []struct {
 		name    string

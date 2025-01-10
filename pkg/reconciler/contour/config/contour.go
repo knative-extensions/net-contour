@@ -37,7 +37,7 @@ const (
 	ContourConfigName = "config-contour"
 
 	visibilityConfigKey = "visibility"
-	// nolint:gosec // Not an actual secret.
+	//nolint:gosec // Not an actual secret.
 	defaultTLSSecretConfigKey = "default-tls-secret"
 	timeoutPolicyIdleKey      = "timeout-policy-idle"
 	timeoutPolicyResponseKey  = "timeout-policy-response"
@@ -63,8 +63,8 @@ type visibilityValue struct {
 // NewContourFromConfigMap creates a Contour config from the supplied ConfigMap
 func NewContourFromConfigMap(configMap *corev1.ConfigMap) (*Contour, error) {
 	var tlsSecret *types.NamespacedName
-	var timeoutPolicyResponse = "infinity"
-	var timeoutPolicyIdle = "infinity"
+	timeoutPolicyResponse := "infinity"
+	timeoutPolicyIdle := "infinity"
 	var contourCORSPolicy *v1.CORSPolicy
 
 	if err := configmap.Parse(configMap.Data,

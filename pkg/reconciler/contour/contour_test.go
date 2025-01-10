@@ -489,7 +489,8 @@ func TestReconcile(t *testing.T) {
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
-				}})
+				},
+			})
 
 		return ingr
 	}))
@@ -594,7 +595,8 @@ func TestReconcileInternalEncryption(t *testing.T) {
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: internalEncryptionConfig,
-				}})
+				},
+			})
 	}))
 }
 
@@ -636,7 +638,8 @@ func TestReconcileProberNotReady(t *testing.T) {
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
-				}})
+				},
+			})
 	}))
 }
 
@@ -684,7 +687,8 @@ func TestReconcileProbeError(t *testing.T) {
 			controller.Options{
 				ConfigStore: &testConfigStore{
 					config: defaultConfig,
-				}})
+				},
+			})
 
 		// The Reconciler won't do any work until it becomes the leader.
 		if la, ok := ingr.(reconciler.LeaderAware); ok {

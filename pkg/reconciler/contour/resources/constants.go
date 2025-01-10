@@ -40,14 +40,14 @@ const (
 )
 
 const (
-	//InternalEncryptionProtocol is the protocol to set on the Services in
-	//the HTTPProxy when InternalEncryption is enabled. This prompt's
-	//Contour's Envoys to encrypt the traffic to the activator.
+	// InternalEncryptionProtocol is the protocol to set on the Services in
+	// the HTTPProxy when InternalEncryption is enabled. This prompt's
+	// Contour's Envoys to encrypt the traffic to the activator.
 	InternalEncryptionProtocol   = "tls"
 	InternalEncryptionH2Protocol = "h2"
 
-	//HttpChallengePath is the path that gets added to routes when using
-	//auto-TLS with an http01 solver as the issuer.
+	// HttpChallengePath is the path that gets added to routes when using
+	// auto-TLS with an http01 solver as the issuer.
 	HTTPChallengePath = "/.well-known/acme-challenge"
 )
 

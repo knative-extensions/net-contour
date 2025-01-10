@@ -18,10 +18,10 @@ package resources
 
 import (
 	"context"
-	// nolint:gosec // No strong cryptography needed.
-	"crypto/sha1"
+	"crypto/sha1" //nolint:gosec // no strong cryptography needed
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
@@ -174,7 +174,6 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 
 			svcs := make([]v1.Service, 0, len(path.Splits))
 			for _, split := range path.Splits {
-
 				svc := v1.Service{
 					Name:   split.ServiceName,
 					Port:   split.ServicePort.IntValue(),
@@ -206,13 +205,13 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				svc.RequestHeadersPolicy = postSplitHeaders
 
 				if proto, ok := serviceToProtocol[split.ServiceName]; ok {
-					//In order for domain mappings to work with internal
-					//encryption, need to unencrypt traffic back to the envoy.
-					//See
-					//https://github.com/knative-sandbox/net-contour/issues/862
-					//Can identify domain mappings by the presence of the RewriteHost field on
-					//the Path in combination with the "K-Original-Host" key in appendHeaders on
-					//the split
+					// In order for domain mappings to work with internal
+					// encryption, need to unencrypt traffic back to the envoy.
+					// See
+					// https://github.com/knative-sandbox/net-contour/issues/862
+					// Can identify domain mappings by the presence of the RewriteHost field on
+					// the Path in combination with the "K-Original-Host" key in appendHeaders on
+					// the split
 					if path.RewriteHost != "" && hasOriginalHostKey {
 						svc.Protocol = ptr.String("h2c")
 					} else {
@@ -232,7 +231,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 				}
 
 				if strings.Contains(path.Path, HTTPChallengePath) {
-					//make sure http01 challenge doesn't get encrypted or use http2
+					// make sure http01 challenge doesn't get encrypted or use http2
 					svc.Protocol = nil
 					svc.UpstreamValidation = nil
 				}
@@ -288,7 +287,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: ing.Namespace,
 				Labels: map[string]string{
-					GenerationKey: fmt.Sprintf("%d", ing.Generation),
+					GenerationKey: strconv.FormatInt(ing.Generation, 10),
 					ParentKey:     ing.Name,
 					ClassKey:      class,
 				},
@@ -338,7 +337,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					}
 				}
 
-				// nolint:gosec // No strong cryptography needed.
+				//nolint:gosec // No strong cryptography needed.
 				hostProxy.Labels[DomainHashKey] = fmt.Sprintf("%x", sha1.Sum([]byte(host)))
 
 				if tls, ok := tlsEntries[host]; ok {
