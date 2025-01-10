@@ -3264,7 +3264,7 @@ func TestServiceNames(t *testing.T) {
 	tests := []struct {
 		name string
 		ing  *v1alpha1.Ingress
-		want sets.String
+		want sets.Set[string]
 	}{{
 		name: "empty",
 		ing: &v1alpha1.Ingress{
@@ -3306,16 +3306,13 @@ func TestServiceNames(t *testing.T) {
 				}},
 			},
 		},
-		want: sets.NewString("goo", "boo", "doo"),
+		want: sets.New("goo", "boo", "doo"),
 	}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			sns := ServiceNames(context.Background(), test.ing)
-			got := make(sets.String, len(sns))
-			for key := range sns {
-				got.Insert(key)
-			}
+			got := sets.KeySet(sns)
 			if !cmp.Equal(test.want, got) {
 				t.Error("ServiceNames (-want, +got):", cmp.Diff(test.want, got))
 			}

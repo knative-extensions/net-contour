@@ -17,7 +17,6 @@ run:
     - ".pb.go$"
 
 output:
-  uniq-by-line: true
   sort-results: true
   sort-order:
   - linter
@@ -46,6 +45,7 @@ linters-settings:
       disabled: true
 
 issues:
+  uniq-by-line: true
   exclude-rules:
     - path: test # Excludes /test, *_test.go etc.
       linters:
