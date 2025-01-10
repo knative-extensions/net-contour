@@ -164,13 +164,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 	logger = logger.With(zap.Bool("have-endpoint-probe", haveEndpointProbe))
 
 	info := resources.ServiceNames(ctx, ing)
-	serviceNames := sets.KeySet(info)
+	serviceNames := sets.List(sets.KeySet(info))
 	serviceToProtocol := make(map[string]string, len(info))
-	logger = logger.With(zap.Strings("services", serviceNames.UnsortedList()))
+	logger = logger.With(zap.Strings("services", serviceNames))
 
 	// Establish the protocol for each Service, and ensure that their Endpoints are
 	// populated with Ready addresses before we reprogram Contour.
-	for _, name := range serviceNames.UnsortedList() {
+	for _, name := range serviceNames {
 		if err := r.tracker.TrackReference(tracker.Reference{
 			APIVersion: "v1",
 			Kind:       "Service",

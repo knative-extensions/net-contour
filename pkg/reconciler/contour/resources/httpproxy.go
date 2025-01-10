@@ -52,7 +52,7 @@ type ServiceInfo struct {
 }
 
 func (si *ServiceInfo) Visibilities() (vis []v1alpha1.IngressVisibility) {
-	for _, v := range si.RawVisibilities.UnsortedList() {
+	for _, v := range sets.List(si.RawVisibilities) {
 		vis = append(vis, v1alpha1.IngressVisibility(v))
 	}
 	return
