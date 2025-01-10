@@ -85,7 +85,7 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 				if !ok {
 					si = ServiceInfo{
 						Port:            intstr.FromInt(svc.Port),
-						RawVisibilities: sets.NewString(),
+						RawVisibilities: sets.New[string](),
 						HasPath:         hasPath,
 					}
 				}
@@ -96,12 +96,8 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 	}
 
 	// Give the services a deterministic ordering.
-	order := make(sets.String, len(sns))
-	for key := range sns {
-		order.Insert(key)
-	}
-
-	l := order.List()
+	order := sets.KeySet(sns)
+	l := sets.List(order)
 	logging.FromContext(ctx).Debugf("Endpoints probe will cover services: %v", l)
 
 	probeHosts := make([]string, 0, len(l))

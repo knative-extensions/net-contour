@@ -42,7 +42,7 @@ import (
 
 type ServiceInfo struct {
 	Port            intstr.IntOrString
-	RawVisibilities sets.String
+	RawVisibilities sets.Set[string]
 	// If the Host header sent to this service needs to be rewritten,
 	// then track that so we can send it for probing.
 	RewriteHost string
@@ -52,7 +52,7 @@ type ServiceInfo struct {
 }
 
 func (si *ServiceInfo) Visibilities() (vis []v1alpha1.IngressVisibility) {
-	for _, v := range si.RawVisibilities.List() {
+	for _, v := range sets.List(si.RawVisibilities) {
 		vis = append(vis, v1alpha1.IngressVisibility(v))
 	}
 	return
@@ -67,7 +67,7 @@ func ServiceNames(ctx context.Context, ing *v1alpha1.Ingress) map[string]Service
 				if !ok {
 					si = ServiceInfo{
 						Port:            split.ServicePort,
-						RawVisibilities: sets.NewString(),
+						RawVisibilities: sets.New[string](),
 						HasPath:         path.Path != "",
 						RewriteHost:     path.RewriteHost,
 					}
