@@ -184,5 +184,4 @@ func createService(ctx context.Context, t *testing.T, clients *test.Clients, svc
 	t.Cleanup(func() {
 		clients.KubeClient.CoreV1().Services(svc.Namespace).Delete(ctx, svc.Name, metav1.DeleteOptions{})
 	})
-
 }

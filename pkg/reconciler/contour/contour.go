@@ -19,6 +19,7 @@ package contour
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -93,7 +94,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 		// a generation's endpoints.
 		labels.Set(map[string]string{
 			resources.ParentKey:     ing.Name,
-			resources.GenerationKey: fmt.Sprintf("%d", ing.Generation),
+			resources.GenerationKey: strconv.FormatInt(ing.Generation, 10),
 		}).AsSelector()); err != nil {
 		return err
 	} else if len(currentGeneration) == 0 {
@@ -184,7 +185,6 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ing *v1alpha1.Ingress) r
 			return err
 		}
 		for _, port := range svc.Spec.Ports {
-
 			if port.Name == networking.ServicePortNameH2C {
 				if cfg.Network != nil && cfg.Network.SystemInternalTLSEnabled() {
 					serviceToProtocol[name] = resources.InternalEncryptionH2Protocol

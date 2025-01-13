@@ -1816,7 +1816,8 @@ func TestMakeProxies(t *testing.T) {
 				Name:      "bar",
 				Annotations: map[string]string{
 					ExtensionServiceKey:          "es",
-					ExtensionServiceNamespaceKey: "es-ns"},
+					ExtensionServiceNamespaceKey: "es-ns",
+				},
 			},
 			Spec: v1alpha1.IngressSpec{
 				HTTPOption: v1alpha1.HTTPOptionEnabled,
@@ -2227,501 +2228,502 @@ func TestMakeProxiesSystemInternalEncryption(t *testing.T) {
 		ing          *v1alpha1.Ingress
 		want         []*v1.HTTPProxy
 		modifyConfig func(*config.Config)
-	}{{
-		name: "single external domain with internal encryption enabled",
-		ing: &v1alpha1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "foo",
-				Name:      "bar",
-			},
-			Spec: v1alpha1.IngressSpec{
-				HTTPOption: v1alpha1.HTTPOptionEnabled,
-				Rules: []v1alpha1.IngressRule{{
-					Hosts:      []string{"example.com"},
-					Visibility: v1alpha1.IngressVisibilityExternalIP,
-					HTTP: &v1alpha1.HTTPIngressRuleValue{
-						Paths: []v1alpha1.HTTPIngressPath{{
-							AppendHeaders: map[string]string{
-								"Foo": "bar",
-							},
-							Splits: []v1alpha1.IngressBackendSplit{{
-								IngressBackend: v1alpha1.IngressBackend{
-									ServiceName:      "goo",
-									ServiceNamespace: "foo",
-									ServicePort:      intstr.FromInt(123),
-								},
-								Percent: 100,
+	}{
+		{
+			name: "single external domain with internal encryption enabled",
+			ing: &v1alpha1.Ingress{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo",
+					Name:      "bar",
+				},
+				Spec: v1alpha1.IngressSpec{
+					HTTPOption: v1alpha1.HTTPOptionEnabled,
+					Rules: []v1alpha1.IngressRule{{
+						Hosts:      []string{"example.com"},
+						Visibility: v1alpha1.IngressVisibilityExternalIP,
+						HTTP: &v1alpha1.HTTPIngressRuleValue{
+							Paths: []v1alpha1.HTTPIngressPath{{
 								AppendHeaders: map[string]string{
-									"Baz":   "blah",
-									"Bleep": "bloop",
+									"Foo": "bar",
 								},
-							}},
-						}},
-					},
-				}},
-			},
-		},
-		want: []*v1.HTTPProxy{{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "foo",
-				Name:      "bar-" + publicClass + "-example.com",
-				Labels: map[string]string{
-					DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
-					GenerationKey: "0",
-					ParentKey:     "bar",
-					ClassKey:      publicClass,
-				},
-				Annotations: map[string]string{
-					ClassKey: publicClass,
-				},
-				OwnerReferences: []metav1.OwnerReference{{
-					APIVersion:         "networking.internal.knative.dev/v1alpha1",
-					Kind:               "Ingress",
-					Name:               "bar",
-					Controller:         ptr.Bool(true),
-					BlockOwnerDeletion: ptr.Bool(true),
-				}},
-			},
-			Spec: v1.HTTPProxySpec{
-				VirtualHost: &v1.VirtualHost{
-					Fqdn: "example.com",
-				},
-				Routes: []v1.Route{{
-					EnableWebsockets: true,
-					PermitInsecure:   true,
-					TimeoutPolicy: &v1.TimeoutPolicy{
-						Response: "infinity",
-						Idle:     "infinity",
-					},
-					RetryPolicy: defaultRetryPolicy(),
-					Conditions: []v1.MatchCondition{{
-						Header: &v1.HeaderMatchCondition{
-							Name:  "K-Network-Hash",
-							Exact: "override",
-						},
-					}},
-					RequestHeadersPolicy: &v1.HeadersPolicy{
-						Set: []v1.HeaderValue{{
-							Name:  "Foo",
-							Value: "bar",
-						}, {
-							Name:  "K-Network-Hash",
-							Value: "6d6a4e524d201b156fae9b8d16e5dc534c6a2c18ca612061c9a5ac4b797affbb",
-						}},
-					},
-					Services: []v1.Service{{
-						Name:     "goo",
-						Port:     123,
-						Protocol: &tlsProto,
-						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
-							SubjectName:   "kn-user-foo",
-							SubjectNames: []string{
-								"kn-user-foo",
-								"kn-routing",
-							},
-						},
-						Weight: 100,
-						RequestHeadersPolicy: &v1.HeadersPolicy{
-							Set: []v1.HeaderValue{{
-								Name:  "Baz",
-								Value: "blah",
-							}, {
-								Name:  "Bleep",
-								Value: "bloop",
-							}},
-						},
-					}},
-				}, {
-					EnableWebsockets: true,
-					PermitInsecure:   true,
-					TimeoutPolicy: &v1.TimeoutPolicy{
-						Response: "infinity",
-						Idle:     "infinity",
-					},
-					RetryPolicy: defaultRetryPolicy(),
-					RequestHeadersPolicy: &v1.HeadersPolicy{
-						Set: []v1.HeaderValue{{
-							Name:  "Foo",
-							Value: "bar",
-						}},
-					},
-					Services: []v1.Service{{
-						Name:     "goo",
-						Port:     123,
-						Protocol: &tlsProto,
-						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
-							SubjectName:   "kn-user-foo",
-							SubjectNames: []string{
-								"kn-user-foo",
-								"kn-routing",
-							},
-						},
-						Weight: 100,
-						RequestHeadersPolicy: &v1.HeadersPolicy{
-							Set: []v1.HeaderValue{{
-								Name:  "Baz",
-								Value: "blah",
-							}, {
-								Name:  "Bleep",
-								Value: "bloop",
-							}},
-						},
-					}},
-				}},
-			},
-		}},
-	}, {
-		name: "single external domain with internal encryption enabled and http/2",
-		ing: &v1alpha1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "foo",
-				Name:      "bar",
-			},
-			Spec: v1alpha1.IngressSpec{
-				HTTPOption: v1alpha1.HTTPOptionEnabled,
-				Rules: []v1alpha1.IngressRule{{
-					Hosts:      []string{"example.com"},
-					Visibility: v1alpha1.IngressVisibilityExternalIP,
-					HTTP: &v1alpha1.HTTPIngressRuleValue{
-						Paths: []v1alpha1.HTTPIngressPath{{
-							AppendHeaders: map[string]string{
-								"Foo": "bar",
-							},
-							Splits: []v1alpha1.IngressBackendSplit{{
-								IngressBackend: v1alpha1.IngressBackend{
-									ServiceName:      "htwo",
-									ServiceNamespace: "foo",
-									ServicePort:      intstr.FromInt(123),
-								},
-								Percent: 100,
-								AppendHeaders: map[string]string{
-									"Baz":   "blah",
-									"Bleep": "bloop",
-								},
-							}},
-						}},
-					},
-				}},
-			},
-		},
-		want: []*v1.HTTPProxy{{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "foo",
-				Name:      "bar-" + publicClass + "-example.com",
-				Labels: map[string]string{
-					DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
-					GenerationKey: "0",
-					ParentKey:     "bar",
-					ClassKey:      publicClass,
-				},
-				Annotations: map[string]string{
-					ClassKey: publicClass,
-				},
-				OwnerReferences: []metav1.OwnerReference{{
-					APIVersion:         "networking.internal.knative.dev/v1alpha1",
-					Kind:               "Ingress",
-					Name:               "bar",
-					Controller:         ptr.Bool(true),
-					BlockOwnerDeletion: ptr.Bool(true),
-				}},
-			},
-			Spec: v1.HTTPProxySpec{
-				VirtualHost: &v1.VirtualHost{
-					Fqdn: "example.com",
-				},
-				Routes: []v1.Route{{
-					EnableWebsockets: true,
-					PermitInsecure:   true,
-					TimeoutPolicy: &v1.TimeoutPolicy{
-						Response: "infinity",
-						Idle:     "infinity",
-					},
-					RetryPolicy: defaultRetryPolicy(),
-					Conditions: []v1.MatchCondition{{
-						Header: &v1.HeaderMatchCondition{
-							Name:  "K-Network-Hash",
-							Exact: "override",
-						},
-					}},
-					RequestHeadersPolicy: &v1.HeadersPolicy{
-						Set: []v1.HeaderValue{{
-							Name:  "Foo",
-							Value: "bar",
-						}, {
-							Name:  "K-Network-Hash",
-							Value: "fe69d18ca560b548fd9cd1fe9a417a4de806f573b52353a435e222a23a984127",
-						}},
-					},
-					Services: []v1.Service{{
-						Name:     "htwo",
-						Port:     123,
-						Protocol: &h2Proto,
-						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
-							SubjectName:   "kn-user-foo",
-							SubjectNames: []string{
-								"kn-user-foo",
-								"kn-routing",
-							},
-						},
-						Weight: 100,
-						RequestHeadersPolicy: &v1.HeadersPolicy{
-							Set: []v1.HeaderValue{{
-								Name:  "Baz",
-								Value: "blah",
-							}, {
-								Name:  "Bleep",
-								Value: "bloop",
-							}},
-						},
-					}},
-				}, {
-					EnableWebsockets: true,
-					PermitInsecure:   true,
-					TimeoutPolicy: &v1.TimeoutPolicy{
-						Response: "infinity",
-						Idle:     "infinity",
-					},
-					RetryPolicy: defaultRetryPolicy(),
-					RequestHeadersPolicy: &v1.HeadersPolicy{
-						Set: []v1.HeaderValue{{
-							Name:  "Foo",
-							Value: "bar",
-						}},
-					},
-					Services: []v1.Service{{
-						Name:     "htwo",
-						Port:     123,
-						Protocol: &h2Proto,
-						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
-							SubjectName:   "kn-user-foo",
-							SubjectNames: []string{
-								"kn-user-foo",
-								"kn-routing",
-							},
-						},
-						Weight: 100,
-						RequestHeadersPolicy: &v1.HeadersPolicy{
-							Set: []v1.HeaderValue{{
-								Name:  "Baz",
-								Value: "blah",
-							}, {
-								Name:  "Bleep",
-								Value: "bloop",
-							}},
-						},
-					}},
-				}},
-			},
-		}},
-	}, {
-		name: "single external domain with internal encryption enabled and http01 challenge endpoints",
-		ing: &v1alpha1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "foo",
-				Name:      "bar",
-			},
-			Spec: v1alpha1.IngressSpec{
-				HTTPOption: v1alpha1.HTTPOptionEnabled,
-				Rules: []v1alpha1.IngressRule{{
-					Hosts:      []string{"example.com"},
-					Visibility: v1alpha1.IngressVisibilityExternalIP,
-					HTTP: &v1alpha1.HTTPIngressRuleValue{
-						Paths: []v1alpha1.HTTPIngressPath{{
-							Splits: []v1alpha1.IngressBackendSplit{{
-								IngressBackend: v1alpha1.IngressBackend{
-									ServiceName:      "goo",
-									ServiceNamespace: "foo",
-									ServicePort:      intstr.FromInt(123),
-								},
-								Percent: 100,
-								AppendHeaders: map[string]string{
-									"Baz":   "blah",
-									"Bleep": "bloop",
-								},
-							}},
-						}, {
-							Path: "/.well-known/acme-challenge/some-challenge",
-							Splits: []v1alpha1.IngressBackendSplit{
-								{
+								Splits: []v1alpha1.IngressBackendSplit{{
 									IngressBackend: v1alpha1.IngressBackend{
-										ServiceName:      "acme-http-solver",
+										ServiceName:      "goo",
 										ServiceNamespace: "foo",
-										ServicePort:      intstr.FromInt(8089),
+										ServicePort:      intstr.FromInt(123),
 									},
 									Percent: 100,
+									AppendHeaders: map[string]string{
+										"Baz":   "blah",
+										"Bleep": "bloop",
+									},
+								}},
+							}},
+						},
+					}},
+				},
+			},
+			want: []*v1.HTTPProxy{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo",
+					Name:      "bar-" + publicClass + "-example.com",
+					Labels: map[string]string{
+						DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
+						GenerationKey: "0",
+						ParentKey:     "bar",
+						ClassKey:      publicClass,
+					},
+					Annotations: map[string]string{
+						ClassKey: publicClass,
+					},
+					OwnerReferences: []metav1.OwnerReference{{
+						APIVersion:         "networking.internal.knative.dev/v1alpha1",
+						Kind:               "Ingress",
+						Name:               "bar",
+						Controller:         ptr.Bool(true),
+						BlockOwnerDeletion: ptr.Bool(true),
+					}},
+				},
+				Spec: v1.HTTPProxySpec{
+					VirtualHost: &v1.VirtualHost{
+						Fqdn: "example.com",
+					},
+					Routes: []v1.Route{{
+						EnableWebsockets: true,
+						PermitInsecure:   true,
+						TimeoutPolicy: &v1.TimeoutPolicy{
+							Response: "infinity",
+							Idle:     "infinity",
+						},
+						RetryPolicy: defaultRetryPolicy(),
+						Conditions: []v1.MatchCondition{{
+							Header: &v1.HeaderMatchCondition{
+								Name:  "K-Network-Hash",
+								Exact: "override",
+							},
+						}},
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Foo",
+								Value: "bar",
+							}, {
+								Name:  "K-Network-Hash",
+								Value: "6d6a4e524d201b156fae9b8d16e5dc534c6a2c18ca612061c9a5ac4b797affbb",
+							}},
+						},
+						Services: []v1.Service{{
+							Name:     "goo",
+							Port:     123,
+							Protocol: &tlsProto,
+							UpstreamValidation: &v1.UpstreamValidation{
+								CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
+								SubjectName:   "kn-user-foo",
+								SubjectNames: []string{
+									"kn-user-foo",
+									"kn-routing",
 								},
 							},
-							/*
-								Note for self: http01 challenges only come up for new domains. So if you delete hello and recreate it, a new challenge won't happen, and won't trigger the case where it tries to use tls to the challenge endpoint
-								   - path: /.well-known/acme-challenge/DzPfge0gXYvu417QIIQ9IAd9_YaG-rl_qby3HQlBbQA
-								     splits:
-								     - percent: 100
-								       serviceName: cm-acme-http-solver-rczvs
-								       serviceNamespace: default
-								       servicePort: 8089
-							*/
-
-						}},
-					},
-				}},
-			},
-		},
-		want: []*v1.HTTPProxy{{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "foo",
-				Name:      "bar-" + publicClass + "-example.com",
-				Labels: map[string]string{
-					DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
-					GenerationKey: "0",
-					ParentKey:     "bar",
-					ClassKey:      publicClass,
-				},
-				Annotations: map[string]string{
-					ClassKey: publicClass,
-				},
-				OwnerReferences: []metav1.OwnerReference{{
-					APIVersion:         "networking.internal.knative.dev/v1alpha1",
-					Kind:               "Ingress",
-					Name:               "bar",
-					Controller:         ptr.Bool(true),
-					BlockOwnerDeletion: ptr.Bool(true),
-				}},
-			},
-			Spec: v1.HTTPProxySpec{
-				VirtualHost: &v1.VirtualHost{
-					Fqdn: "example.com",
-				},
-				Routes: []v1.Route{{
-					EnableWebsockets: true,
-					PermitInsecure:   true,
-					TimeoutPolicy: &v1.TimeoutPolicy{
-						Response: "infinity",
-						Idle:     "infinity",
-					},
-					RetryPolicy: defaultRetryPolicy(),
-					RequestHeadersPolicy: &v1.HeadersPolicy{
-						Set: []v1.HeaderValue{{
-							Name:  "K-Network-Hash",
-							Value: "62a84eab49a55afbf471afc85d08701d4beff2fc957b4d7614048320d0795597",
-						}},
-					},
-					Conditions: []v1.MatchCondition{{
-						Header: &v1.HeaderMatchCondition{
-							Name:  "K-Network-Hash",
-							Exact: "override",
-						},
-					}},
-					Services: []v1.Service{{
-						Name:     "goo",
-						Port:     123,
-						Protocol: &tlsProto,
-						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
-							SubjectName:   "kn-user-foo",
-							SubjectNames: []string{
-								"kn-user-foo",
-								"kn-routing",
+							Weight: 100,
+							RequestHeadersPolicy: &v1.HeadersPolicy{
+								Set: []v1.HeaderValue{{
+									Name:  "Baz",
+									Value: "blah",
+								}, {
+									Name:  "Bleep",
+									Value: "bloop",
+								}},
 							},
-						},
-						Weight: 100,
-						RequestHeadersPolicy: &v1.HeadersPolicy{
-							Set: []v1.HeaderValue{{
-								Name:  "Baz",
-								Value: "blah",
-							}, {
-								Name:  "Bleep",
-								Value: "bloop",
-							}},
-						},
-					}},
-				}, {
-					EnableWebsockets: true,
-					PermitInsecure:   true,
-					TimeoutPolicy: &v1.TimeoutPolicy{
-						Response: "infinity",
-						Idle:     "infinity",
-					},
-					RetryPolicy: defaultRetryPolicy(),
-					RequestHeadersPolicy: &v1.HeadersPolicy{
-						Set: []v1.HeaderValue{{
-							Name:  "K-Network-Hash",
-							Value: "62a84eab49a55afbf471afc85d08701d4beff2fc957b4d7614048320d0795597",
 						}},
-					},
-					Conditions: []v1.MatchCondition{{
-						Prefix: "/.well-known/acme-challenge/some-challenge",
 					}, {
-						Header: &v1.HeaderMatchCondition{
-							Name:  "K-Network-Hash",
-							Exact: "override",
+						EnableWebsockets: true,
+						PermitInsecure:   true,
+						TimeoutPolicy: &v1.TimeoutPolicy{
+							Response: "infinity",
+							Idle:     "infinity",
 						},
-					}},
-					Services: []v1.Service{{
-						Name:   "acme-http-solver",
-						Port:   8089,
-						Weight: 100,
-					}},
-				}, {
-					EnableWebsockets: true,
-					PermitInsecure:   true,
-					TimeoutPolicy: &v1.TimeoutPolicy{
-						Response: "infinity",
-						Idle:     "infinity",
-					},
-					RetryPolicy: defaultRetryPolicy(),
-					RequestHeadersPolicy: &v1.HeadersPolicy{
-						Set: []v1.HeaderValue{},
-					},
-					Services: []v1.Service{{
-						Name:     "goo",
-						Port:     123,
-						Protocol: &tlsProto,
-						UpstreamValidation: &v1.UpstreamValidation{
-							CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
-							SubjectName:   "kn-user-foo",
-							SubjectNames: []string{
-								"kn-user-foo",
-								"kn-routing",
-							},
-						},
-						Weight: 100,
+						RetryPolicy: defaultRetryPolicy(),
 						RequestHeadersPolicy: &v1.HeadersPolicy{
 							Set: []v1.HeaderValue{{
-								Name:  "Baz",
-								Value: "blah",
-							}, {
-								Name:  "Bleep",
-								Value: "bloop",
+								Name:  "Foo",
+								Value: "bar",
+							}},
+						},
+						Services: []v1.Service{{
+							Name:     "goo",
+							Port:     123,
+							Protocol: &tlsProto,
+							UpstreamValidation: &v1.UpstreamValidation{
+								CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
+								SubjectName:   "kn-user-foo",
+								SubjectNames: []string{
+									"kn-user-foo",
+									"kn-routing",
+								},
+							},
+							Weight: 100,
+							RequestHeadersPolicy: &v1.HeadersPolicy{
+								Set: []v1.HeaderValue{{
+									Name:  "Baz",
+									Value: "blah",
+								}, {
+									Name:  "Bleep",
+									Value: "bloop",
+								}},
+							},
+						}},
+					}},
+				},
+			}},
+		}, {
+			name: "single external domain with internal encryption enabled and http/2",
+			ing: &v1alpha1.Ingress{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo",
+					Name:      "bar",
+				},
+				Spec: v1alpha1.IngressSpec{
+					HTTPOption: v1alpha1.HTTPOptionEnabled,
+					Rules: []v1alpha1.IngressRule{{
+						Hosts:      []string{"example.com"},
+						Visibility: v1alpha1.IngressVisibilityExternalIP,
+						HTTP: &v1alpha1.HTTPIngressRuleValue{
+							Paths: []v1alpha1.HTTPIngressPath{{
+								AppendHeaders: map[string]string{
+									"Foo": "bar",
+								},
+								Splits: []v1alpha1.IngressBackendSplit{{
+									IngressBackend: v1alpha1.IngressBackend{
+										ServiceName:      "htwo",
+										ServiceNamespace: "foo",
+										ServicePort:      intstr.FromInt(123),
+									},
+									Percent: 100,
+									AppendHeaders: map[string]string{
+										"Baz":   "blah",
+										"Bleep": "bloop",
+									},
+								}},
 							}},
 						},
 					}},
-				}, {
-					EnableWebsockets: true,
-					PermitInsecure:   true,
-					TimeoutPolicy: &v1.TimeoutPolicy{
-						Response: "infinity",
-						Idle:     "infinity",
-					},
-					Conditions: []v1.MatchCondition{{
-						Prefix: "/.well-known/acme-challenge/some-challenge",
-					}},
-					RetryPolicy: defaultRetryPolicy(),
-					RequestHeadersPolicy: &v1.HeadersPolicy{
-						Set: []v1.HeaderValue{},
-					},
-					Services: []v1.Service{{
-						Name:   "acme-http-solver",
-						Port:   8089,
-						Weight: 100,
-					}},
-				}},
+				},
 			},
-		}},
-	},
+			want: []*v1.HTTPProxy{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo",
+					Name:      "bar-" + publicClass + "-example.com",
+					Labels: map[string]string{
+						DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
+						GenerationKey: "0",
+						ParentKey:     "bar",
+						ClassKey:      publicClass,
+					},
+					Annotations: map[string]string{
+						ClassKey: publicClass,
+					},
+					OwnerReferences: []metav1.OwnerReference{{
+						APIVersion:         "networking.internal.knative.dev/v1alpha1",
+						Kind:               "Ingress",
+						Name:               "bar",
+						Controller:         ptr.Bool(true),
+						BlockOwnerDeletion: ptr.Bool(true),
+					}},
+				},
+				Spec: v1.HTTPProxySpec{
+					VirtualHost: &v1.VirtualHost{
+						Fqdn: "example.com",
+					},
+					Routes: []v1.Route{{
+						EnableWebsockets: true,
+						PermitInsecure:   true,
+						TimeoutPolicy: &v1.TimeoutPolicy{
+							Response: "infinity",
+							Idle:     "infinity",
+						},
+						RetryPolicy: defaultRetryPolicy(),
+						Conditions: []v1.MatchCondition{{
+							Header: &v1.HeaderMatchCondition{
+								Name:  "K-Network-Hash",
+								Exact: "override",
+							},
+						}},
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Foo",
+								Value: "bar",
+							}, {
+								Name:  "K-Network-Hash",
+								Value: "fe69d18ca560b548fd9cd1fe9a417a4de806f573b52353a435e222a23a984127",
+							}},
+						},
+						Services: []v1.Service{{
+							Name:     "htwo",
+							Port:     123,
+							Protocol: &h2Proto,
+							UpstreamValidation: &v1.UpstreamValidation{
+								CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
+								SubjectName:   "kn-user-foo",
+								SubjectNames: []string{
+									"kn-user-foo",
+									"kn-routing",
+								},
+							},
+							Weight: 100,
+							RequestHeadersPolicy: &v1.HeadersPolicy{
+								Set: []v1.HeaderValue{{
+									Name:  "Baz",
+									Value: "blah",
+								}, {
+									Name:  "Bleep",
+									Value: "bloop",
+								}},
+							},
+						}},
+					}, {
+						EnableWebsockets: true,
+						PermitInsecure:   true,
+						TimeoutPolicy: &v1.TimeoutPolicy{
+							Response: "infinity",
+							Idle:     "infinity",
+						},
+						RetryPolicy: defaultRetryPolicy(),
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "Foo",
+								Value: "bar",
+							}},
+						},
+						Services: []v1.Service{{
+							Name:     "htwo",
+							Port:     123,
+							Protocol: &h2Proto,
+							UpstreamValidation: &v1.UpstreamValidation{
+								CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
+								SubjectName:   "kn-user-foo",
+								SubjectNames: []string{
+									"kn-user-foo",
+									"kn-routing",
+								},
+							},
+							Weight: 100,
+							RequestHeadersPolicy: &v1.HeadersPolicy{
+								Set: []v1.HeaderValue{{
+									Name:  "Baz",
+									Value: "blah",
+								}, {
+									Name:  "Bleep",
+									Value: "bloop",
+								}},
+							},
+						}},
+					}},
+				},
+			}},
+		}, {
+			name: "single external domain with internal encryption enabled and http01 challenge endpoints",
+			ing: &v1alpha1.Ingress{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo",
+					Name:      "bar",
+				},
+				Spec: v1alpha1.IngressSpec{
+					HTTPOption: v1alpha1.HTTPOptionEnabled,
+					Rules: []v1alpha1.IngressRule{{
+						Hosts:      []string{"example.com"},
+						Visibility: v1alpha1.IngressVisibilityExternalIP,
+						HTTP: &v1alpha1.HTTPIngressRuleValue{
+							Paths: []v1alpha1.HTTPIngressPath{{
+								Splits: []v1alpha1.IngressBackendSplit{{
+									IngressBackend: v1alpha1.IngressBackend{
+										ServiceName:      "goo",
+										ServiceNamespace: "foo",
+										ServicePort:      intstr.FromInt(123),
+									},
+									Percent: 100,
+									AppendHeaders: map[string]string{
+										"Baz":   "blah",
+										"Bleep": "bloop",
+									},
+								}},
+							}, {
+								Path: "/.well-known/acme-challenge/some-challenge",
+								Splits: []v1alpha1.IngressBackendSplit{
+									{
+										IngressBackend: v1alpha1.IngressBackend{
+											ServiceName:      "acme-http-solver",
+											ServiceNamespace: "foo",
+											ServicePort:      intstr.FromInt(8089),
+										},
+										Percent: 100,
+									},
+								},
+								/*
+									Note for self: http01 challenges only come up for new domains. So if you delete hello and recreate it, a new challenge won't happen, and won't trigger the case where it tries to use tls to the challenge endpoint
+									   - path: /.well-known/acme-challenge/DzPfge0gXYvu417QIIQ9IAd9_YaG-rl_qby3HQlBbQA
+									     splits:
+									     - percent: 100
+									       serviceName: cm-acme-http-solver-rczvs
+									       serviceNamespace: default
+									       servicePort: 8089
+								*/
+
+							}},
+						},
+					}},
+				},
+			},
+			want: []*v1.HTTPProxy{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "foo",
+					Name:      "bar-" + publicClass + "-example.com",
+					Labels: map[string]string{
+						DomainHashKey: "0caaf24ab1a0c33440c06afe99df986365b0781f",
+						GenerationKey: "0",
+						ParentKey:     "bar",
+						ClassKey:      publicClass,
+					},
+					Annotations: map[string]string{
+						ClassKey: publicClass,
+					},
+					OwnerReferences: []metav1.OwnerReference{{
+						APIVersion:         "networking.internal.knative.dev/v1alpha1",
+						Kind:               "Ingress",
+						Name:               "bar",
+						Controller:         ptr.Bool(true),
+						BlockOwnerDeletion: ptr.Bool(true),
+					}},
+				},
+				Spec: v1.HTTPProxySpec{
+					VirtualHost: &v1.VirtualHost{
+						Fqdn: "example.com",
+					},
+					Routes: []v1.Route{{
+						EnableWebsockets: true,
+						PermitInsecure:   true,
+						TimeoutPolicy: &v1.TimeoutPolicy{
+							Response: "infinity",
+							Idle:     "infinity",
+						},
+						RetryPolicy: defaultRetryPolicy(),
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "K-Network-Hash",
+								Value: "62a84eab49a55afbf471afc85d08701d4beff2fc957b4d7614048320d0795597",
+							}},
+						},
+						Conditions: []v1.MatchCondition{{
+							Header: &v1.HeaderMatchCondition{
+								Name:  "K-Network-Hash",
+								Exact: "override",
+							},
+						}},
+						Services: []v1.Service{{
+							Name:     "goo",
+							Port:     123,
+							Protocol: &tlsProto,
+							UpstreamValidation: &v1.UpstreamValidation{
+								CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
+								SubjectName:   "kn-user-foo",
+								SubjectNames: []string{
+									"kn-user-foo",
+									"kn-routing",
+								},
+							},
+							Weight: 100,
+							RequestHeadersPolicy: &v1.HeadersPolicy{
+								Set: []v1.HeaderValue{{
+									Name:  "Baz",
+									Value: "blah",
+								}, {
+									Name:  "Bleep",
+									Value: "bloop",
+								}},
+							},
+						}},
+					}, {
+						EnableWebsockets: true,
+						PermitInsecure:   true,
+						TimeoutPolicy: &v1.TimeoutPolicy{
+							Response: "infinity",
+							Idle:     "infinity",
+						},
+						RetryPolicy: defaultRetryPolicy(),
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{{
+								Name:  "K-Network-Hash",
+								Value: "62a84eab49a55afbf471afc85d08701d4beff2fc957b4d7614048320d0795597",
+							}},
+						},
+						Conditions: []v1.MatchCondition{{
+							Prefix: "/.well-known/acme-challenge/some-challenge",
+						}, {
+							Header: &v1.HeaderMatchCondition{
+								Name:  "K-Network-Hash",
+								Exact: "override",
+							},
+						}},
+						Services: []v1.Service{{
+							Name:   "acme-http-solver",
+							Port:   8089,
+							Weight: 100,
+						}},
+					}, {
+						EnableWebsockets: true,
+						PermitInsecure:   true,
+						TimeoutPolicy: &v1.TimeoutPolicy{
+							Response: "infinity",
+							Idle:     "infinity",
+						},
+						RetryPolicy: defaultRetryPolicy(),
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{},
+						},
+						Services: []v1.Service{{
+							Name:     "goo",
+							Port:     123,
+							Protocol: &tlsProto,
+							UpstreamValidation: &v1.UpstreamValidation{
+								CACertificate: fmt.Sprintf("%s/%s", system.Namespace(), netcfg.ServingRoutingCertName),
+								SubjectName:   "kn-user-foo",
+								SubjectNames: []string{
+									"kn-user-foo",
+									"kn-routing",
+								},
+							},
+							Weight: 100,
+							RequestHeadersPolicy: &v1.HeadersPolicy{
+								Set: []v1.HeaderValue{{
+									Name:  "Baz",
+									Value: "blah",
+								}, {
+									Name:  "Bleep",
+									Value: "bloop",
+								}},
+							},
+						}},
+					}, {
+						EnableWebsockets: true,
+						PermitInsecure:   true,
+						TimeoutPolicy: &v1.TimeoutPolicy{
+							Response: "infinity",
+							Idle:     "infinity",
+						},
+						Conditions: []v1.MatchCondition{{
+							Prefix: "/.well-known/acme-challenge/some-challenge",
+						}},
+						RetryPolicy: defaultRetryPolicy(),
+						RequestHeadersPolicy: &v1.HeadersPolicy{
+							Set: []v1.HeaderValue{},
+						},
+						Services: []v1.Service{{
+							Name:   "acme-http-solver",
+							Port:   8089,
+							Weight: 100,
+						}},
+					}},
+				},
+			}},
+		},
 	}
 
 	for _, test := range tests {
