@@ -10,7 +10,7 @@ require (
 	k8s.io/apimachinery v0.31.4
 	k8s.io/client-go v0.31.4
 	knative.dev/hack v0.0.0-20250109131303-f8be0ccdff36
-	knative.dev/networking v0.0.0-20250110041416-61c6cb642bc9
+	knative.dev/networking v0.0.0-20250110153017-22a6457498e8
 	knative.dev/pkg v0.0.0-20250110150618-accfe3649188
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -61,7 +61,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
