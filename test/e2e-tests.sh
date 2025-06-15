@@ -18,7 +18,7 @@ source $(dirname $0)/e2e-common.sh
 
 
 # Script entry point.
-initialize --cluster-version=1.31 $@
+initialize $@
 
 test_flags="-timeout=60m"
 if (( KIND )); then
