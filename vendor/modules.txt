@@ -16,7 +16,7 @@ github.com/cespare/xxhash/v2
 # github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/emicklei/go-restful/v3 v3.12.1
+# github.com/emicklei/go-restful/v3 v3.12.2
 ## explicit; go 1.13
 github.com/emicklei/go-restful/v3
 github.com/emicklei/go-restful/v3/log
@@ -27,8 +27,8 @@ github.com/evanphx/json-patch/v5/internal/json
 # github.com/felixge/httpsnoop v1.0.4
 ## explicit; go 1.13
 github.com/felixge/httpsnoop
-# github.com/fxamacker/cbor/v2 v2.7.0
-## explicit; go 1.17
+# github.com/fxamacker/cbor/v2 v2.9.0
+## explicit; go 1.20
 github.com/fxamacker/cbor/v2
 # github.com/go-logr/logr v1.4.3
 ## explicit; go 1.18
@@ -55,7 +55,7 @@ github.com/go-openapi/swag
 ## explicit; go 1.15
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/sortkeys
-# github.com/google/gnostic-models v0.6.9
+# github.com/google/gnostic-models v0.7.0 => github.com/google/gnostic-models v0.6.9
 ## explicit; go 1.21
 github.com/google/gnostic-models/compiler
 github.com/google/gnostic-models/extensions
@@ -105,7 +105,7 @@ github.com/mailru/easyjson/jwriter
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 ## explicit
 github.com/modern-go/concurrent
-# github.com/modern-go/reflect2 v1.0.2
+# github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee
 ## explicit; go 1.12
 github.com/modern-go/reflect2
 # github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
@@ -114,7 +114,7 @@ github.com/munnerz/goautoneg
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# github.com/projectcontour/contour v1.32.0
+# github.com/projectcontour/contour v1.33.0
 ## explicit; go 1.24.0
 github.com/projectcontour/contour/apis/projectcontour/v1
 # github.com/prometheus/client_golang v1.23.2
@@ -296,8 +296,8 @@ golang.org/x/net/internal/socks
 golang.org/x/net/internal/timeseries
 golang.org/x/net/proxy
 golang.org/x/net/trace
-# golang.org/x/oauth2 v0.30.0
-## explicit; go 1.23.0
+# golang.org/x/oauth2 v0.31.0
+## explicit; go 1.24.0
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
 # golang.org/x/sync v0.17.0
@@ -355,14 +355,14 @@ golang.org/x/tools/internal/versions
 # gomodules.xyz/jsonpatch/v2 v2.5.0
 ## explicit; go 1.20
 gomodules.xyz/jsonpatch/v2
-# google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822
+# google.golang.org/genproto/googleapis/api v0.0.0-20250707201910-8d1bb00bc6a7
 ## explicit; go 1.23.0
 google.golang.org/genproto/googleapis/api/httpbody
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7
 ## explicit; go 1.23.0
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.74.2
+# google.golang.org/grpc v1.75.0
 ## explicit; go 1.23.0
 google.golang.org/grpc
 google.golang.org/grpc/attributes
@@ -475,7 +475,7 @@ gopkg.in/inf.v0
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# k8s.io/api v0.33.4
+# k8s.io/api v0.34.0 => k8s.io/api v0.33.4
 ## explicit; go 1.24.0
 k8s.io/api/admission/v1
 k8s.io/api/admissionregistration/v1
@@ -536,11 +536,11 @@ k8s.io/api/storage/v1
 k8s.io/api/storage/v1alpha1
 k8s.io/api/storage/v1beta1
 k8s.io/api/storagemigration/v1alpha1
-# k8s.io/apiextensions-apiserver v0.33.4
+# k8s.io/apiextensions-apiserver v0.34.0 => k8s.io/apiextensions-apiserver v0.33.4
 ## explicit; go 1.24.0
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
-# k8s.io/apimachinery v0.33.4
+# k8s.io/apimachinery v0.34.0 => k8s.io/apimachinery v0.33.4
 ## explicit; go 1.24.0
 k8s.io/apimachinery/pkg/api/equality
 k8s.io/apimachinery/pkg/api/errors
@@ -596,7 +596,7 @@ k8s.io/apimachinery/pkg/version
 k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/third_party/forked/golang/json
 k8s.io/apimachinery/third_party/forked/golang/reflect
-# k8s.io/client-go v0.33.4
+# k8s.io/client-go v0.34.0 => k8s.io/client-go v0.33.4
 ## explicit; go 1.24.0
 k8s.io/client-go/applyconfigurations
 k8s.io/client-go/applyconfigurations/admissionregistration/v1
@@ -932,7 +932,7 @@ k8s.io/client-go/util/keyutil
 k8s.io/client-go/util/retry
 k8s.io/client-go/util/watchlist
 k8s.io/client-go/util/workqueue
-# k8s.io/code-generator v0.33.4
+# k8s.io/code-generator v0.34.0 => k8s.io/code-generator v0.33.4
 ## explicit; go 1.24.0
 k8s.io/code-generator
 k8s.io/code-generator/cmd/applyconfiguration-gen
@@ -968,9 +968,10 @@ k8s.io/code-generator/cmd/register-gen/generators
 k8s.io/code-generator/pkg/namer
 k8s.io/code-generator/pkg/util
 k8s.io/code-generator/third_party/forked/golang/reflect
-# k8s.io/gengo/v2 v2.0.0-20250207200755-1244d31929d7
+# k8s.io/gengo/v2 v2.0.0-20250604051438-85fd79dbfd9f
 ## explicit; go 1.20
 k8s.io/gengo/v2
+k8s.io/gengo/v2/codetags
 k8s.io/gengo/v2/generator
 k8s.io/gengo/v2/namer
 k8s.io/gengo/v2/parser
@@ -984,7 +985,7 @@ k8s.io/klog/v2/internal/dbg
 k8s.io/klog/v2/internal/serialize
 k8s.io/klog/v2/internal/severity
 k8s.io/klog/v2/internal/sloghandler
-# k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff
+# k8s.io/kube-openapi v0.0.0-20250710124328-f3f2b991d03b => k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff
 ## explicit; go 1.21
 k8s.io/kube-openapi/cmd/openapi-gen
 k8s.io/kube-openapi/cmd/openapi-gen/args
@@ -1000,7 +1001,7 @@ k8s.io/kube-openapi/pkg/spec3
 k8s.io/kube-openapi/pkg/util/proto
 k8s.io/kube-openapi/pkg/util/sets
 k8s.io/kube-openapi/pkg/validation/spec
-# k8s.io/utils v0.0.0-20241210054802-24370beab758
+# k8s.io/utils v0.0.0-20250604170112-4c0f3b243397
 ## explicit; go 1.18
 k8s.io/utils/buffer
 k8s.io/utils/clock
@@ -1156,3 +1157,10 @@ sigs.k8s.io/structured-merge-diff/v4/value
 ## explicit; go 1.22
 sigs.k8s.io/yaml
 sigs.k8s.io/yaml/goyaml.v2
+# github.com/google/gnostic-models => github.com/google/gnostic-models v0.6.9
+# k8s.io/api => k8s.io/api v0.33.4
+# k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.33.4
+# k8s.io/apimachinery => k8s.io/apimachinery v0.33.4
+# k8s.io/client-go => k8s.io/client-go v0.33.4
+# k8s.io/code-generator => k8s.io/code-generator v0.33.4
+# k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff

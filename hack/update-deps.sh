@@ -20,7 +20,7 @@ set -o pipefail
 
 source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 
-CONTOUR_VERSION="v1.32.0" # This is for controlling which version of contour we want to use.
+CONTOUR_VERSION="v1.33.0" # This is for controlling which version of contour we want to use.
 CLUSTER_ROLE_NAME=knative-contour
 
 go get "github.com/projectcontour/contour@${CONTOUR_VERSION}"
@@ -28,7 +28,7 @@ go get "github.com/projectcontour/contour@${CONTOUR_VERSION}"
 go_update_deps "$@"
 
 function run_ytt() {
-  go_run carvel.dev/ytt/cmd/ytt@v0.51.2 "$@"
+  go_run carvel.dev/ytt/cmd/ytt@v0.52.1 "$@"
 }
 
 function contour_yaml() {
