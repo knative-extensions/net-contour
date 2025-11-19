@@ -16,12 +16,12 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/projectcontour/contour v1.33.0
 	go.uber.org/zap v1.27.0
-	k8s.io/api v0.34.1
-	k8s.io/apimachinery v0.34.1
-	k8s.io/client-go v0.34.1
-	knative.dev/hack v0.0.0-20251103013745-91eedd9bef96
-	knative.dev/networking v0.0.0-20251103014656-7d4a19889854
-	knative.dev/pkg v0.0.0-20251104154049-5037c4760829
+	k8s.io/api v0.34.2
+	k8s.io/apimachinery v0.34.2
+	k8s.io/client-go v0.34.2
+	knative.dev/hack v0.0.0-20251117013754-67a5b048bc27
+	knative.dev/networking v0.0.0-20251117014740-e8506646d57f
+	knative.dev/pkg v0.0.0-20251118173915-745990698d3c
 	sigs.k8s.io/yaml v1.6.0
 )
 
@@ -86,7 +86,7 @@ require (
 	golang.org/x/mod v0.29.0 // indirect
 	golang.org/x/net v0.46.0 // indirect
 	golang.org/x/oauth2 v0.31.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.37.0 // indirect
 	golang.org/x/term v0.36.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
@@ -100,8 +100,8 @@ require (
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.34.1 // indirect
-	k8s.io/code-generator v0.34.1 // indirect
+	k8s.io/apiextensions-apiserver v0.34.2 // indirect
+	k8s.io/code-generator v0.34.2 // indirect
 	k8s.io/gengo/v2 v2.0.0-20250604051438-85fd79dbfd9f // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20250710124328-f3f2b991d03b // indirect
