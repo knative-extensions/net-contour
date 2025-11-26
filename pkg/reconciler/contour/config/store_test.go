@@ -21,7 +21,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	network "knative.dev/networking/pkg"
 	netconfig "knative.dev/networking/pkg/config"
 	logtesting "knative.dev/pkg/logging/testing"
 
@@ -43,7 +42,7 @@ func TestStoreLoadWithContext(t *testing.T) {
 		t.Error("Unexpected contour config (-want, +got):", diff)
 	}
 
-	expectedNetwork, _ := network.NewConfigFromConfigMap(contourConfig)
+	expectedNetwork, _ := netconfig.NewConfigFromConfigMap(contourConfig)
 	if diff := cmp.Diff(expectedNetwork, config.Network); diff != "" {
 		t.Error("Unexpected contour config (-want, +got):", diff)
 	}
