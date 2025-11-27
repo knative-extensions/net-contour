@@ -19,7 +19,6 @@ package config
 import (
 	"context"
 
-	network "knative.dev/networking/pkg"
 	netconfig "knative.dev/networking/pkg/config"
 	"knative.dev/pkg/configmap"
 )
@@ -64,7 +63,7 @@ func NewStore(logger configmap.Logger, onAfterStore ...func(name string, value i
 			logger,
 			configmap.Constructors{
 				ContourConfigName:       NewContourFromConfigMap,
-				netconfig.ConfigMapName: network.NewConfigFromConfigMap,
+				netconfig.ConfigMapName: netconfig.NewConfigFromConfigMap,
 			},
 			onAfterStore...,
 		),
