@@ -133,7 +133,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 		allowInsecure = false
 	}
 
-	proxies := []*v1.HTTPProxy{}
+	proxiesByName := map[string]*v1.HTTPProxy{}
 	for _, rule := range ing.Spec.Rules {
 		class := cfg.Contour.VisibilityClasses[rule.Visibility]
 
@@ -304,18 +304,27 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 
 		for _, originalHost := range rule.Hosts {
 			for _, host := range sets.List(ingress.ExpandedHosts(sets.New(originalHost))) {
-				hostProxy := base.DeepCopy()
-
-				class := class
 
 				// Ideally these would just be marked ClusterLocal :(
+				class := class
 				if strings.HasSuffix(originalHost, network.GetClusterDomainName()) {
 					class = cfg.Contour.VisibilityClasses[v1alpha1.IngressVisibilityClusterLocal]
-					hostProxy.Annotations[ClassKey] = class
-					hostProxy.Labels[ClassKey] = class
 				}
 
-				hostProxy.Name = kmeta.ChildName(ing.Name+"-"+class+"-", host)
+				hostProxyName := kmeta.ChildName(ing.Name+"-"+class+"-", host)
+
+				// Merge routes if proxy already exists for this name.
+				// NOTE: Only routes are merged; VirtualHost properties (TLS, CORS, Authorization)
+				// from the first rule are used. Rules for the same host should have matching configs.
+				if existing := proxiesByName[hostProxyName]; existing != nil {
+					existing.Spec.Routes = append(existing.Spec.Routes, routes...)
+					continue
+				}
+
+				hostProxy := base.DeepCopy()
+				hostProxy.Name = hostProxyName
+				hostProxy.Annotations[ClassKey] = class
+				hostProxy.Labels[ClassKey] = class
 
 				hostProxy.Spec.VirtualHost = &v1.VirtualHost{
 					Fqdn: host,
@@ -349,10 +358,19 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					hostProxy.Spec.VirtualHost.TLS = &v1.TLS{SecretName: s.String()}
 				}
 
-				proxies = append(proxies, hostProxy)
+				proxiesByName[hostProxy.Name] = hostProxy
 			}
 		}
 	}
+
+	// Convert map to slice and sort by name for deterministic output
+	proxies := make([]*v1.HTTPProxy, 0, len(proxiesByName))
+	for _, proxy := range proxiesByName {
+		proxies = append(proxies, proxy)
+	}
+	sort.Slice(proxies, func(i, j int) bool {
+		return proxies[i].Name < proxies[j].Name
+	})
 
 	return proxies
 }
