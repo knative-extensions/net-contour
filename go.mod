@@ -4,11 +4,11 @@ go 1.24.0
 
 require (
 	github.com/google/go-cmp v0.7.0
-	github.com/projectcontour/contour v1.32.0
+	github.com/projectcontour/contour v1.32.2
 	go.uber.org/zap v1.27.0
-	k8s.io/api v0.33.4
-	k8s.io/apimachinery v0.33.4
-	k8s.io/client-go v0.33.4
+	k8s.io/api v0.33.7
+	k8s.io/apimachinery v0.33.7
+	k8s.io/client-go v0.33.7
 	knative.dev/hack v0.0.0-20251022160748-50b120a65f30
 	knative.dev/networking v0.0.0-20251022163549-cc90e8c53309
 	knative.dev/pkg v0.0.0-20251022162148-4ebd86bc2d85
@@ -87,12 +87,12 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/grpc v1.75.0 // indirect
-	google.golang.org/protobuf v1.36.8 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.33.4 // indirect
-	k8s.io/code-generator v0.33.4 // indirect
+	k8s.io/apiextensions-apiserver v0.33.7 // indirect
+	k8s.io/code-generator v0.33.7 // indirect
 	k8s.io/gengo/v2 v2.0.0-20250207200755-1244d31929d7 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff // indirect
