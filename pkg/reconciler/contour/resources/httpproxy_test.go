@@ -3331,3 +3331,89 @@ func (t *testConfigStore) ToContext(ctx context.Context) context.Context {
 }
 
 var _ reconciler.ConfigStore = (*testConfigStore)(nil)
+
+func TestMultipleRulesForSameHost(t *testing.T) {
+	ing := &v1alpha1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "test-ns",
+			Name:      "test-ing",
+		},
+		Spec: v1alpha1.IngressSpec{
+			Rules: []v1alpha1.IngressRule{{
+				Hosts:      []string{"example.com"},
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				HTTP: &v1alpha1.HTTPIngressRuleValue{
+					Paths: []v1alpha1.HTTPIngressPath{{
+						Splits: []v1alpha1.IngressBackendSplit{{
+							IngressBackend: v1alpha1.IngressBackend{
+								ServiceName: "traffic-svc",
+								ServicePort: intstr.FromInt(80),
+							},
+							Percent: 100,
+						}},
+					}},
+				},
+			}, {
+				Hosts:      []string{"example.com"},
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				HTTP: &v1alpha1.HTTPIngressRuleValue{
+					Paths: []v1alpha1.HTTPIngressPath{{
+						Path: "/.well-known/acme-challenge/xyz",
+						Splits: []v1alpha1.IngressBackendSplit{{
+							IngressBackend: v1alpha1.IngressBackend{
+								ServiceName: "acme-solver",
+								ServicePort: intstr.FromInt(8089),
+							},
+							Percent: 100,
+						}},
+					}},
+				},
+			}},
+		},
+	}
+
+	cfg := &config.Config{
+		Contour: &config.Contour{
+			VisibilityClasses: map[v1alpha1.IngressVisibility]string{
+				v1alpha1.IngressVisibilityExternalIP: "external",
+			},
+			TimeoutPolicyResponse: "10s",
+			TimeoutPolicyIdle:     "10s",
+		},
+	}
+
+	tcs := &testConfigStore{config: cfg}
+	ctx := tcs.ToContext(context.Background())
+
+	proxies := MakeHTTPProxies(ctx, ing, nil)
+
+	if len(proxies) != 1 {
+		t.Fatalf("Expected 1 HTTPProxy, got %d", len(proxies))
+	}
+
+	proxy := proxies[0]
+
+	if len(proxy.Spec.Routes) < 2 {
+		t.Fatalf("Expected at least 2 routes, got %d", len(proxy.Spec.Routes))
+	}
+
+	hasTrafficRoute := false
+	hasACMERoute := false
+	for _, route := range proxy.Spec.Routes {
+		for _, svc := range route.Services {
+			if svc.Name == "traffic-svc" && svc.Port == 80 {
+				hasTrafficRoute = true
+			}
+			if svc.Name == "acme-solver" && svc.Port == 8089 {
+				hasACMERoute = true
+			}
+		}
+	}
+
+	if !hasTrafficRoute {
+		t.Error("Expected a route to the traffic endpoint")
+	}
+	if !hasACMERoute {
+		t.Error("Expected a route to the ACME endpoint")
+	}
+}
