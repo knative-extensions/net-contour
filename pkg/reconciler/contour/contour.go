@@ -327,5 +327,5 @@ func (r *Reconciler) lbStatus(ctx context.Context, vis v1alpha1.IngressVisibilit
 			})
 		}
 	}
-	return
+	return lbs
 }

@@ -880,7 +880,7 @@ func mustMakeProxiesWithConfig(t *testing.T, i *v1alpha1.Ingress, cfg *config.Co
 		}
 		objs = append(objs, p)
 	}
-	return
+	return objs
 }
 
 func deleteSelector(t *testing.T, generation int) labels.Selector {

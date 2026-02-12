@@ -55,7 +55,7 @@ func (si *ServiceInfo) Visibilities() (vis []v1alpha1.IngressVisibility) {
 	for _, v := range sets.List(si.RawVisibilities) {
 		vis = append(vis, v1alpha1.IngressVisibility(v))
 	}
-	return
+	return vis
 }
 
 func ServiceNames(ctx context.Context, ing *v1alpha1.Ingress) map[string]ServiceInfo {
