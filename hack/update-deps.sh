@@ -28,7 +28,7 @@ go get "github.com/projectcontour/contour@${CONTOUR_VERSION}"
 go_update_deps "$@"
 
 function run_ytt() {
-  go_run carvel.dev/ytt/cmd/ytt@v0.53.2 "$@"
+  go_run carvel.dev/ytt/cmd/ytt@v0.52.1 "$@"
 }
 
 function contour_yaml() {
