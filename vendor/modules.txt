@@ -110,7 +110,7 @@ github.com/munnerz/goautoneg
 # github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/projectcontour/contour v1.33.1
+# github.com/projectcontour/contour v1.33.2
 ## explicit; go 1.24.0
 github.com/projectcontour/contour/apis/projectcontour/v1
 # github.com/prometheus/client_golang v1.23.2
