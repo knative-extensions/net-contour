@@ -1852,7 +1852,9 @@ func TestMakeProxies(t *testing.T) {
 					ClassKey:      publicClass,
 				},
 				Annotations: map[string]string{
-					ClassKey: publicClass,
+					ClassKey:                     publicClass,
+					ExtensionServiceKey:          "es",
+					ExtensionServiceNamespaceKey: "es-ns",
 				},
 				OwnerReferences: []metav1.OwnerReference{{
 					APIVersion:         "networking.internal.knative.dev/v1alpha1",

@@ -283,6 +283,12 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 			})
 		}
 
+		// Propagate annotations from the parent KIngress to the HTTPProxy
+		// The Contour class annotation always takes precedence.
+		annotations := kmeta.UnionMaps(ing.GetAnnotations(), map[string]string{
+			ClassKey: class,
+		})
+
 		base := v1.HTTPProxy{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: ing.Namespace,
@@ -291,9 +297,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 					ParentKey:     ing.Name,
 					ClassKey:      class,
 				},
-				Annotations: map[string]string{
-					ClassKey: class,
-				},
+				Annotations:     annotations,
 				OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 			},
 			Spec: v1.HTTPProxySpec{
