@@ -111,7 +111,7 @@ github.com/munnerz/goautoneg
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# github.com/projectcontour/contour v1.33.3
+# github.com/projectcontour/contour v1.33.4
 ## explicit; go 1.24.0
 github.com/projectcontour/contour/apis/projectcontour/v1
 # github.com/prometheus/client_golang v1.23.2
