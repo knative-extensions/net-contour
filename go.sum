@@ -97,8 +97,8 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/prashantv/gostub v1.1.0 h1:BTyx3RfQjRHnUWaGF9oQos79AlQ5k8WNktv7VGvVH4g=
 github.com/prashantv/gostub v1.1.0/go.mod h1:A5zLQHz7ieHGG7is6LLXLz7I8+3LZzsrV0P1IAHhP5U=
-github.com/projectcontour/contour v1.33.3 h1:C/pNpx8+fbgnfg1Qi5iykk8mREGdLZb0qWxp2aPCaDk=
-github.com/projectcontour/contour v1.33.3/go.mod h1:t9+vcvRkJhnzvbJ78GkOSomvoqzHlFQKMZbllUdnwh4=
+github.com/projectcontour/contour v1.33.4 h1:bzgX9GEEnQjOWfu0+mEnw/3bO7Ng0BT3qUcnEVqDD1w=
+github.com/projectcontour/contour v1.33.4/go.mod h1:t9+vcvRkJhnzvbJ78GkOSomvoqzHlFQKMZbllUdnwh4=
 github.com/prometheus/client_golang v1.23.2 h1:Je96obch5RDVy3FDMndoUsjAhG5Edi49h0RJWRi/o0o=
 github.com/prometheus/client_golang v1.23.2/go.mod h1:Tb1a6LWHB3/SPIzCoaDXI4I8UHKeFTEQ1YCr+0Gyqmg=
 github.com/prometheus/client_model v0.6.2 h1:oBsgwpGs7iVziMvrGhE53c/GrLUsZdHnqNwqPLxwZyk=
