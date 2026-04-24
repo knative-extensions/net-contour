@@ -14,7 +14,7 @@ replace (
 
 require (
 	github.com/google/go-cmp v0.7.0
-	github.com/projectcontour/contour v1.33.3
+	github.com/projectcontour/contour v1.33.4
 	go.uber.org/zap v1.27.1
 	k8s.io/api v0.34.6
 	k8s.io/apimachinery v0.34.6
