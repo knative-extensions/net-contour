@@ -5,13 +5,13 @@ go 1.25.0
 require (
 	github.com/google/go-cmp v0.7.0
 	github.com/projectcontour/contour v1.33.4
-	go.uber.org/zap v1.27.1
+	go.uber.org/zap v1.28.0
 	k8s.io/api v0.35.4
 	k8s.io/apimachinery v0.35.4
 	k8s.io/client-go v0.35.4
-	knative.dev/hack v0.0.0-20260421155212-aeb7b4a9bf96
-	knative.dev/networking v0.0.0-20260422140718-e9578ef11562
-	knative.dev/pkg v0.0.0-20260422015212-ec452872dcc1
+	knative.dev/hack v0.0.0-20260428014158-b2a37f1b6e7b
+	knative.dev/networking v0.0.0-20260506015723-9b427f7c8091
+	knative.dev/pkg v0.0.0-20260505204821-021ad709ec68
 	sigs.k8s.io/yaml v1.6.0
 )
 
