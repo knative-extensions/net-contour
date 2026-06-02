@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/google/go-cmp v0.7.0
-	github.com/projectcontour/contour v1.33.4
+	github.com/projectcontour/contour v1.33.5
 	go.uber.org/zap v1.28.0
 	k8s.io/api v0.35.5
 	k8s.io/apimachinery v0.35.5
