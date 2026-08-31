@@ -58,12 +58,13 @@ func (si *ServiceInfo) Visibilities() (vis []v1alpha1.IngressVisibility) {
 	return vis
 }
 
-func ServiceNames(ctx context.Context, ing *v1alpha1.Ingress) map[string]ServiceInfo {
-	s := map[string]ServiceInfo{}
+func serviceInfosBy[K comparable](ing *v1alpha1.Ingress, key func(v1alpha1.IngressBackendSplit) K) map[K]ServiceInfo {
+	services := make(map[K]ServiceInfo)
 	for _, rule := range ing.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
 			for _, split := range path.Splits {
-				si, ok := s[split.ServiceName]
+				k := key(split)
+				si, ok := services[k]
 				if !ok {
 					si = ServiceInfo{
 						Port:            split.ServicePort,
@@ -73,11 +74,17 @@ func ServiceNames(ctx context.Context, ing *v1alpha1.Ingress) map[string]Service
 					}
 				}
 				si.RawVisibilities.Insert(string(rule.Visibility))
-				s[split.ServiceName] = si
+				services[k] = si
 			}
 		}
 	}
-	return s
+	return services
+}
+
+func ServiceNames(ctx context.Context, ing *v1alpha1.Ingress) map[string]ServiceInfo {
+	return serviceInfosBy(ing, func(split v1alpha1.IngressBackendSplit) string {
+		return split.ServiceName
+	})
 }
 
 func defaultRetryPolicy() *v1.RetryPolicy {

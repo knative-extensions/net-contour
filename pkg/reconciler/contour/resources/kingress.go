@@ -19,6 +19,8 @@ package resources
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strings"
 
 	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,6 +32,20 @@ import (
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/logging"
 )
+
+type serviceIdentity struct {
+	name string
+	port string
+}
+
+func endpointProbeServices(ing *v1alpha1.Ingress) map[serviceIdentity]ServiceInfo {
+	return serviceInfosBy(ing, func(split v1alpha1.IngressBackendSplit) serviceIdentity {
+		return serviceIdentity{
+			name: split.ServiceName,
+			port: split.ServicePort.String(),
+		}
+	})
+}
 
 // MakeEndpointProbeIngress creates a new child kingress resource with a
 // bogus hostname per referenced service, which we will probe to ensure
@@ -51,7 +67,7 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 		},
 	}
 
-	sns := ServiceNames(ctx, ing)
+	sns := endpointProbeServices(ing)
 
 	// Reverse engineer our previous state from the prior generation's HTTP Proxy resources.
 	for _, proxy := range previousState {
@@ -74,6 +90,15 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 		}
 
 		for _, route := range proxy.Spec.Routes {
+			rewriteHost := ""
+			if route.RequestHeadersPolicy != nil {
+				for _, header := range route.RequestHeadersPolicy.Set {
+					if strings.EqualFold(header.Name, "Host") {
+						rewriteHost = header.Value
+						break
+					}
+				}
+			}
 			hasPath := false
 			for _, cond := range route.Conditions {
 				if cond.Prefix != "" {
@@ -81,35 +106,49 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 				}
 			}
 			for _, svc := range route.Services {
-				si, ok := sns[svc.Name]
+				port := intstr.FromInt(svc.Port)
+				identity := serviceIdentity{
+					name: svc.Name,
+					port: port.String(),
+				}
+				si, ok := sns[identity]
 				if !ok {
 					si = ServiceInfo{
-						Port:            intstr.FromInt(svc.Port),
+						Port:            port,
 						RawVisibilities: sets.New[string](),
 						HasPath:         hasPath,
+						RewriteHost:     rewriteHost,
 					}
 				}
 				si.RawVisibilities.Insert(string(vis))
-				sns[svc.Name] = si
+				sns[identity] = si
 			}
 		}
 	}
 
 	// Give the services a deterministic ordering.
-	order := sets.KeySet(sns)
-	l := sets.List(order)
+	l := make([]serviceIdentity, 0, len(sns))
+	for identity := range sns {
+		l = append(l, identity)
+	}
+	sort.Slice(l, func(i, j int) bool {
+		if l[i].name == l[j].name {
+			return l[i].port < l[j].port
+		}
+		return l[i].name < l[j].name
+	})
 	logging.FromContext(ctx).Debugf("Endpoints probe will cover services: %v", l)
 
 	probeHosts := make([]string, 0, len(l))
 
-	for _, name := range l {
-		si := sns[name]
+	for _, identity := range l {
+		si := sns[identity]
 		if si.HasPath {
 			// TODO(https://github.com/knative-sandbox/net-certmanager/issues/44): Remove this.
 			continue
 		}
 		for _, vis := range si.Visibilities() {
-			host := fmt.Sprintf("%s.gen-%d.%s.%s.net-contour.invalid", name, ing.Generation, ing.Name, ing.Namespace)
+			host := fmt.Sprintf("%s.port-%s.gen-%d.%s.%s.net-contour.invalid", identity.name, identity.port, ing.Generation, ing.Name, ing.Namespace)
 			probeHosts = append(probeHosts, host)
 			childIng.Spec.Rules = append(childIng.Spec.Rules, v1alpha1.IngressRule{
 				Hosts:      []string{host},
@@ -119,7 +158,7 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 						RewriteHost: si.RewriteHost,
 						Splits: []v1alpha1.IngressBackendSplit{{
 							IngressBackend: v1alpha1.IngressBackend{
-								ServiceName:      name,
+								ServiceName:      identity.name,
 								ServiceNamespace: ing.Namespace,
 								ServicePort:      si.Port,
 							},
