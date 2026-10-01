@@ -274,6 +274,10 @@ func TestReconcile(t *testing.T) {
 			Name: "name--ep",
 		}},
 		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: "ns",
+				Resource:  v1.SchemeGroupVersion.WithResource("httpproxies"),
+			},
 			ListRestrictions: clientgotesting.ListRestrictions{
 				// We delete the things that don't match the generation being reconciled.
 				Labels: deleteSelector(t, 1),
@@ -396,6 +400,10 @@ func TestReconcile(t *testing.T) {
 			)[0],
 		}},
 		WantDeleteCollections: []clientgotesting.DeleteCollectionActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: "ns",
+				Resource:  v1.SchemeGroupVersion.WithResource("httpproxies"),
+			},
 			ListRestrictions: clientgotesting.ListRestrictions{
 				// We delete the things that don't match the generation being reconciled.
 				Labels: deleteSelector(t, 1),
