@@ -27,6 +27,7 @@ import (
 	"knative.dev/net-contour/pkg/reconciler/contour/config"
 	"knative.dev/net-contour/pkg/reconciler/contour/resources/names"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	"knative.dev/pkg/kmap"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/logging"
 )
@@ -41,7 +42,7 @@ func MakeEndpointProbeIngress(ctx context.Context, ing *v1alpha1.Ingress, previo
 			Name:      names.EndpointProbeIngress(ing),
 			Namespace: ing.Namespace,
 			Labels:    ing.Labels,
-			Annotations: kmeta.UnionMaps(ing.Annotations, map[string]string{
+			Annotations: kmap.Union(ing.Annotations, map[string]string{
 				EndpointsProbeKey: "true",
 			}),
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
