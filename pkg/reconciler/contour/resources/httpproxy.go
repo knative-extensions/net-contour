@@ -34,6 +34,7 @@ import (
 	netcfg "knative.dev/networking/pkg/config"
 	netheader "knative.dev/networking/pkg/http/header"
 	"knative.dev/networking/pkg/ingress"
+	"knative.dev/pkg/kmap"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/ptr"
@@ -133,7 +134,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 		allowInsecure = false
 	}
 
-	proxies := []*v1.HTTPProxy{}
+	var proxies []*v1.HTTPProxy
 	for _, rule := range ing.Spec.Rules {
 		class := cfg.Contour.VisibilityClasses[rule.Visibility]
 
@@ -285,7 +286,7 @@ func MakeHTTPProxies(ctx context.Context, ing *v1alpha1.Ingress, serviceToProtoc
 
 		// Propagate annotations from the parent KIngress to the HTTPProxy
 		// The Contour class annotation always takes precedence.
-		annotations := kmeta.UnionMaps(ing.GetAnnotations(), map[string]string{
+		annotations := kmap.Union(ing.GetAnnotations(), map[string]string{
 			ClassKey: class,
 		})
 

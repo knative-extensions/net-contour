@@ -24,6 +24,7 @@ import (
 	"time"
 
 	v1 "github.com/projectcontour/contour/apis/projectcontour/v1"
+	"knative.dev/pkg/kmap"
 	"knative.dev/pkg/logging"
 
 	fakecontourclient "knative.dev/net-contour/pkg/client/injection/client/fake"
@@ -46,7 +47,6 @@ import (
 	netconfig "knative.dev/networking/pkg/config"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 
@@ -1053,7 +1053,7 @@ func withDomainMappingSpec(i *v1alpha1.Ingress) {
 
 func withAnnotation(ann map[string]string) IngressOption {
 	return func(i *v1alpha1.Ingress) {
-		i.Annotations = kmeta.UnionMaps(i.Annotations, ann)
+		i.Annotations = kmap.Union(i.Annotations, ann)
 	}
 }
 
