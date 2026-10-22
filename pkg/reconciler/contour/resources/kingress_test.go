@@ -108,7 +108,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			Spec: v1alpha1.IngressSpec{
 				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				Rules: []v1alpha1.IngressRule{{
-					Hosts:      []string{"doo.gen-123.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"doo.port-124.gen-123.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
@@ -123,7 +123,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 						}},
 					},
 				}, {
-					Hosts:      []string{"goo.gen-123.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"goo.port-123.gen-123.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
@@ -186,7 +186,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			Spec: v1alpha1.IngressSpec{
 				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				Rules: []v1alpha1.IngressRule{{
-					Hosts:      []string{"goo.gen-432.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"goo.port-123.gen-432.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
@@ -246,7 +246,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			Spec: v1alpha1.IngressSpec{
 				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				Rules: []v1alpha1.IngressRule{{
-					Hosts:      []string{"goo.gen-0.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"goo.port-123.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityClusterLocal,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
@@ -311,7 +311,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			Spec: v1alpha1.IngressSpec{
 				HTTPOption: v1alpha1.HTTPOptionRedirected,
 				Rules: []v1alpha1.IngressRule{{
-					Hosts:      []string{"goo.gen-0.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"goo.port-123.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
@@ -327,7 +327,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 					},
 				}},
 				TLS: []v1alpha1.IngressTLS{{
-					Hosts:      []string{"goo.gen-0.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"goo.port-123.gen-0.bar.foo.net-contour.invalid"},
 					SecretName: "example",
 				}},
 			},
@@ -394,7 +394,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			Spec: v1alpha1.IngressSpec{
 				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				Rules: []v1alpha1.IngressRule{{
-					Hosts:      []string{"goo.gen-0.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"goo.port-123.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
@@ -487,6 +487,9 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 							Name:  "Foo",
 							Value: "bar",
 						}, {
+							Name:  "Host",
+							Value: "previous.internal.example",
+						}, {
 							Name:  "K-Network-Hash",
 							Value: "99dbaae65d712842149f0be3a930d0e229226f86fadddd36bb7b87b0a38ffd3e",
 						}},
@@ -539,7 +542,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			Spec: v1alpha1.IngressSpec{
 				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				Rules: []v1alpha1.IngressRule{{
-					Hosts:      []string{"doo.gen-0.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"doo.port-124.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
@@ -554,7 +557,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 						}},
 					},
 				}, {
-					Hosts:      []string{"goo.gen-0.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"goo.port-123.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
@@ -572,7 +575,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			},
 		},
 	}, {
-		name: "single external domain with split (w/ prev no overlap)",
+		name: "single external domain with split (w/ prev no overlap and host rewrite)",
 		ing: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "foo",
@@ -647,6 +650,9 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 							Name:  "Foo",
 							Value: "bar",
 						}, {
+							Name:  "host",
+							Value: "previous.internal.example",
+						}, {
 							Name:  "K-Network-Hash",
 							Value: "99dbaae65d712842149f0be3a930d0e229226f86fadddd36bb7b87b0a38ffd3e",
 						}},
@@ -708,7 +714,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			Spec: v1alpha1.IngressSpec{
 				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				Rules: []v1alpha1.IngressRule{{
-					Hosts:      []string{"doo.gen-0.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"doo.port-124.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
@@ -723,10 +729,11 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 						}},
 					},
 				}, {
-					Hosts:      []string{"fu.gen-0.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"fu.port-124.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
+							RewriteHost: "previous.internal.example",
 							Splits: []v1alpha1.IngressBackendSplit{{
 								IngressBackend: v1alpha1.IngressBackend{
 									ServiceNamespace: "foo",
@@ -738,7 +745,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 						}},
 					},
 				}, {
-					Hosts:      []string{"goo.gen-0.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"goo.port-123.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
@@ -753,10 +760,11 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 						}},
 					},
 				}, {
-					Hosts:      []string{"kung.gen-0.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"kung.port-123.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
+							RewriteHost: "previous.internal.example",
 							Splits: []v1alpha1.IngressBackendSplit{{
 								IngressBackend: v1alpha1.IngressBackend{
 									ServiceNamespace: "foo",
@@ -909,7 +917,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				// want ingress only from valid HTTPProxy.
 				Rules: []v1alpha1.IngressRule{{
-					Hosts:      []string{"doo.gen-0.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"doo.port-124.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
@@ -924,7 +932,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 						}},
 					},
 				}, {
-					Hosts:      []string{"goo.gen-0.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"goo.port-123.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
@@ -985,7 +993,7 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 			Spec: v1alpha1.IngressSpec{
 				HTTPOption: v1alpha1.HTTPOptionEnabled,
 				Rules: []v1alpha1.IngressRule{{
-					Hosts:      []string{"goo.gen-0.bar.foo.net-contour.invalid"},
+					Hosts:      []string{"goo.port-123.gen-0.bar.foo.net-contour.invalid"},
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
 					HTTP: &v1alpha1.HTTPIngressRuleValue{
 						Paths: []v1alpha1.HTTPIngressPath{{
@@ -1012,5 +1020,122 @@ func TestMakeEndpointProbeIngress(t *testing.T) {
 				t.Error("MakeHTTPProxies (-want, +got) =", cmp.Diff(test.want, got))
 			}
 		})
+	}
+}
+
+func TestMakeEndpointProbeIngressUsesServicePortIdentity(t *testing.T) {
+	ctx := (&testConfigStore{
+		config: &config.Config{
+			Contour: &config.Contour{
+				VisibilityClasses: map[v1alpha1.IngressVisibility]string{
+					v1alpha1.IngressVisibilityExternalIP: publicClass,
+				},
+			},
+		},
+	}).ToContext(context.Background())
+
+	ing := &v1alpha1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:  "default",
+			Name:       "mapping",
+			Generation: 3,
+		},
+		Spec: v1alpha1.IngressSpec{
+			Rules: []v1alpha1.IngressRule{{
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				HTTP: &v1alpha1.HTTPIngressRuleValue{
+					Paths: []v1alpha1.HTTPIngressPath{{
+						Splits: []v1alpha1.IngressBackendSplit{{
+							IngressBackend: v1alpha1.IngressBackend{
+								ServiceName: "app",
+								ServicePort: intstr.FromInt(8080),
+							},
+						}, {
+							IngressBackend: v1alpha1.IngressBackend{
+								ServiceName: "metrics",
+								ServicePort: intstr.FromString("http"),
+							},
+						}},
+					}},
+				},
+			}},
+		},
+	}
+	previous := []*v1.HTTPProxy{{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{
+				"projectcontour.io/ingress.class": publicClass,
+			},
+		},
+		Spec: v1.HTTPProxySpec{
+			Routes: []v1.Route{{
+				RequestHeadersPolicy: &v1.HeadersPolicy{
+					Set: []v1.HeaderValue{{
+						Name:  "Host",
+						Value: "app.default.svc.cluster.local",
+					}},
+				},
+				Services: []v1.Service{{
+					Name: "app",
+					Port: 80,
+				}},
+			}},
+		},
+		Status: v1.HTTPProxyStatus{
+			CurrentStatus: "valid",
+		},
+	}}
+
+	want := []v1alpha1.IngressRule{{
+		Hosts:      []string{"app.port-80.gen-3.mapping.default.net-contour.invalid"},
+		Visibility: v1alpha1.IngressVisibilityExternalIP,
+		HTTP: &v1alpha1.HTTPIngressRuleValue{
+			Paths: []v1alpha1.HTTPIngressPath{{
+				RewriteHost: "app.default.svc.cluster.local",
+				Splits: []v1alpha1.IngressBackendSplit{{
+					IngressBackend: v1alpha1.IngressBackend{
+						ServiceName:      "app",
+						ServiceNamespace: "default",
+						ServicePort:      intstr.FromInt(80),
+					},
+					Percent: 100,
+				}},
+			}},
+		},
+	}, {
+		Hosts:      []string{"app.port-8080.gen-3.mapping.default.net-contour.invalid"},
+		Visibility: v1alpha1.IngressVisibilityExternalIP,
+		HTTP: &v1alpha1.HTTPIngressRuleValue{
+			Paths: []v1alpha1.HTTPIngressPath{{
+				Splits: []v1alpha1.IngressBackendSplit{{
+					IngressBackend: v1alpha1.IngressBackend{
+						ServiceName:      "app",
+						ServiceNamespace: "default",
+						ServicePort:      intstr.FromInt(8080),
+					},
+					Percent: 100,
+				}},
+			}},
+		},
+	}, {
+		Hosts:      []string{"metrics.port-http.gen-3.mapping.default.net-contour.invalid"},
+		Visibility: v1alpha1.IngressVisibilityExternalIP,
+		HTTP: &v1alpha1.HTTPIngressRuleValue{
+			Paths: []v1alpha1.HTTPIngressPath{{
+				Splits: []v1alpha1.IngressBackendSplit{{
+					IngressBackend: v1alpha1.IngressBackend{
+						ServiceName:      "metrics",
+						ServiceNamespace: "default",
+						ServicePort:      intstr.FromString("http"),
+					},
+					Percent: 100,
+				}},
+			}},
+		},
+	}}
+
+	got := MakeEndpointProbeIngress(ctx, ing, previous)
+	if diff := cmp.Diff(want, got.Spec.Rules); diff != "" {
+		t.Error("MakeEndpointProbeIngress rules (-want, +got):", diff)
 	}
 }
